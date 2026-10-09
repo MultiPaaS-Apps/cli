@@ -1,0 +1,40 @@
+version: 2
+
+project_name: multipaas
+
+builds:
+  - binary: multipaas
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+# A Formula, not a Cask: see the README, Develop.
+brews:
+  - name: multipaas
+    repository:
+      owner: MultiPaaS-Apps
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/MultiPaaS-Apps/cli
+    description: Sign in to MultiPaaS and work with your apps from the command line
+    # While MultiPaaS-Apps/cli is private its release assets need a token to download; the tap's
+    # lib/private_release_download.rb fetches them. Drop both lines when the repo is public.
+    custom_require: ../lib/private_release_download
+    download_strategy: GitHubPrivateReleaseDownloadStrategy
+    skip_upload: auto
+    test: |
+      assert_match version.to_s, shell_output("#{bin}/multipaas --version")

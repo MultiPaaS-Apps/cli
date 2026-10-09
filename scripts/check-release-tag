@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Refuses a release tag webapp-api would refuse as X-MultiPaaS-Cli-Version: not vMAJOR.MINOR.PATCH[-pre],
+# or below v0.1.0, the oldest CLI webapp-api accepts. This is what stops a 0.0.0 build shipping.
+set -euo pipefail
+
+tag="${1:?usage: check-release-tag <tag>}"
+semver='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$'
+if [[ ! "$tag" =~ $semver ]] || [[ "${BASH_REMATCH[1]}" == 0 && "${BASH_REMATCH[2]}" == 0 ]]; then
+  echo "refusing to release $tag: it must be vMAJOR.MINOR.PATCH[-pre] at or above v0.1.0" >&2
+  exit 1
+fi

@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Nightly, so a breaking webapp-api change on dev fails here even when nobody pushes.
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test -race ./...
+      - name: Regenerate against the live webapp-api schema
+        env:
+          SCHEMA_ENDPOINT: ${{ secrets.SCHEMA_ENDPOINT }}
+        run: |
+          if [ -z "$SCHEMA_ENDPOINT" ]; then
+            echo "SCHEMA_ENDPOINT is not available to this run, so the schema regenerate check did not run."
+            exit 0
+          fi
+          if ! go tool gqlfetch --endpoint "$SCHEMA_ENDPOINT" --without-builtins > schema.graphql 2>/dev/null; then
+            echo "schema fetch failed"
+            exit 1
+          fi
+          go tool genqlient
+          git diff --exit-code
+      - uses: goreleaser/goreleaser-action@v7.2.3
+        with:
+          version: v2.18.2
+          args: release --snapshot --clean

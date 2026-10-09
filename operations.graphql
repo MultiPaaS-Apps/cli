@@ -1,0 +1,55 @@
+query Me {
+  me {
+    id
+    email
+    name
+  }
+}
+
+query MyTenants {
+  myTenants {
+    client {
+      id
+      name
+    }
+    applicationId
+    appTenantId
+  }
+}
+
+query Applications($page: PageInput!) {
+  applications(page: $page) {
+    items {
+      id
+      name
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query AppTenants($page: PageInput!) {
+  appTenants(page: $page) {
+    items {
+      id
+      name
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query ScopedAppTenant {
+  me {
+    application {
+      id
+      name
+    }
+    appTenant {
+      id
+      name
+    }
+  }
+}

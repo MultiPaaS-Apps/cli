@@ -1,0 +1,958 @@
+"""
+Indicates exactly one field must be supplied and this field must not be `null`.
+"""
+directive @oneOf on INPUT_OBJECT
+
+"""
+Exposes a URL that specifies the behavior of this scalar.
+"""
+directive @specifiedBy(
+"""
+The URL that specifies the behavior of this scalar.
+"""
+	url: String!
+) on SCALAR
+
+input AcceptInvitationInput {
+	token: String!
+}
+
+"""
+Marks a type that decides which rows the server shows the caller: writing one can change any list, so the client discards its whole cache after it.
+"""
+interface AccessGrant {
+"""
+Marks a type that decides which rows the server shows the caller: writing one can change any list, so the client discards its whole cache after it.
+"""
+	_accessGrant: Boolean!
+}
+
+type AccessGroup implements AccessGrant{
+	_accessGrant: Boolean!
+	appTenant: AppTenant
+	id: ID!
+	name: String!
+}
+
+type AccessGroupMember implements AccessGrant{
+	_accessGrant: Boolean!
+	group: AccessGroup
+	id: ID!
+	user: User
+}
+
+input AddMemberInput {
+	appTenantId: ID
+	userId: ID!
+}
+
+type AiTurn {
+	conversation: Conversation!
+	createdAt: DateTime!
+	error: String
+	id: ID!
+	prompt: String!
+	reply: String
+	status: AiTurnStatus!
+	steps: [TurnStep!]!
+}
+
+type AiTurnPage {
+	items: [AiTurn!]!
+	pageInfo: PageInfo!
+}
+
+enum AiTurnStatus {
+	failed
+	queued
+	running
+	succeeded
+}
+
+type ApiToken implements Receipt{
+	_receipt: Boolean!
+	accessToken: String!
+	expiresAt: DateTime!
+}
+
+type AppTenant {
+	createdAt: DateTime!
+	id: ID!
+	name: String!
+	updatedAt: DateTime!
+}
+
+type AppTenantPage {
+	items: [AppTenant!]!
+	pageInfo: PageInfo!
+}
+
+type Application {
+	createdAt: DateTime!
+	id: ID!
+	key: String!
+	name: String!
+	updatedAt: DateTime!
+}
+
+type ApplicationInvitation {
+	appTenant: AppTenant
+	createdAt: DateTime!
+	email: String!
+	expiresAt: DateTime!
+	id: ID!
+	role: Role
+	scope: InvitationScope!
+	status: ApplicationInvitationStatus!
+}
+
+type ApplicationInvitationPage {
+	items: [ApplicationInvitation!]!
+	pageInfo: PageInfo!
+}
+
+enum ApplicationInvitationStatus {
+	expired
+	pending
+}
+
+type ApplicationPage {
+	items: [Application!]!
+	pageInfo: PageInfo!
+}
+
+input ApproveOAuthAuthorizationInput {
+	appTenantId: ID!
+	clientId: ID!
+	codeChallenge: String!
+	redirectUri: String!
+	state: String
+}
+
+type AuthOkResult implements Receipt{
+	_receipt: Boolean!
+	ok: Boolean!
+}
+
+type Client {
+	createdAt: DateTime!
+	id: ID!
+	name: String!
+	updatedAt: DateTime!
+}
+
+type ClientPage {
+	items: [Client!]!
+	pageInfo: PageInfo!
+}
+
+type Constraint {
+	createdAt: DateTime!
+	entity: Entity!
+	fields(
+		page: PageInput!
+	): FieldPage!
+	id: ID!
+	kind: String!
+	updatedAt: DateTime!
+}
+
+type ConstraintPage {
+	items: [Constraint!]!
+	pageInfo: PageInfo!
+}
+
+type Conversation {
+	canContinue: Boolean!
+	createdAt: DateTime!
+	id: ID!
+	model: String!
+	title: String
+	turns(
+		before: ID
+		page: PageInput!
+	): AiTurnPage!
+}
+
+type ConversationPage {
+	items: [Conversation!]!
+	pageInfo: PageInfo!
+}
+
+input CreateAppTenantInput {
+	name: String!
+}
+
+input CreateApplicationInput {
+	key: String!
+	name: String!
+}
+
+input CreateClientInitialUserInput {
+	email: String!
+	name: String
+}
+
+input CreateClientInput {
+	initialUser: CreateClientInitialUserInput!
+	name: String!
+}
+
+type CreateClientPayload {
+	client: Client!
+	user: User!
+	userWasExisting: Boolean!
+}
+
+input CreateConstraintInput {
+	entityId: ID!
+	fieldIds: [ID!]!
+}
+
+input CreateEntityInput {
+	graphqlPluralName: String
+	graphqlTypeName: String
+	name: String!
+}
+
+input CreateFieldInput {
+	entityId: ID!
+	enumValues: [String!]
+	graphqlFieldName: String
+	isLifecycle: Boolean
+	isParent: Boolean
+	name: String
+	referencesEntityId: ID
+	relatedFieldId: ID
+	required: Boolean
+	type: String!
+}
+
+input CreateOAuthClientInput {
+	name: String!
+	redirectUris: [String!]!
+}
+
+input CreateRecordInput {
+	data: JSON!
+	entityId: ID!
+}
+
+input CreateRoleInput {
+	key: String!
+	name: String!
+	permissions: [RolePermissionInput!]!
+}
+
+input CreateUserInput {
+	email: String!
+	name: String
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+input DeactivateAppTenantInput {
+	id: ID!
+}
+
+input DeactivateApplicationInput {
+	id: ID!
+}
+
+input DeactivateClientInput {
+	id: ID!
+}
+
+input DeactivateUserInput {
+	id: ID!
+}
+
+input DenyOAuthAuthorizationInput {
+	clientId: ID!
+	redirectUri: String!
+	state: String
+}
+
+type Entity {
+	createdAt: DateTime!
+	graphqlPluralName: String!
+	graphqlTypeName: String!
+	id: ID!
+	managed: Boolean!
+	name: String!
+	updatedAt: DateTime!
+}
+
+type EntityPage {
+	items: [Entity!]!
+	pageInfo: PageInfo!
+}
+
+type Field {
+	createdAt: DateTime!
+	entity: Entity!
+	enumValues: [String!]
+	graphqlFieldName: String!
+	id: ID!
+	isLifecycle: Boolean!
+	isParent: Boolean!
+	name: String
+	referencesEntity: Entity
+	relatedField: Field
+	required: Boolean!
+	type: String!
+	updatedAt: DateTime!
+}
+
+type FieldPage {
+	items: [Field!]!
+	pageInfo: PageInfo!
+}
+
+type GroupRoleAssignment implements AccessGrant{
+	_accessGrant: Boolean!
+	group: AccessGroup
+	id: ID!
+	role: Role
+}
+
+type HeldPermission {
+	entityId: ID
+	permission: String!
+}
+
+enum InvitationScope {
+	app_tenant
+	client
+}
+
+input InviteMemberInput {
+	email: String!
+	roleId: ID
+	scope: InvitationScope!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type ModelRevision {
+	createdAt: DateTime!
+	generatorVersion: Int!
+	id: ID!
+}
+
+type ModelRevisionPage {
+	items: [ModelRevision!]!
+	pageInfo: PageInfo!
+}
+
+type Mutation {
+	acceptInvitation(
+		input: AcceptInvitationInput!
+	): TenantMember!
+	addAccessGroupMember(
+		groupId: ID!
+		userId: ID!
+	): AccessGroupMember!
+	addMember(
+		input: AddMemberInput!
+	): TenantMember!
+	approveOAuthAuthorization(
+		input: ApproveOAuthAuthorizationInput!
+	): OAuthRedirect!
+	assignRole(
+		roleId: ID!
+		userId: ID!
+	): RoleAssignment!
+	assignRoleToGroup(
+		groupId: ID!
+		roleId: ID!
+	): GroupRoleAssignment!
+	createAccessGroup(
+		name: String!
+	): AccessGroup!
+	createAppTenant(
+		input: CreateAppTenantInput!
+	): AppTenant!
+	createApplication(
+		input: CreateApplicationInput!
+	): Application!
+	createClient(
+		input: CreateClientInput!
+	): CreateClientPayload!
+	createConstraint(
+		input: CreateConstraintInput!
+	): Constraint!
+	createEntity(
+		input: CreateEntityInput!
+	): Entity!
+	createField(
+		input: CreateFieldInput!
+	): Field!
+	createOAuthClient(
+		input: CreateOAuthClientInput!
+	): OAuthClient!
+	createRecord(
+		input: CreateRecordInput!
+	): Record!
+	createRole(
+		input: CreateRoleInput!
+	): Role!
+	createUser(
+		input: CreateUserInput!
+	): User!
+	deactivateAppTenant(
+		input: DeactivateAppTenantInput!
+	): AppTenant!
+	deactivateApplication(
+		input: DeactivateApplicationInput!
+	): Application!
+	deactivateClient(
+		input: DeactivateClientInput!
+	): Client!
+	deactivateUser(
+		input: DeactivateUserInput!
+	): User!
+	denyOAuthAuthorization(
+		input: DenyOAuthAuthorizationInput!
+	): OAuthRedirect!
+	grantPlatformPermission(
+		permission: String!
+		userId: ID!
+	): User!
+	inviteMember(
+		input: InviteMemberInput!
+	): ApplicationInvitation!
+	issueApiToken(
+		appTenantId: ID!
+		oauthClientId: ID!
+	): ApiToken!
+	issueRealtimeTicket: RealtimeTicket!
+	removeAccessGroupMember(
+		id: ID!
+	): AccessGroupMember!
+	removeMember(
+		input: RemoveMemberInput!
+	): TenantMember!
+	renameAccessGroup(
+		id: ID!
+		name: String!
+	): AccessGroup!
+	requestSignIn(
+		input: RequestSignInInput!
+	): AuthOkResult!
+	resendInvitation(
+		input: ResendInvitationInput!
+	): ApplicationInvitation!
+	retireAccessGroup(
+		id: ID!
+	): AccessGroup!
+	retireConstraint(
+		constraintId: ID!
+	): Constraint!
+	retireEntity(
+		entityId: ID!
+	): Entity!
+	retireField(
+		fieldId: ID!
+	): Field!
+	retireOAuthClient(
+		id: ID!
+	): OAuthClient!
+	retireRecord(
+		input: RetireRecordInput!
+	): Record!
+	retireRole(
+		id: ID!
+	): Role!
+	revokePlatformPermission(
+		permission: String!
+		userId: ID!
+	): User!
+	sendPrompt(
+		input: SendPromptInput!
+	): AiTurn!
+	shareRecord(
+		input: ShareRecordInput!
+	): RecordShare!
+	signIn(
+		input: SignInInput!
+	): AuthOkResult!
+	signOut: AuthOkResult!
+	startConversation(
+		input: StartConversationInput!
+	): Conversation!
+	unassignGroupRole(
+		id: ID!
+	): GroupRoleAssignment!
+	unassignRole(
+		id: ID!
+	): RoleAssignment!
+	unshareRecord(
+		input: UnshareRecordInput!
+	): RecordShare!
+	updateAppTenant(
+		input: UpdateAppTenantInput!
+	): AppTenant!
+	updateApplication(
+		input: UpdateApplicationInput!
+	): Application!
+	updateClient(
+		input: UpdateClientInput!
+	): Client!
+	updateEntity(
+		input: UpdateEntityInput!
+	): Entity!
+	updateField(
+		input: UpdateFieldInput!
+	): Field!
+	updateOAuthClient(
+		input: UpdateOAuthClientInput!
+	): OAuthClient!
+	updateRecord(
+		input: UpdateRecordInput!
+	): Record!
+	updateRole(
+		input: UpdateRoleInput!
+	): Role!
+	updateUser(
+		input: UpdateUserInput!
+	): User!
+}
+
+type OAuthAppTenantOption {
+	id: ID!
+	name: String!
+}
+
+type OAuthAuthorizationRequest {
+	appTenants: [OAuthAppTenantOption!]!
+	applicationName: String!
+	clientName: String!
+}
+
+type OAuthClient {
+	createdAt: DateTime!
+	id: ID!
+	name: String!
+	redirectUris: [String!]!
+}
+
+type OAuthRedirect implements Receipt{
+	_receipt: Boolean!
+	redirectUrl: String!
+}
+
+type PageInfo {
+	hasMore: Boolean!
+	page: Int!
+	pageSize: Int!
+}
+
+input PageInput {
+	page: Int!
+	pageSize: Int!
+}
+
+type PermissionInfo {
+	entityTargeted: Boolean!
+	key: String!
+	level: String!
+}
+
+type Query {
+	accessGroupMembers: [AccessGroupMember!]!
+	accessGroups: [AccessGroup!]!
+	aiTurn(
+		id: ID!
+	): AiTurn
+	apiSchema(
+		revisionId: ID!
+	): String!
+	appTenant(
+		id: ID!
+	): AppTenant
+	appTenants(
+		page: PageInput!
+	): AppTenantPage!
+	application(
+		id: ID!
+	): Application
+	applications(
+		page: PageInput!
+	): ApplicationPage!
+	client(
+		id: ID!
+	): Client
+	clients(
+		page: PageInput!
+	): ClientPage!
+	constraints(
+		entityId: ID!
+		page: PageInput!
+	): ConstraintPage!
+	conversation(
+		id: ID!
+	): Conversation
+	conversations(
+		page: PageInput!
+	): ConversationPage!
+	entities(
+		page: PageInput!
+	): EntityPage!
+	fields(
+		entityId: ID!
+		page: PageInput!
+	): FieldPage!
+	groupRoleAssignments: [GroupRoleAssignment!]!
+	invitations(
+		page: PageInput!
+	): ApplicationInvitationPage!
+	me: User
+	members(
+		appTenantId: ID
+		page: PageInput!
+	): TenantMemberPage!
+	modelRevisions(
+		page: PageInput!
+	): ModelRevisionPage!
+	myPermissions(
+		applicationWide: Boolean
+	): [HeldPermission!]!
+	myTenants: [TenantOption!]!
+	oauthAuthorizationRequest(
+		clientId: ID!
+		redirectUri: String!
+	): OAuthAuthorizationRequest!
+	oauthClients: [OAuthClient!]!
+	permissionCatalog: [PermissionInfo!]!
+	platformGrants(
+		userId: ID!
+	): [String!]!
+	recordAccess(
+		recordId: ID!
+	): RecordAccess!
+	recordAccessExplanation(
+		recordId: ID!
+		userId: ID!
+	): RecordAccessExplanation!
+	recordHistory(
+		entityId: ID!
+		page: PageInput!
+		recordId: ID!
+	): RecordVersionPage!
+	records(
+		entityId: ID!
+		page: PageInput!
+	): RecordPage!
+	referencingFields(
+		entityId: ID!
+	): [Field!]!
+	roleAssignments(
+		userId: ID
+	): [RoleAssignment!]!
+	roles: [Role!]!
+	users(
+		page: PageInput!
+	): UserPage!
+}
+
+type RealtimeTicket implements Receipt{
+	_receipt: Boolean!
+	expiresAt: DateTime!
+	secret: String!
+	url: String!
+}
+
+"""
+Marks a mutation result that invalidates no cached list: it changes no data a list holds, or the client discards its cache after it.
+"""
+interface Receipt {
+"""
+Marks a mutation result that invalidates no cached list: it changes no data a list holds, or the client discards its cache after it.
+"""
+	_receipt: Boolean!
+}
+
+type Record {
+	createdAt: DateTime!
+	data: JSON!
+	entity: Entity!
+	id: ID!
+	updatedAt: DateTime!
+}
+
+type RecordAccess {
+	recordId: ID!
+	rootRecordId: ID
+	shares: [RecordShare!]!
+	targets: [ShareTarget!]!
+}
+
+type RecordAccessExplanation {
+	level: Int!
+	recordId: ID!
+	sources: [RecordAccessSource!]!
+	summary: String!
+	userId: ID!
+}
+
+enum RecordAccessLevel {
+	edit
+	manage
+	view
+}
+
+type RecordAccessSource {
+	applicationWide: Boolean
+	groupName: String
+	kind: RecordAccessSourceKind!
+	level: Int!
+	permission: String
+	reason: String!
+	roleName: String
+	viaParentRecordId: ID
+}
+
+enum RecordAccessSourceKind {
+	client_grant
+	group_role
+	platform_grant
+	role
+	share_everyone
+	share_group
+	share_user
+}
+
+type RecordPage {
+	items: [Record!]!
+	pageInfo: PageInfo!
+}
+
+type RecordShare implements AccessGrant{
+	_accessGrant: Boolean!
+	createdAt: DateTime!
+	grantedBy: ID!
+	id: ID!
+	level: RecordAccessLevel!
+	principalId: ID
+	principalName: String
+	principalType: SharePrincipalType!
+	recordId: ID!
+}
+
+type RecordVersion {
+	current: Boolean!
+	data: JSON!
+	id: ID!
+	retiredAt: DateTime
+	versionedAt: DateTime!
+}
+
+type RecordVersionPage {
+	items: [RecordVersion!]!
+	pageInfo: PageInfo!
+}
+
+input RemoveMemberInput {
+	id: ID!
+}
+
+input RequestSignInInput {
+	email: String!
+	returnTo: String
+}
+
+input ResendInvitationInput {
+	invitationId: ID!
+}
+
+input RetireRecordInput {
+	entityId: ID!
+	recordId: ID!
+}
+
+type Role implements AccessGrant{
+	_accessGrant: Boolean!
+	appTenant: AppTenant
+	id: ID!
+	key: String!
+	name: String!
+	permissions: [RolePermission!]!
+}
+
+type RoleAssignment implements AccessGrant{
+	_accessGrant: Boolean!
+	appTenant: AppTenant
+	id: ID!
+	role: Role
+	user: User
+}
+
+type RolePermission {
+	entityId: ID
+	permission: String!
+}
+
+input RolePermissionInput {
+	entityId: ID
+	permission: String!
+}
+
+input SendPromptInput {
+	conversationId: ID!
+	text: String!
+}
+
+enum SharePrincipalType {
+	everyone
+	group
+	user
+}
+
+input ShareRecordInput {
+	level: RecordAccessLevel!
+	principalId: ID
+	principalType: SharePrincipalType!
+	recordId: ID!
+}
+
+type ShareTarget {
+	name: String!
+	principalId: ID!
+	principalType: SharePrincipalType!
+}
+
+input SignInInput {
+	token: String!
+}
+
+input StartConversationInput {
+	title: String
+}
+
+type TenantMember implements AccessGrant{
+	_accessGrant: Boolean!
+	appTenant: AppTenant
+	createdAt: DateTime!
+	id: ID!
+	updatedAt: DateTime!
+	user: User!
+}
+
+type TenantMemberPage {
+	items: [TenantMember!]!
+	pageInfo: PageInfo!
+}
+
+type TenantOption {
+	appTenantId: ID
+	applicationId: ID
+	client: Client!
+}
+
+type TurnStep {
+	aiTurn: AiTurn!
+	id: ID!
+	kind: TurnStepKind!
+	occurredAt: DateTime!
+	revision: Int!
+	sequence: Int!
+	text: String
+	tool: String
+}
+
+enum TurnStepKind {
+	reply
+	thinking
+	toolCall
+}
+
+input UnshareRecordInput {
+	principalId: ID
+	principalType: SharePrincipalType!
+	recordId: ID!
+}
+
+input UpdateAppTenantInput {
+	id: ID!
+	name: String!
+}
+
+input UpdateApplicationInput {
+	id: ID!
+	name: String!
+}
+
+input UpdateClientInput {
+	id: ID!
+	name: String!
+}
+
+input UpdateEntityInput {
+	entityId: ID!
+	graphqlPluralName: String
+	graphqlTypeName: String
+	managed: Boolean
+	name: String
+}
+
+input UpdateFieldInput {
+	enumValues: [String!]
+	fieldId: ID!
+	graphqlFieldName: String
+	isParent: Boolean
+	name: String
+	referencesEntityId: ID
+	relatedFieldId: ID
+	required: Boolean
+	type: String
+}
+
+input UpdateOAuthClientInput {
+	id: ID!
+	name: String!
+	redirectUris: [String!]!
+}
+
+input UpdateRecordInput {
+	clearFieldIds: [ID!]
+	data: JSON!
+	entityId: ID!
+	recordId: ID!
+}
+
+input UpdateRoleInput {
+	id: ID!
+	name: String
+	permissions: [RolePermissionInput!]
+}
+
+input UpdateUserInput {
+	email: String!
+	id: ID!
+	name: String
+}
+
+type User {
+	appTenant: AppTenant
+	application: Application
+	client: Client
+	createdAt: DateTime!
+	email: String!
+	id: ID!
+	name: String
+	updatedAt: DateTime!
+}
+
+type UserPage {
+	items: [User!]!
+	pageInfo: PageInfo!
+}
+
+

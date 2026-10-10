@@ -223,6 +223,7 @@ input CreateFieldInput {
 	isParent: Boolean
 	name: String
 	referencesEntityId: ID
+	relatedFieldId: ID
 	required: Boolean
 	type: String!
 }
@@ -300,6 +301,7 @@ type Field {
 	isParent: Boolean!
 	name: String
 	referencesEntity: Entity
+	relatedField: Field
 	required: Boolean!
 	type: String!
 	updatedAt: DateTime!
@@ -648,6 +650,9 @@ type Query {
 		entityId: ID!
 		page: PageInput!
 	): RecordPage!
+	referencingFields(
+		entityId: ID!
+	): [Field!]!
 	roleAssignments(
 		userId: ID
 	): [RoleAssignment!]!
@@ -904,6 +909,7 @@ input UpdateFieldInput {
 	isParent: Boolean
 	name: String
 	referencesEntityId: ID
+	relatedFieldId: ID
 	required: Boolean
 	type: String
 }

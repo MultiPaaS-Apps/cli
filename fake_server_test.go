@@ -34,6 +34,7 @@ type fakeMultiPaaS struct {
 	scopedApps   map[string]fakeRow     // app-tenant id -> its app
 	scopes       []string               // X-MultiPaaS-Scope per GraphQL request ("" when absent)
 	refused      map[string]bool        // client ids myTenants lists but the scope check refuses
+	nameless     bool                   // the signed-in user has no name
 	hangToken    bool                   // the token endpoint never answers
 	redirectTo   string                 // the token endpoint answers 307 to this URL
 	failRevoke   bool                   // the revoke endpoint answers HTTP 500
@@ -213,7 +214,11 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 	parts := strings.Split(scope, "/")
 	switch operation {
 	case "Me":
-		writeData(w, map[string]any{"me": map[string]any{"id": "user-1", "email": "dev@example.com", "name": "Dev"}})
+		var name any = "Dev"
+		if f.nameless {
+			name = nil
+		}
+		writeData(w, map[string]any{"me": map[string]any{"id": "user-1", "email": "dev@example.com", "name": name}})
 	case "MyTenants":
 		options := []map[string]any{}
 		for _, e := range f.entitlements {

@@ -214,6 +214,19 @@ func TestARequestTheServerNeverAnswersTimesOut(t *testing.T) {
 	}
 }
 
+func TestAUserWithoutANameIsReportedWithANullName(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.nameless = true
+	got := fake.run(t, "whoami", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"user":{"id":"user-1","email":"dev@example.com","name":null}}` {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	fake.nameless = false
+	if named := fake.run(t, "whoami", "--json"); compact(named.stdout) != `{"user":{"id":"user-1","email":"dev@example.com","name":"Dev"}}` {
+		t.Fatalf("a named user: %s", named.stdout)
+	}
+}
+
 func TestARedirectIsNeverFollowed(t *testing.T) {
 	fake := signedInFake(t, expired)
 	var received atomic.Int32

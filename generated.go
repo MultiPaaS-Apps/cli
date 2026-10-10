@@ -100,9 +100,9 @@ func (v *ApplicationsResponse) GetApplications() ApplicationsApplicationsApplica
 
 // MeMeUser includes the requested fields of the GraphQL type User.
 type MeMeUser struct {
-	Id    string `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	Id    string  `json:"id"`
+	Email string  `json:"email"`
+	Name  *string `json:"name"`
 }
 
 // GetId returns MeMeUser.Id, and is useful for accessing the field via an interface.
@@ -112,7 +112,7 @@ func (v *MeMeUser) GetId() string { return v.Id }
 func (v *MeMeUser) GetEmail() string { return v.Email }
 
 // GetName returns MeMeUser.Name, and is useful for accessing the field via an interface.
-func (v *MeMeUser) GetName() string { return v.Name }
+func (v *MeMeUser) GetName() *string { return v.Name }
 
 // MeResponse is returned by Me on success.
 type MeResponse struct {

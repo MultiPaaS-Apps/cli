@@ -20,8 +20,14 @@ multipaas login                        # opens your browser
 multipaas whoami
 multipaas apps list
 multipaas tenants list --app <app id>
+multipaas model show --app <app id>
+multipaas entity create --app <app id> --name Order
+multipaas field add --app <app id> --entity <entity id> --type text --name Title --required
+multipaas constraint add --app <app id> --entity <entity id> --fields <field id>,<field id>
 multipaas logout
 ```
+
+The model commands are `model show`, `entity create|update|retire`, `field add|update|retire` and `constraint add|retire`; `--help` on each lists its flags. Each change prints the changed entity, field or constraint and `apiVersion`: the API version the model is at after the change.
 
 Every command takes `--json`, which prints exactly one JSON document on stdout.
 

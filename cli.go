@@ -48,7 +48,7 @@ func run(args []string, env environment) int {
 	}
 	root.PersistentFlags().BoolVar(&asJSON, "json", false, "print exactly one JSON document on stdout")
 
-	command := func(use, short string, do func(context.Context, *session) (any, func(io.Writer), error)) *cobra.Command {
+	var command commandFunc = func(use, short string, do func(context.Context, *session) (any, func(io.Writer), error)) *cobra.Command {
 		return &cobra.Command{
 			Use:   use,
 			Short: short,
@@ -110,6 +110,7 @@ func run(args []string, env environment) int {
 	_ = tenantsList.MarkFlagRequired("app")
 	tenants.AddCommand(tenantsList)
 	root.AddCommand(apps, tenants)
+	root.AddCommand(modelCommands(command)...)
 
 	root.SetArgs(args)
 	root.SetOut(env.stdout)

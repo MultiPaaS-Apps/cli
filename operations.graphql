@@ -54,3 +54,136 @@ query ScopedAppTenant {
     }
   }
 }
+
+fragment EntityParts on Entity {
+  id
+  name
+  graphqlTypeName
+  graphqlPluralName
+  managed
+}
+
+fragment FieldParts on Field {
+  id
+  entity {
+    id
+  }
+  # @genqlient(pointer: true)
+  name
+  graphqlFieldName
+  type
+  required
+  enumValues
+  isLifecycle
+  isParent
+  # @genqlient(pointer: true)
+  referencesEntity {
+    id
+  }
+  # @genqlient(pointer: true)
+  relatedField {
+    id
+  }
+}
+
+fragment ConstraintParts on Constraint {
+  id
+  entity {
+    id
+  }
+  kind
+  fields(page: {page: 0, pageSize: 100}) {
+    items {
+      id
+    }
+  }
+}
+
+query Entities($page: PageInput!) {
+  entities(page: $page) {
+    items {
+      ...EntityParts
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query Fields($entityId: ID!, $page: PageInput!) {
+  fields(entityId: $entityId, page: $page) {
+    items {
+      ...FieldParts
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query Constraints($entityId: ID!, $page: PageInput!) {
+  constraints(entityId: $entityId, page: $page) {
+    items {
+      ...ConstraintParts
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query LatestModelRevision {
+  modelRevisions(page: {page: 0, pageSize: 1}) {
+    items {
+      id
+    }
+  }
+}
+
+mutation CreateEntity($input: CreateEntityInput!) {
+  createEntity(input: $input) {
+    ...EntityParts
+  }
+}
+
+mutation UpdateEntity($input: UpdateEntityInput!) {
+  updateEntity(input: $input) {
+    ...EntityParts
+  }
+}
+
+mutation RetireEntity($entityId: ID!) {
+  retireEntity(entityId: $entityId) {
+    ...EntityParts
+  }
+}
+
+mutation CreateField($input: CreateFieldInput!) {
+  createField(input: $input) {
+    ...FieldParts
+  }
+}
+
+mutation UpdateField($input: UpdateFieldInput!) {
+  updateField(input: $input) {
+    ...FieldParts
+  }
+}
+
+mutation RetireField($fieldId: ID!) {
+  retireField(fieldId: $fieldId) {
+    ...FieldParts
+  }
+}
+
+mutation CreateConstraint($input: CreateConstraintInput!) {
+  createConstraint(input: $input) {
+    ...ConstraintParts
+  }
+}
+
+mutation RetireConstraint($constraintId: ID!) {
+  retireConstraint(constraintId: $constraintId) {
+    ...ConstraintParts
+  }
+}

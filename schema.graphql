@@ -122,7 +122,7 @@ type ApplicationPage {
 }
 
 input ApproveOAuthAuthorizationInput {
-	appTenantId: ID!
+	appTenantId: ID
 	clientId: ID!
 	codeChallenge: String!
 	redirectUri: String!
@@ -532,7 +532,7 @@ type OAuthAppTenantOption {
 
 type OAuthAuthorizationRequest {
 	appTenants: [OAuthAppTenantOption!]!
-	applicationName: String!
+	applicationName: String
 	clientName: String!
 }
 
@@ -716,6 +716,7 @@ type RecordAccessSource {
 	permission: String
 	reason: String!
 	roleName: String
+	viaParentEntityName: String
 	viaParentRecordId: ID
 }
 

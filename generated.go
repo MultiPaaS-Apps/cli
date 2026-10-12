@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/Khan/genqlient/graphql"
 )
@@ -98,6 +99,842 @@ func (v *ApplicationsResponse) GetApplications() ApplicationsApplicationsApplica
 	return v.Applications
 }
 
+// ConstraintParts includes the GraphQL fields of Constraint requested by the fragment ConstraintParts.
+type ConstraintParts struct {
+	Id     string                         `json:"id"`
+	Entity ConstraintPartsEntity          `json:"entity"`
+	Kind   string                         `json:"kind"`
+	Fields ConstraintPartsFieldsFieldPage `json:"fields"`
+}
+
+// GetId returns ConstraintParts.Id, and is useful for accessing the field via an interface.
+func (v *ConstraintParts) GetId() string { return v.Id }
+
+// GetEntity returns ConstraintParts.Entity, and is useful for accessing the field via an interface.
+func (v *ConstraintParts) GetEntity() ConstraintPartsEntity { return v.Entity }
+
+// GetKind returns ConstraintParts.Kind, and is useful for accessing the field via an interface.
+func (v *ConstraintParts) GetKind() string { return v.Kind }
+
+// GetFields returns ConstraintParts.Fields, and is useful for accessing the field via an interface.
+func (v *ConstraintParts) GetFields() ConstraintPartsFieldsFieldPage { return v.Fields }
+
+// ConstraintPartsEntity includes the requested fields of the GraphQL type Entity.
+type ConstraintPartsEntity struct {
+	Id string `json:"id"`
+}
+
+// GetId returns ConstraintPartsEntity.Id, and is useful for accessing the field via an interface.
+func (v *ConstraintPartsEntity) GetId() string { return v.Id }
+
+// ConstraintPartsFieldsFieldPage includes the requested fields of the GraphQL type FieldPage.
+type ConstraintPartsFieldsFieldPage struct {
+	Items []ConstraintPartsFieldsFieldPageItemsField `json:"items"`
+}
+
+// GetItems returns ConstraintPartsFieldsFieldPage.Items, and is useful for accessing the field via an interface.
+func (v *ConstraintPartsFieldsFieldPage) GetItems() []ConstraintPartsFieldsFieldPageItemsField {
+	return v.Items
+}
+
+// ConstraintPartsFieldsFieldPageItemsField includes the requested fields of the GraphQL type Field.
+type ConstraintPartsFieldsFieldPageItemsField struct {
+	Id string `json:"id"`
+}
+
+// GetId returns ConstraintPartsFieldsFieldPageItemsField.Id, and is useful for accessing the field via an interface.
+func (v *ConstraintPartsFieldsFieldPageItemsField) GetId() string { return v.Id }
+
+// ConstraintsConstraintsConstraintPage includes the requested fields of the GraphQL type ConstraintPage.
+type ConstraintsConstraintsConstraintPage struct {
+	Items    []ConstraintsConstraintsConstraintPageItemsConstraint `json:"items"`
+	PageInfo ConstraintsConstraintsConstraintPagePageInfo          `json:"pageInfo"`
+}
+
+// GetItems returns ConstraintsConstraintsConstraintPage.Items, and is useful for accessing the field via an interface.
+func (v *ConstraintsConstraintsConstraintPage) GetItems() []ConstraintsConstraintsConstraintPageItemsConstraint {
+	return v.Items
+}
+
+// GetPageInfo returns ConstraintsConstraintsConstraintPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *ConstraintsConstraintsConstraintPage) GetPageInfo() ConstraintsConstraintsConstraintPagePageInfo {
+	return v.PageInfo
+}
+
+// ConstraintsConstraintsConstraintPageItemsConstraint includes the requested fields of the GraphQL type Constraint.
+type ConstraintsConstraintsConstraintPageItemsConstraint struct {
+	ConstraintParts `json:"-"`
+}
+
+// GetId returns ConstraintsConstraintsConstraintPageItemsConstraint.Id, and is useful for accessing the field via an interface.
+func (v *ConstraintsConstraintsConstraintPageItemsConstraint) GetId() string {
+	return v.ConstraintParts.Id
+}
+
+// GetEntity returns ConstraintsConstraintsConstraintPageItemsConstraint.Entity, and is useful for accessing the field via an interface.
+func (v *ConstraintsConstraintsConstraintPageItemsConstraint) GetEntity() ConstraintPartsEntity {
+	return v.ConstraintParts.Entity
+}
+
+// GetKind returns ConstraintsConstraintsConstraintPageItemsConstraint.Kind, and is useful for accessing the field via an interface.
+func (v *ConstraintsConstraintsConstraintPageItemsConstraint) GetKind() string {
+	return v.ConstraintParts.Kind
+}
+
+// GetFields returns ConstraintsConstraintsConstraintPageItemsConstraint.Fields, and is useful for accessing the field via an interface.
+func (v *ConstraintsConstraintsConstraintPageItemsConstraint) GetFields() ConstraintPartsFieldsFieldPage {
+	return v.ConstraintParts.Fields
+}
+
+func (v *ConstraintsConstraintsConstraintPageItemsConstraint) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ConstraintsConstraintsConstraintPageItemsConstraint
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ConstraintsConstraintsConstraintPageItemsConstraint = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.ConstraintParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalConstraintsConstraintsConstraintPageItemsConstraint struct {
+	Id string `json:"id"`
+
+	Entity ConstraintPartsEntity `json:"entity"`
+
+	Kind string `json:"kind"`
+
+	Fields ConstraintPartsFieldsFieldPage `json:"fields"`
+}
+
+func (v *ConstraintsConstraintsConstraintPageItemsConstraint) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ConstraintsConstraintsConstraintPageItemsConstraint) __premarshalJSON() (*__premarshalConstraintsConstraintsConstraintPageItemsConstraint, error) {
+	var retval __premarshalConstraintsConstraintsConstraintPageItemsConstraint
+
+	retval.Id = v.ConstraintParts.Id
+	retval.Entity = v.ConstraintParts.Entity
+	retval.Kind = v.ConstraintParts.Kind
+	retval.Fields = v.ConstraintParts.Fields
+	return &retval, nil
+}
+
+// ConstraintsConstraintsConstraintPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type ConstraintsConstraintsConstraintPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns ConstraintsConstraintsConstraintPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *ConstraintsConstraintsConstraintPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// ConstraintsResponse is returned by Constraints on success.
+type ConstraintsResponse struct {
+	Constraints ConstraintsConstraintsConstraintPage `json:"constraints"`
+}
+
+// GetConstraints returns ConstraintsResponse.Constraints, and is useful for accessing the field via an interface.
+func (v *ConstraintsResponse) GetConstraints() ConstraintsConstraintsConstraintPage {
+	return v.Constraints
+}
+
+// CreateConstraintCreateConstraint includes the requested fields of the GraphQL type Constraint.
+type CreateConstraintCreateConstraint struct {
+	ConstraintParts `json:"-"`
+}
+
+// GetId returns CreateConstraintCreateConstraint.Id, and is useful for accessing the field via an interface.
+func (v *CreateConstraintCreateConstraint) GetId() string { return v.ConstraintParts.Id }
+
+// GetEntity returns CreateConstraintCreateConstraint.Entity, and is useful for accessing the field via an interface.
+func (v *CreateConstraintCreateConstraint) GetEntity() ConstraintPartsEntity {
+	return v.ConstraintParts.Entity
+}
+
+// GetKind returns CreateConstraintCreateConstraint.Kind, and is useful for accessing the field via an interface.
+func (v *CreateConstraintCreateConstraint) GetKind() string { return v.ConstraintParts.Kind }
+
+// GetFields returns CreateConstraintCreateConstraint.Fields, and is useful for accessing the field via an interface.
+func (v *CreateConstraintCreateConstraint) GetFields() ConstraintPartsFieldsFieldPage {
+	return v.ConstraintParts.Fields
+}
+
+func (v *CreateConstraintCreateConstraint) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateConstraintCreateConstraint
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateConstraintCreateConstraint = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.ConstraintParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateConstraintCreateConstraint struct {
+	Id string `json:"id"`
+
+	Entity ConstraintPartsEntity `json:"entity"`
+
+	Kind string `json:"kind"`
+
+	Fields ConstraintPartsFieldsFieldPage `json:"fields"`
+}
+
+func (v *CreateConstraintCreateConstraint) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateConstraintCreateConstraint) __premarshalJSON() (*__premarshalCreateConstraintCreateConstraint, error) {
+	var retval __premarshalCreateConstraintCreateConstraint
+
+	retval.Id = v.ConstraintParts.Id
+	retval.Entity = v.ConstraintParts.Entity
+	retval.Kind = v.ConstraintParts.Kind
+	retval.Fields = v.ConstraintParts.Fields
+	return &retval, nil
+}
+
+// CreateConstraintResponse is returned by CreateConstraint on success.
+type CreateConstraintResponse struct {
+	CreateConstraint CreateConstraintCreateConstraint `json:"createConstraint"`
+}
+
+// GetCreateConstraint returns CreateConstraintResponse.CreateConstraint, and is useful for accessing the field via an interface.
+func (v *CreateConstraintResponse) GetCreateConstraint() CreateConstraintCreateConstraint {
+	return v.CreateConstraint
+}
+
+// CreateEntityCreateEntity includes the requested fields of the GraphQL type Entity.
+type CreateEntityCreateEntity struct {
+	EntityParts `json:"-"`
+}
+
+// GetId returns CreateEntityCreateEntity.Id, and is useful for accessing the field via an interface.
+func (v *CreateEntityCreateEntity) GetId() string { return v.EntityParts.Id }
+
+// GetName returns CreateEntityCreateEntity.Name, and is useful for accessing the field via an interface.
+func (v *CreateEntityCreateEntity) GetName() string { return v.EntityParts.Name }
+
+// GetGraphqlTypeName returns CreateEntityCreateEntity.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *CreateEntityCreateEntity) GetGraphqlTypeName() string { return v.EntityParts.GraphqlTypeName }
+
+// GetGraphqlPluralName returns CreateEntityCreateEntity.GraphqlPluralName, and is useful for accessing the field via an interface.
+func (v *CreateEntityCreateEntity) GetGraphqlPluralName() string {
+	return v.EntityParts.GraphqlPluralName
+}
+
+// GetManaged returns CreateEntityCreateEntity.Managed, and is useful for accessing the field via an interface.
+func (v *CreateEntityCreateEntity) GetManaged() bool { return v.EntityParts.Managed }
+
+func (v *CreateEntityCreateEntity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateEntityCreateEntity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateEntityCreateEntity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EntityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateEntityCreateEntity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	GraphqlPluralName string `json:"graphqlPluralName"`
+
+	Managed bool `json:"managed"`
+}
+
+func (v *CreateEntityCreateEntity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateEntityCreateEntity) __premarshalJSON() (*__premarshalCreateEntityCreateEntity, error) {
+	var retval __premarshalCreateEntityCreateEntity
+
+	retval.Id = v.EntityParts.Id
+	retval.Name = v.EntityParts.Name
+	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
+	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
+	retval.Managed = v.EntityParts.Managed
+	return &retval, nil
+}
+
+// CreateEntityResponse is returned by CreateEntity on success.
+type CreateEntityResponse struct {
+	CreateEntity CreateEntityCreateEntity `json:"createEntity"`
+}
+
+// GetCreateEntity returns CreateEntityResponse.CreateEntity, and is useful for accessing the field via an interface.
+func (v *CreateEntityResponse) GetCreateEntity() CreateEntityCreateEntity { return v.CreateEntity }
+
+// CreateFieldCreateField includes the requested fields of the GraphQL type Field.
+type CreateFieldCreateField struct {
+	FieldParts `json:"-"`
+}
+
+// GetId returns CreateFieldCreateField.Id, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetId() string { return v.FieldParts.Id }
+
+// GetEntity returns CreateFieldCreateField.Entity, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetEntity() FieldPartsEntity { return v.FieldParts.Entity }
+
+// GetName returns CreateFieldCreateField.Name, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetName() *string { return v.FieldParts.Name }
+
+// GetGraphqlFieldName returns CreateFieldCreateField.GraphqlFieldName, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetType returns CreateFieldCreateField.Type, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetType() string { return v.FieldParts.Type }
+
+// GetRequired returns CreateFieldCreateField.Required, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetRequired() bool { return v.FieldParts.Required }
+
+// GetEnumValues returns CreateFieldCreateField.EnumValues, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetIsLifecycle returns CreateFieldCreateField.IsLifecycle, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
+
+// GetIsParent returns CreateFieldCreateField.IsParent, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetIsParent() bool { return v.FieldParts.IsParent }
+
+// GetReferencesEntity returns CreateFieldCreateField.ReferencesEntity, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetReferencesEntity() *FieldPartsReferencesEntity {
+	return v.FieldParts.ReferencesEntity
+}
+
+// GetRelatedField returns CreateFieldCreateField.RelatedField, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetRelatedField() *FieldPartsRelatedField {
+	return v.FieldParts.RelatedField
+}
+
+func (v *CreateFieldCreateField) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateFieldCreateField
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateFieldCreateField = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FieldParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateFieldCreateField struct {
+	Id string `json:"id"`
+
+	Entity FieldPartsEntity `json:"entity"`
+
+	Name *string `json:"name"`
+
+	GraphqlFieldName string `json:"graphqlFieldName"`
+
+	Type string `json:"type"`
+
+	Required bool `json:"required"`
+
+	EnumValues []string `json:"enumValues"`
+
+	IsLifecycle bool `json:"isLifecycle"`
+
+	IsParent bool `json:"isParent"`
+
+	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
+
+	RelatedField *FieldPartsRelatedField `json:"relatedField"`
+}
+
+func (v *CreateFieldCreateField) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateFieldCreateField) __premarshalJSON() (*__premarshalCreateFieldCreateField, error) {
+	var retval __premarshalCreateFieldCreateField
+
+	retval.Id = v.FieldParts.Id
+	retval.Entity = v.FieldParts.Entity
+	retval.Name = v.FieldParts.Name
+	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Type = v.FieldParts.Type
+	retval.Required = v.FieldParts.Required
+	retval.EnumValues = v.FieldParts.EnumValues
+	retval.IsLifecycle = v.FieldParts.IsLifecycle
+	retval.IsParent = v.FieldParts.IsParent
+	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
+	retval.RelatedField = v.FieldParts.RelatedField
+	return &retval, nil
+}
+
+// CreateFieldResponse is returned by CreateField on success.
+type CreateFieldResponse struct {
+	CreateField CreateFieldCreateField `json:"createField"`
+}
+
+// GetCreateField returns CreateFieldResponse.CreateField, and is useful for accessing the field via an interface.
+func (v *CreateFieldResponse) GetCreateField() CreateFieldCreateField { return v.CreateField }
+
+// EntitiesEntitiesEntityPage includes the requested fields of the GraphQL type EntityPage.
+type EntitiesEntitiesEntityPage struct {
+	Items    []EntitiesEntitiesEntityPageItemsEntity `json:"items"`
+	PageInfo EntitiesEntitiesEntityPagePageInfo      `json:"pageInfo"`
+}
+
+// GetItems returns EntitiesEntitiesEntityPage.Items, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPage) GetItems() []EntitiesEntitiesEntityPageItemsEntity {
+	return v.Items
+}
+
+// GetPageInfo returns EntitiesEntitiesEntityPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPage) GetPageInfo() EntitiesEntitiesEntityPagePageInfo {
+	return v.PageInfo
+}
+
+// EntitiesEntitiesEntityPageItemsEntity includes the requested fields of the GraphQL type Entity.
+type EntitiesEntitiesEntityPageItemsEntity struct {
+	EntityParts `json:"-"`
+}
+
+// GetId returns EntitiesEntitiesEntityPageItemsEntity.Id, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPageItemsEntity) GetId() string { return v.EntityParts.Id }
+
+// GetName returns EntitiesEntitiesEntityPageItemsEntity.Name, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPageItemsEntity) GetName() string { return v.EntityParts.Name }
+
+// GetGraphqlTypeName returns EntitiesEntitiesEntityPageItemsEntity.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPageItemsEntity) GetGraphqlTypeName() string {
+	return v.EntityParts.GraphqlTypeName
+}
+
+// GetGraphqlPluralName returns EntitiesEntitiesEntityPageItemsEntity.GraphqlPluralName, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPageItemsEntity) GetGraphqlPluralName() string {
+	return v.EntityParts.GraphqlPluralName
+}
+
+// GetManaged returns EntitiesEntitiesEntityPageItemsEntity.Managed, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPageItemsEntity) GetManaged() bool { return v.EntityParts.Managed }
+
+func (v *EntitiesEntitiesEntityPageItemsEntity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*EntitiesEntitiesEntityPageItemsEntity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.EntitiesEntitiesEntityPageItemsEntity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EntityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalEntitiesEntitiesEntityPageItemsEntity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	GraphqlPluralName string `json:"graphqlPluralName"`
+
+	Managed bool `json:"managed"`
+}
+
+func (v *EntitiesEntitiesEntityPageItemsEntity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *EntitiesEntitiesEntityPageItemsEntity) __premarshalJSON() (*__premarshalEntitiesEntitiesEntityPageItemsEntity, error) {
+	var retval __premarshalEntitiesEntitiesEntityPageItemsEntity
+
+	retval.Id = v.EntityParts.Id
+	retval.Name = v.EntityParts.Name
+	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
+	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
+	retval.Managed = v.EntityParts.Managed
+	return &retval, nil
+}
+
+// EntitiesEntitiesEntityPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type EntitiesEntitiesEntityPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns EntitiesEntitiesEntityPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// EntitiesResponse is returned by Entities on success.
+type EntitiesResponse struct {
+	Entities EntitiesEntitiesEntityPage `json:"entities"`
+}
+
+// GetEntities returns EntitiesResponse.Entities, and is useful for accessing the field via an interface.
+func (v *EntitiesResponse) GetEntities() EntitiesEntitiesEntityPage { return v.Entities }
+
+// EntityParts includes the GraphQL fields of Entity requested by the fragment EntityParts.
+type EntityParts struct {
+	Id                string `json:"id"`
+	Name              string `json:"name"`
+	GraphqlTypeName   string `json:"graphqlTypeName"`
+	GraphqlPluralName string `json:"graphqlPluralName"`
+	Managed           bool   `json:"managed"`
+}
+
+// GetId returns EntityParts.Id, and is useful for accessing the field via an interface.
+func (v *EntityParts) GetId() string { return v.Id }
+
+// GetName returns EntityParts.Name, and is useful for accessing the field via an interface.
+func (v *EntityParts) GetName() string { return v.Name }
+
+// GetGraphqlTypeName returns EntityParts.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *EntityParts) GetGraphqlTypeName() string { return v.GraphqlTypeName }
+
+// GetGraphqlPluralName returns EntityParts.GraphqlPluralName, and is useful for accessing the field via an interface.
+func (v *EntityParts) GetGraphqlPluralName() string { return v.GraphqlPluralName }
+
+// GetManaged returns EntityParts.Managed, and is useful for accessing the field via an interface.
+func (v *EntityParts) GetManaged() bool { return v.Managed }
+
+// FieldParts includes the GraphQL fields of Field requested by the fragment FieldParts.
+type FieldParts struct {
+	Id               string                      `json:"id"`
+	Entity           FieldPartsEntity            `json:"entity"`
+	Name             *string                     `json:"name"`
+	GraphqlFieldName string                      `json:"graphqlFieldName"`
+	Type             string                      `json:"type"`
+	Required         bool                        `json:"required"`
+	EnumValues       []string                    `json:"enumValues"`
+	IsLifecycle      bool                        `json:"isLifecycle"`
+	IsParent         bool                        `json:"isParent"`
+	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
+	RelatedField     *FieldPartsRelatedField     `json:"relatedField"`
+}
+
+// GetId returns FieldParts.Id, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetId() string { return v.Id }
+
+// GetEntity returns FieldParts.Entity, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetEntity() FieldPartsEntity { return v.Entity }
+
+// GetName returns FieldParts.Name, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetName() *string { return v.Name }
+
+// GetGraphqlFieldName returns FieldParts.GraphqlFieldName, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetGraphqlFieldName() string { return v.GraphqlFieldName }
+
+// GetType returns FieldParts.Type, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetType() string { return v.Type }
+
+// GetRequired returns FieldParts.Required, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetRequired() bool { return v.Required }
+
+// GetEnumValues returns FieldParts.EnumValues, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetEnumValues() []string { return v.EnumValues }
+
+// GetIsLifecycle returns FieldParts.IsLifecycle, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetIsLifecycle() bool { return v.IsLifecycle }
+
+// GetIsParent returns FieldParts.IsParent, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetIsParent() bool { return v.IsParent }
+
+// GetReferencesEntity returns FieldParts.ReferencesEntity, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetReferencesEntity() *FieldPartsReferencesEntity { return v.ReferencesEntity }
+
+// GetRelatedField returns FieldParts.RelatedField, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetRelatedField() *FieldPartsRelatedField { return v.RelatedField }
+
+// FieldPartsEntity includes the requested fields of the GraphQL type Entity.
+type FieldPartsEntity struct {
+	Id string `json:"id"`
+}
+
+// GetId returns FieldPartsEntity.Id, and is useful for accessing the field via an interface.
+func (v *FieldPartsEntity) GetId() string { return v.Id }
+
+// FieldPartsReferencesEntity includes the requested fields of the GraphQL type Entity.
+type FieldPartsReferencesEntity struct {
+	Id string `json:"id"`
+}
+
+// GetId returns FieldPartsReferencesEntity.Id, and is useful for accessing the field via an interface.
+func (v *FieldPartsReferencesEntity) GetId() string { return v.Id }
+
+// FieldPartsRelatedField includes the requested fields of the GraphQL type Field.
+type FieldPartsRelatedField struct {
+	Id string `json:"id"`
+}
+
+// GetId returns FieldPartsRelatedField.Id, and is useful for accessing the field via an interface.
+func (v *FieldPartsRelatedField) GetId() string { return v.Id }
+
+// FieldsFieldsFieldPage includes the requested fields of the GraphQL type FieldPage.
+type FieldsFieldsFieldPage struct {
+	Items    []FieldsFieldsFieldPageItemsField `json:"items"`
+	PageInfo FieldsFieldsFieldPagePageInfo     `json:"pageInfo"`
+}
+
+// GetItems returns FieldsFieldsFieldPage.Items, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPage) GetItems() []FieldsFieldsFieldPageItemsField { return v.Items }
+
+// GetPageInfo returns FieldsFieldsFieldPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPage) GetPageInfo() FieldsFieldsFieldPagePageInfo { return v.PageInfo }
+
+// FieldsFieldsFieldPageItemsField includes the requested fields of the GraphQL type Field.
+type FieldsFieldsFieldPageItemsField struct {
+	FieldParts `json:"-"`
+}
+
+// GetId returns FieldsFieldsFieldPageItemsField.Id, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetId() string { return v.FieldParts.Id }
+
+// GetEntity returns FieldsFieldsFieldPageItemsField.Entity, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetEntity() FieldPartsEntity { return v.FieldParts.Entity }
+
+// GetName returns FieldsFieldsFieldPageItemsField.Name, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetName() *string { return v.FieldParts.Name }
+
+// GetGraphqlFieldName returns FieldsFieldsFieldPageItemsField.GraphqlFieldName, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetGraphqlFieldName() string {
+	return v.FieldParts.GraphqlFieldName
+}
+
+// GetType returns FieldsFieldsFieldPageItemsField.Type, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetType() string { return v.FieldParts.Type }
+
+// GetRequired returns FieldsFieldsFieldPageItemsField.Required, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetRequired() bool { return v.FieldParts.Required }
+
+// GetEnumValues returns FieldsFieldsFieldPageItemsField.EnumValues, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetIsLifecycle returns FieldsFieldsFieldPageItemsField.IsLifecycle, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
+
+// GetIsParent returns FieldsFieldsFieldPageItemsField.IsParent, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetIsParent() bool { return v.FieldParts.IsParent }
+
+// GetReferencesEntity returns FieldsFieldsFieldPageItemsField.ReferencesEntity, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetReferencesEntity() *FieldPartsReferencesEntity {
+	return v.FieldParts.ReferencesEntity
+}
+
+// GetRelatedField returns FieldsFieldsFieldPageItemsField.RelatedField, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetRelatedField() *FieldPartsRelatedField {
+	return v.FieldParts.RelatedField
+}
+
+func (v *FieldsFieldsFieldPageItemsField) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*FieldsFieldsFieldPageItemsField
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.FieldsFieldsFieldPageItemsField = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FieldParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalFieldsFieldsFieldPageItemsField struct {
+	Id string `json:"id"`
+
+	Entity FieldPartsEntity `json:"entity"`
+
+	Name *string `json:"name"`
+
+	GraphqlFieldName string `json:"graphqlFieldName"`
+
+	Type string `json:"type"`
+
+	Required bool `json:"required"`
+
+	EnumValues []string `json:"enumValues"`
+
+	IsLifecycle bool `json:"isLifecycle"`
+
+	IsParent bool `json:"isParent"`
+
+	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
+
+	RelatedField *FieldPartsRelatedField `json:"relatedField"`
+}
+
+func (v *FieldsFieldsFieldPageItemsField) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *FieldsFieldsFieldPageItemsField) __premarshalJSON() (*__premarshalFieldsFieldsFieldPageItemsField, error) {
+	var retval __premarshalFieldsFieldsFieldPageItemsField
+
+	retval.Id = v.FieldParts.Id
+	retval.Entity = v.FieldParts.Entity
+	retval.Name = v.FieldParts.Name
+	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Type = v.FieldParts.Type
+	retval.Required = v.FieldParts.Required
+	retval.EnumValues = v.FieldParts.EnumValues
+	retval.IsLifecycle = v.FieldParts.IsLifecycle
+	retval.IsParent = v.FieldParts.IsParent
+	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
+	retval.RelatedField = v.FieldParts.RelatedField
+	return &retval, nil
+}
+
+// FieldsFieldsFieldPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type FieldsFieldsFieldPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns FieldsFieldsFieldPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// FieldsResponse is returned by Fields on success.
+type FieldsResponse struct {
+	Fields FieldsFieldsFieldPage `json:"fields"`
+}
+
+// GetFields returns FieldsResponse.Fields, and is useful for accessing the field via an interface.
+func (v *FieldsResponse) GetFields() FieldsFieldsFieldPage { return v.Fields }
+
+// LatestModelRevisionModelRevisionsModelRevisionPage includes the requested fields of the GraphQL type ModelRevisionPage.
+type LatestModelRevisionModelRevisionsModelRevisionPage struct {
+	Items []LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision `json:"items"`
+}
+
+// GetItems returns LatestModelRevisionModelRevisionsModelRevisionPage.Items, and is useful for accessing the field via an interface.
+func (v *LatestModelRevisionModelRevisionsModelRevisionPage) GetItems() []LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision {
+	return v.Items
+}
+
+// LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision includes the requested fields of the GraphQL type ModelRevision.
+type LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision struct {
+	Id string `json:"id"`
+}
+
+// GetId returns LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision.Id, and is useful for accessing the field via an interface.
+func (v *LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision) GetId() string {
+	return v.Id
+}
+
+// LatestModelRevisionResponse is returned by LatestModelRevision on success.
+type LatestModelRevisionResponse struct {
+	ModelRevisions LatestModelRevisionModelRevisionsModelRevisionPage `json:"modelRevisions"`
+}
+
+// GetModelRevisions returns LatestModelRevisionResponse.ModelRevisions, and is useful for accessing the field via an interface.
+func (v *LatestModelRevisionResponse) GetModelRevisions() LatestModelRevisionModelRevisionsModelRevisionPage {
+	return v.ModelRevisions
+}
+
 // MeMeUser includes the requested fields of the GraphQL type User.
 type MeMeUser struct {
 	Id    string  `json:"id"`
@@ -171,6 +1008,300 @@ func (v *PageInput) GetPage() int { return v.Page }
 // GetPageSize returns PageInput.PageSize, and is useful for accessing the field via an interface.
 func (v *PageInput) GetPageSize() int { return v.PageSize }
 
+// RetireConstraintResponse is returned by RetireConstraint on success.
+type RetireConstraintResponse struct {
+	RetireConstraint RetireConstraintRetireConstraint `json:"retireConstraint"`
+}
+
+// GetRetireConstraint returns RetireConstraintResponse.RetireConstraint, and is useful for accessing the field via an interface.
+func (v *RetireConstraintResponse) GetRetireConstraint() RetireConstraintRetireConstraint {
+	return v.RetireConstraint
+}
+
+// RetireConstraintRetireConstraint includes the requested fields of the GraphQL type Constraint.
+type RetireConstraintRetireConstraint struct {
+	ConstraintParts `json:"-"`
+}
+
+// GetId returns RetireConstraintRetireConstraint.Id, and is useful for accessing the field via an interface.
+func (v *RetireConstraintRetireConstraint) GetId() string { return v.ConstraintParts.Id }
+
+// GetEntity returns RetireConstraintRetireConstraint.Entity, and is useful for accessing the field via an interface.
+func (v *RetireConstraintRetireConstraint) GetEntity() ConstraintPartsEntity {
+	return v.ConstraintParts.Entity
+}
+
+// GetKind returns RetireConstraintRetireConstraint.Kind, and is useful for accessing the field via an interface.
+func (v *RetireConstraintRetireConstraint) GetKind() string { return v.ConstraintParts.Kind }
+
+// GetFields returns RetireConstraintRetireConstraint.Fields, and is useful for accessing the field via an interface.
+func (v *RetireConstraintRetireConstraint) GetFields() ConstraintPartsFieldsFieldPage {
+	return v.ConstraintParts.Fields
+}
+
+func (v *RetireConstraintRetireConstraint) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RetireConstraintRetireConstraint
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RetireConstraintRetireConstraint = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.ConstraintParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRetireConstraintRetireConstraint struct {
+	Id string `json:"id"`
+
+	Entity ConstraintPartsEntity `json:"entity"`
+
+	Kind string `json:"kind"`
+
+	Fields ConstraintPartsFieldsFieldPage `json:"fields"`
+}
+
+func (v *RetireConstraintRetireConstraint) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RetireConstraintRetireConstraint) __premarshalJSON() (*__premarshalRetireConstraintRetireConstraint, error) {
+	var retval __premarshalRetireConstraintRetireConstraint
+
+	retval.Id = v.ConstraintParts.Id
+	retval.Entity = v.ConstraintParts.Entity
+	retval.Kind = v.ConstraintParts.Kind
+	retval.Fields = v.ConstraintParts.Fields
+	return &retval, nil
+}
+
+// RetireEntityResponse is returned by RetireEntity on success.
+type RetireEntityResponse struct {
+	RetireEntity RetireEntityRetireEntity `json:"retireEntity"`
+}
+
+// GetRetireEntity returns RetireEntityResponse.RetireEntity, and is useful for accessing the field via an interface.
+func (v *RetireEntityResponse) GetRetireEntity() RetireEntityRetireEntity { return v.RetireEntity }
+
+// RetireEntityRetireEntity includes the requested fields of the GraphQL type Entity.
+type RetireEntityRetireEntity struct {
+	EntityParts `json:"-"`
+}
+
+// GetId returns RetireEntityRetireEntity.Id, and is useful for accessing the field via an interface.
+func (v *RetireEntityRetireEntity) GetId() string { return v.EntityParts.Id }
+
+// GetName returns RetireEntityRetireEntity.Name, and is useful for accessing the field via an interface.
+func (v *RetireEntityRetireEntity) GetName() string { return v.EntityParts.Name }
+
+// GetGraphqlTypeName returns RetireEntityRetireEntity.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *RetireEntityRetireEntity) GetGraphqlTypeName() string { return v.EntityParts.GraphqlTypeName }
+
+// GetGraphqlPluralName returns RetireEntityRetireEntity.GraphqlPluralName, and is useful for accessing the field via an interface.
+func (v *RetireEntityRetireEntity) GetGraphqlPluralName() string {
+	return v.EntityParts.GraphqlPluralName
+}
+
+// GetManaged returns RetireEntityRetireEntity.Managed, and is useful for accessing the field via an interface.
+func (v *RetireEntityRetireEntity) GetManaged() bool { return v.EntityParts.Managed }
+
+func (v *RetireEntityRetireEntity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RetireEntityRetireEntity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RetireEntityRetireEntity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EntityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRetireEntityRetireEntity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	GraphqlPluralName string `json:"graphqlPluralName"`
+
+	Managed bool `json:"managed"`
+}
+
+func (v *RetireEntityRetireEntity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RetireEntityRetireEntity) __premarshalJSON() (*__premarshalRetireEntityRetireEntity, error) {
+	var retval __premarshalRetireEntityRetireEntity
+
+	retval.Id = v.EntityParts.Id
+	retval.Name = v.EntityParts.Name
+	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
+	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
+	retval.Managed = v.EntityParts.Managed
+	return &retval, nil
+}
+
+// RetireFieldResponse is returned by RetireField on success.
+type RetireFieldResponse struct {
+	RetireField RetireFieldRetireField `json:"retireField"`
+}
+
+// GetRetireField returns RetireFieldResponse.RetireField, and is useful for accessing the field via an interface.
+func (v *RetireFieldResponse) GetRetireField() RetireFieldRetireField { return v.RetireField }
+
+// RetireFieldRetireField includes the requested fields of the GraphQL type Field.
+type RetireFieldRetireField struct {
+	FieldParts `json:"-"`
+}
+
+// GetId returns RetireFieldRetireField.Id, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetId() string { return v.FieldParts.Id }
+
+// GetEntity returns RetireFieldRetireField.Entity, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetEntity() FieldPartsEntity { return v.FieldParts.Entity }
+
+// GetName returns RetireFieldRetireField.Name, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetName() *string { return v.FieldParts.Name }
+
+// GetGraphqlFieldName returns RetireFieldRetireField.GraphqlFieldName, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetType returns RetireFieldRetireField.Type, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetType() string { return v.FieldParts.Type }
+
+// GetRequired returns RetireFieldRetireField.Required, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetRequired() bool { return v.FieldParts.Required }
+
+// GetEnumValues returns RetireFieldRetireField.EnumValues, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetIsLifecycle returns RetireFieldRetireField.IsLifecycle, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
+
+// GetIsParent returns RetireFieldRetireField.IsParent, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetIsParent() bool { return v.FieldParts.IsParent }
+
+// GetReferencesEntity returns RetireFieldRetireField.ReferencesEntity, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetReferencesEntity() *FieldPartsReferencesEntity {
+	return v.FieldParts.ReferencesEntity
+}
+
+// GetRelatedField returns RetireFieldRetireField.RelatedField, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetRelatedField() *FieldPartsRelatedField {
+	return v.FieldParts.RelatedField
+}
+
+func (v *RetireFieldRetireField) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RetireFieldRetireField
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RetireFieldRetireField = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FieldParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRetireFieldRetireField struct {
+	Id string `json:"id"`
+
+	Entity FieldPartsEntity `json:"entity"`
+
+	Name *string `json:"name"`
+
+	GraphqlFieldName string `json:"graphqlFieldName"`
+
+	Type string `json:"type"`
+
+	Required bool `json:"required"`
+
+	EnumValues []string `json:"enumValues"`
+
+	IsLifecycle bool `json:"isLifecycle"`
+
+	IsParent bool `json:"isParent"`
+
+	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
+
+	RelatedField *FieldPartsRelatedField `json:"relatedField"`
+}
+
+func (v *RetireFieldRetireField) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RetireFieldRetireField) __premarshalJSON() (*__premarshalRetireFieldRetireField, error) {
+	var retval __premarshalRetireFieldRetireField
+
+	retval.Id = v.FieldParts.Id
+	retval.Entity = v.FieldParts.Entity
+	retval.Name = v.FieldParts.Name
+	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Type = v.FieldParts.Type
+	retval.Required = v.FieldParts.Required
+	retval.EnumValues = v.FieldParts.EnumValues
+	retval.IsLifecycle = v.FieldParts.IsLifecycle
+	retval.IsParent = v.FieldParts.IsParent
+	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
+	retval.RelatedField = v.FieldParts.RelatedField
+	return &retval, nil
+}
+
 // ScopedAppTenantMeUser includes the requested fields of the GraphQL type User.
 type ScopedAppTenantMeUser struct {
 	Application ScopedAppTenantMeUserApplication `json:"application"`
@@ -217,6 +1348,216 @@ type ScopedAppTenantResponse struct {
 // GetMe returns ScopedAppTenantResponse.Me, and is useful for accessing the field via an interface.
 func (v *ScopedAppTenantResponse) GetMe() ScopedAppTenantMeUser { return v.Me }
 
+// UpdateEntityResponse is returned by UpdateEntity on success.
+type UpdateEntityResponse struct {
+	UpdateEntity UpdateEntityUpdateEntity `json:"updateEntity"`
+}
+
+// GetUpdateEntity returns UpdateEntityResponse.UpdateEntity, and is useful for accessing the field via an interface.
+func (v *UpdateEntityResponse) GetUpdateEntity() UpdateEntityUpdateEntity { return v.UpdateEntity }
+
+// UpdateEntityUpdateEntity includes the requested fields of the GraphQL type Entity.
+type UpdateEntityUpdateEntity struct {
+	EntityParts `json:"-"`
+}
+
+// GetId returns UpdateEntityUpdateEntity.Id, and is useful for accessing the field via an interface.
+func (v *UpdateEntityUpdateEntity) GetId() string { return v.EntityParts.Id }
+
+// GetName returns UpdateEntityUpdateEntity.Name, and is useful for accessing the field via an interface.
+func (v *UpdateEntityUpdateEntity) GetName() string { return v.EntityParts.Name }
+
+// GetGraphqlTypeName returns UpdateEntityUpdateEntity.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *UpdateEntityUpdateEntity) GetGraphqlTypeName() string { return v.EntityParts.GraphqlTypeName }
+
+// GetGraphqlPluralName returns UpdateEntityUpdateEntity.GraphqlPluralName, and is useful for accessing the field via an interface.
+func (v *UpdateEntityUpdateEntity) GetGraphqlPluralName() string {
+	return v.EntityParts.GraphqlPluralName
+}
+
+// GetManaged returns UpdateEntityUpdateEntity.Managed, and is useful for accessing the field via an interface.
+func (v *UpdateEntityUpdateEntity) GetManaged() bool { return v.EntityParts.Managed }
+
+func (v *UpdateEntityUpdateEntity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateEntityUpdateEntity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateEntityUpdateEntity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EntityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateEntityUpdateEntity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	GraphqlPluralName string `json:"graphqlPluralName"`
+
+	Managed bool `json:"managed"`
+}
+
+func (v *UpdateEntityUpdateEntity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateEntityUpdateEntity) __premarshalJSON() (*__premarshalUpdateEntityUpdateEntity, error) {
+	var retval __premarshalUpdateEntityUpdateEntity
+
+	retval.Id = v.EntityParts.Id
+	retval.Name = v.EntityParts.Name
+	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
+	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
+	retval.Managed = v.EntityParts.Managed
+	return &retval, nil
+}
+
+// UpdateFieldResponse is returned by UpdateField on success.
+type UpdateFieldResponse struct {
+	UpdateField UpdateFieldUpdateField `json:"updateField"`
+}
+
+// GetUpdateField returns UpdateFieldResponse.UpdateField, and is useful for accessing the field via an interface.
+func (v *UpdateFieldResponse) GetUpdateField() UpdateFieldUpdateField { return v.UpdateField }
+
+// UpdateFieldUpdateField includes the requested fields of the GraphQL type Field.
+type UpdateFieldUpdateField struct {
+	FieldParts `json:"-"`
+}
+
+// GetId returns UpdateFieldUpdateField.Id, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetId() string { return v.FieldParts.Id }
+
+// GetEntity returns UpdateFieldUpdateField.Entity, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetEntity() FieldPartsEntity { return v.FieldParts.Entity }
+
+// GetName returns UpdateFieldUpdateField.Name, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetName() *string { return v.FieldParts.Name }
+
+// GetGraphqlFieldName returns UpdateFieldUpdateField.GraphqlFieldName, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetType returns UpdateFieldUpdateField.Type, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetType() string { return v.FieldParts.Type }
+
+// GetRequired returns UpdateFieldUpdateField.Required, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetRequired() bool { return v.FieldParts.Required }
+
+// GetEnumValues returns UpdateFieldUpdateField.EnumValues, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetIsLifecycle returns UpdateFieldUpdateField.IsLifecycle, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
+
+// GetIsParent returns UpdateFieldUpdateField.IsParent, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetIsParent() bool { return v.FieldParts.IsParent }
+
+// GetReferencesEntity returns UpdateFieldUpdateField.ReferencesEntity, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetReferencesEntity() *FieldPartsReferencesEntity {
+	return v.FieldParts.ReferencesEntity
+}
+
+// GetRelatedField returns UpdateFieldUpdateField.RelatedField, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetRelatedField() *FieldPartsRelatedField {
+	return v.FieldParts.RelatedField
+}
+
+func (v *UpdateFieldUpdateField) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateFieldUpdateField
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateFieldUpdateField = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FieldParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateFieldUpdateField struct {
+	Id string `json:"id"`
+
+	Entity FieldPartsEntity `json:"entity"`
+
+	Name *string `json:"name"`
+
+	GraphqlFieldName string `json:"graphqlFieldName"`
+
+	Type string `json:"type"`
+
+	Required bool `json:"required"`
+
+	EnumValues []string `json:"enumValues"`
+
+	IsLifecycle bool `json:"isLifecycle"`
+
+	IsParent bool `json:"isParent"`
+
+	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
+
+	RelatedField *FieldPartsRelatedField `json:"relatedField"`
+}
+
+func (v *UpdateFieldUpdateField) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpdateField, error) {
+	var retval __premarshalUpdateFieldUpdateField
+
+	retval.Id = v.FieldParts.Id
+	retval.Entity = v.FieldParts.Entity
+	retval.Name = v.FieldParts.Name
+	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Type = v.FieldParts.Type
+	retval.Required = v.FieldParts.Required
+	retval.EnumValues = v.FieldParts.EnumValues
+	retval.IsLifecycle = v.FieldParts.IsLifecycle
+	retval.IsParent = v.FieldParts.IsParent
+	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
+	retval.RelatedField = v.FieldParts.RelatedField
+	return &retval, nil
+}
+
 // __AppTenantsInput is used internally by genqlient
 type __AppTenantsInput struct {
 	Page PageInput `json:"page"`
@@ -232,6 +1573,102 @@ type __ApplicationsInput struct {
 
 // GetPage returns __ApplicationsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ApplicationsInput) GetPage() PageInput { return v.Page }
+
+// __ConstraintsInput is used internally by genqlient
+type __ConstraintsInput struct {
+	EntityId string    `json:"entityId"`
+	Page     PageInput `json:"page"`
+}
+
+// GetEntityId returns __ConstraintsInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__ConstraintsInput) GetEntityId() string { return v.EntityId }
+
+// GetPage returns __ConstraintsInput.Page, and is useful for accessing the field via an interface.
+func (v *__ConstraintsInput) GetPage() PageInput { return v.Page }
+
+// __CreateConstraintInput is used internally by genqlient
+type __CreateConstraintInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __CreateConstraintInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateConstraintInput) GetInput() map[string]any { return v.Input }
+
+// __CreateEntityInput is used internally by genqlient
+type __CreateEntityInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __CreateEntityInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateEntityInput) GetInput() map[string]any { return v.Input }
+
+// __CreateFieldInput is used internally by genqlient
+type __CreateFieldInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __CreateFieldInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateFieldInput) GetInput() map[string]any { return v.Input }
+
+// __EntitiesInput is used internally by genqlient
+type __EntitiesInput struct {
+	Page PageInput `json:"page"`
+}
+
+// GetPage returns __EntitiesInput.Page, and is useful for accessing the field via an interface.
+func (v *__EntitiesInput) GetPage() PageInput { return v.Page }
+
+// __FieldsInput is used internally by genqlient
+type __FieldsInput struct {
+	EntityId string    `json:"entityId"`
+	Page     PageInput `json:"page"`
+}
+
+// GetEntityId returns __FieldsInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__FieldsInput) GetEntityId() string { return v.EntityId }
+
+// GetPage returns __FieldsInput.Page, and is useful for accessing the field via an interface.
+func (v *__FieldsInput) GetPage() PageInput { return v.Page }
+
+// __RetireConstraintInput is used internally by genqlient
+type __RetireConstraintInput struct {
+	ConstraintId string `json:"constraintId"`
+}
+
+// GetConstraintId returns __RetireConstraintInput.ConstraintId, and is useful for accessing the field via an interface.
+func (v *__RetireConstraintInput) GetConstraintId() string { return v.ConstraintId }
+
+// __RetireEntityInput is used internally by genqlient
+type __RetireEntityInput struct {
+	EntityId string `json:"entityId"`
+}
+
+// GetEntityId returns __RetireEntityInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__RetireEntityInput) GetEntityId() string { return v.EntityId }
+
+// __RetireFieldInput is used internally by genqlient
+type __RetireFieldInput struct {
+	FieldId string `json:"fieldId"`
+}
+
+// GetFieldId returns __RetireFieldInput.FieldId, and is useful for accessing the field via an interface.
+func (v *__RetireFieldInput) GetFieldId() string { return v.FieldId }
+
+// __UpdateEntityInput is used internally by genqlient
+type __UpdateEntityInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __UpdateEntityInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateEntityInput) GetInput() map[string]any { return v.Input }
+
+// __UpdateFieldInput is used internally by genqlient
+type __UpdateFieldInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __UpdateFieldInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateFieldInput) GetInput() map[string]any { return v.Input }
 
 // The query executed by AppTenants.
 const AppTenants_Operation = `
@@ -313,6 +1750,337 @@ func Applications(
 	return data_, err_
 }
 
+// The query executed by Constraints.
+const Constraints_Operation = `
+query Constraints ($entityId: ID!, $page: PageInput!) {
+	constraints(entityId: $entityId, page: $page) {
+		items {
+			... ConstraintParts
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+fragment ConstraintParts on Constraint {
+	id
+	entity {
+		id
+	}
+	kind
+	fields(page: {page:0,pageSize:100}) {
+		items {
+			id
+		}
+	}
+}
+`
+
+func Constraints(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+	page PageInput,
+) (data_ *ConstraintsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Constraints",
+		Query:  Constraints_Operation,
+		Variables: &__ConstraintsInput{
+			EntityId: entityId,
+			Page:     page,
+		},
+	}
+
+	data_ = &ConstraintsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateConstraint.
+const CreateConstraint_Operation = `
+mutation CreateConstraint ($input: CreateConstraintInput!) {
+	createConstraint(input: $input) {
+		... ConstraintParts
+	}
+}
+fragment ConstraintParts on Constraint {
+	id
+	entity {
+		id
+	}
+	kind
+	fields(page: {page:0,pageSize:100}) {
+		items {
+			id
+		}
+	}
+}
+`
+
+func CreateConstraint(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *CreateConstraintResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateConstraint",
+		Query:  CreateConstraint_Operation,
+		Variables: &__CreateConstraintInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateConstraintResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateEntity.
+const CreateEntity_Operation = `
+mutation CreateEntity ($input: CreateEntityInput!) {
+	createEntity(input: $input) {
+		... EntityParts
+	}
+}
+fragment EntityParts on Entity {
+	id
+	name
+	graphqlTypeName
+	graphqlPluralName
+	managed
+}
+`
+
+func CreateEntity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *CreateEntityResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateEntity",
+		Query:  CreateEntity_Operation,
+		Variables: &__CreateEntityInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateEntityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateField.
+const CreateField_Operation = `
+mutation CreateField ($input: CreateFieldInput!) {
+	createField(input: $input) {
+		... FieldParts
+	}
+}
+fragment FieldParts on Field {
+	id
+	entity {
+		id
+	}
+	name
+	graphqlFieldName
+	type
+	required
+	enumValues
+	isLifecycle
+	isParent
+	referencesEntity {
+		id
+	}
+	relatedField {
+		id
+	}
+}
+`
+
+func CreateField(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *CreateFieldResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateField",
+		Query:  CreateField_Operation,
+		Variables: &__CreateFieldInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateFieldResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Entities.
+const Entities_Operation = `
+query Entities ($page: PageInput!) {
+	entities(page: $page) {
+		items {
+			... EntityParts
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+fragment EntityParts on Entity {
+	id
+	name
+	graphqlTypeName
+	graphqlPluralName
+	managed
+}
+`
+
+func Entities(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	page PageInput,
+) (data_ *EntitiesResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Entities",
+		Query:  Entities_Operation,
+		Variables: &__EntitiesInput{
+			Page: page,
+		},
+	}
+
+	data_ = &EntitiesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Fields.
+const Fields_Operation = `
+query Fields ($entityId: ID!, $page: PageInput!) {
+	fields(entityId: $entityId, page: $page) {
+		items {
+			... FieldParts
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+fragment FieldParts on Field {
+	id
+	entity {
+		id
+	}
+	name
+	graphqlFieldName
+	type
+	required
+	enumValues
+	isLifecycle
+	isParent
+	referencesEntity {
+		id
+	}
+	relatedField {
+		id
+	}
+}
+`
+
+func Fields(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+	page PageInput,
+) (data_ *FieldsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Fields",
+		Query:  Fields_Operation,
+		Variables: &__FieldsInput{
+			EntityId: entityId,
+			Page:     page,
+		},
+	}
+
+	data_ = &FieldsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by LatestModelRevision.
+const LatestModelRevision_Operation = `
+query LatestModelRevision {
+	modelRevisions(page: {page:0,pageSize:1}) {
+		items {
+			id
+		}
+	}
+}
+`
+
+func LatestModelRevision(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *LatestModelRevisionResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "LatestModelRevision",
+		Query:  LatestModelRevision_Operation,
+	}
+
+	data_ = &LatestModelRevisionResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Me.
 const Me_Operation = `
 query Me {
@@ -380,6 +2148,146 @@ func MyTenants(
 	return data_, err_
 }
 
+// The mutation executed by RetireConstraint.
+const RetireConstraint_Operation = `
+mutation RetireConstraint ($constraintId: ID!) {
+	retireConstraint(constraintId: $constraintId) {
+		... ConstraintParts
+	}
+}
+fragment ConstraintParts on Constraint {
+	id
+	entity {
+		id
+	}
+	kind
+	fields(page: {page:0,pageSize:100}) {
+		items {
+			id
+		}
+	}
+}
+`
+
+func RetireConstraint(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	constraintId string,
+) (data_ *RetireConstraintResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RetireConstraint",
+		Query:  RetireConstraint_Operation,
+		Variables: &__RetireConstraintInput{
+			ConstraintId: constraintId,
+		},
+	}
+
+	data_ = &RetireConstraintResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RetireEntity.
+const RetireEntity_Operation = `
+mutation RetireEntity ($entityId: ID!) {
+	retireEntity(entityId: $entityId) {
+		... EntityParts
+	}
+}
+fragment EntityParts on Entity {
+	id
+	name
+	graphqlTypeName
+	graphqlPluralName
+	managed
+}
+`
+
+func RetireEntity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+) (data_ *RetireEntityResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RetireEntity",
+		Query:  RetireEntity_Operation,
+		Variables: &__RetireEntityInput{
+			EntityId: entityId,
+		},
+	}
+
+	data_ = &RetireEntityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RetireField.
+const RetireField_Operation = `
+mutation RetireField ($fieldId: ID!) {
+	retireField(fieldId: $fieldId) {
+		... FieldParts
+	}
+}
+fragment FieldParts on Field {
+	id
+	entity {
+		id
+	}
+	name
+	graphqlFieldName
+	type
+	required
+	enumValues
+	isLifecycle
+	isParent
+	referencesEntity {
+		id
+	}
+	relatedField {
+		id
+	}
+}
+`
+
+func RetireField(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	fieldId string,
+) (data_ *RetireFieldResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RetireField",
+		Query:  RetireField_Operation,
+		Variables: &__RetireFieldInput{
+			FieldId: fieldId,
+		},
+	}
+
+	data_ = &RetireFieldResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by ScopedAppTenant.
 const ScopedAppTenant_Operation = `
 query ScopedAppTenant {
@@ -406,6 +2314,100 @@ func ScopedAppTenant(
 	}
 
 	data_ = &ScopedAppTenantResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateEntity.
+const UpdateEntity_Operation = `
+mutation UpdateEntity ($input: UpdateEntityInput!) {
+	updateEntity(input: $input) {
+		... EntityParts
+	}
+}
+fragment EntityParts on Entity {
+	id
+	name
+	graphqlTypeName
+	graphqlPluralName
+	managed
+}
+`
+
+func UpdateEntity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *UpdateEntityResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateEntity",
+		Query:  UpdateEntity_Operation,
+		Variables: &__UpdateEntityInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateEntityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateField.
+const UpdateField_Operation = `
+mutation UpdateField ($input: UpdateFieldInput!) {
+	updateField(input: $input) {
+		... FieldParts
+	}
+}
+fragment FieldParts on Field {
+	id
+	entity {
+		id
+	}
+	name
+	graphqlFieldName
+	type
+	required
+	enumValues
+	isLifecycle
+	isParent
+	referencesEntity {
+		id
+	}
+	relatedField {
+		id
+	}
+}
+`
+
+func UpdateField(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *UpdateFieldResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateField",
+		Query:  UpdateField_Operation,
+		Variables: &__UpdateFieldInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateFieldResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

@@ -3,3 +3,15 @@ operations:
   - operations.graphql
 generated: generated.go
 package: main
+# Model command inputs are built from the flags given, so an update sends only what was named.
+bindings:
+  CreateEntityInput:
+    type: map[string]any
+  UpdateEntityInput:
+    type: map[string]any
+  CreateFieldInput:
+    type: map[string]any
+  UpdateFieldInput:
+    type: map[string]any
+  CreateConstraintInput:
+    type: map[string]any

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -40,6 +41,15 @@ type fakeMultiPaaS struct {
 	failRevoke   bool                   // the revoke endpoint answers HTTP 500
 	release      chan struct{}          // closed at cleanup, to free handlers that never answer
 	accessTokens map[string]bool        // every access token minted, so a refresh grant can refuse one
+
+	entities     map[string][]map[string]any // app id -> its entities, as model show reads them
+	fields       map[string][]map[string]any // entity id -> its fields
+	constraints  map[string][]map[string]any // entity id -> its constraints
+	revisions    map[string]int              // app id -> how many revisions its model has
+	mutations    []map[string]any            // the variables of every model mutation received
+	noModelEdit  bool                        // the signed-in user lacks model.edit
+	refuseChange [2]string                   // a model mutation is refused with this code and message
+	failVersion  bool                        // LatestModelRevision answers HTTP 500
 }
 
 type pendingCode struct{ redirectURI, challenge string }
@@ -62,6 +72,7 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
 		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{},
+		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /oauth/authorize", fake.authorize)
@@ -209,7 +220,7 @@ func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// answer serves the five operations the CLI sends, shaped as the schema shapes them.
+// answer serves the operations the CLI sends, shaped as the schema shapes them.
 func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, variables map[string]any) {
 	parts := strings.Split(scope, "/")
 	switch operation {
@@ -253,6 +264,24 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			"application": map[string]any{"id": scopedApp.id, "name": scopedApp.name},
 			"appTenant":   map[string]any{"id": tenant.id, "name": tenant.name},
 		}})
+	case "Entities":
+		writeData(w, map[string]any{"entities": pageOf(f.entities[appOf(parts)], variables)})
+	case "Fields":
+		writeData(w, map[string]any{"fields": pageOf(f.fields[variables["entityId"].(string)], variables)})
+	case "Constraints":
+		writeData(w, map[string]any{"constraints": pageOf(f.constraints[variables["entityId"].(string)], variables)})
+	case "LatestModelRevision":
+		if f.failVersion {
+			http.Error(w, "unavailable", http.StatusInternalServerError)
+			return
+		}
+		items := []map[string]any{}
+		if n := f.revisions[appOf(parts)]; n > 0 {
+			items = append(items, map[string]any{"id": fmt.Sprintf("rev-%d", n)})
+		}
+		writeData(w, map[string]any{"modelRevisions": map[string]any{"items": items}})
+	case "CreateEntity", "UpdateEntity", "RetireEntity", "CreateField", "UpdateField", "RetireField", "CreateConstraint", "RetireConstraint":
+		f.mutateModel(w, operation, parts, variables)
 	default:
 		http.Error(w, "unknown operation "+operation, http.StatusBadRequest)
 	}
@@ -360,4 +389,54 @@ func writeJSONResponse(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+// mutateModel shares these steps with the server, in order: an application in scope (requireApplication),
+// model.edit, then the change, which mints one revision. It does not check the input or that the entity
+// exists, which the server does before model.edit. The changed row echoes the input with its id.
+func (f *fakeMultiPaaS) mutateModel(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	f.mutations = append(f.mutations, variables)
+	switch {
+	case appOf(parts) == "":
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	case f.noModelEdit:
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	case f.refuseChange[0] != "":
+		graphQLRefusal(w, f.refuseChange[0], f.refuseChange[1])
+		return
+	}
+	changed := map[string]any{"id": "new-1"}
+	if input, ok := variables["input"].(map[string]any); ok {
+		for key, value := range input {
+			changed[key] = value
+		}
+	}
+	for _, id := range []string{"entityId", "fieldId", "constraintId"} {
+		if value, ok := variables[id]; ok {
+			changed["id"] = value
+		}
+	}
+	if input, ok := variables["input"].(map[string]any); ok && strings.HasPrefix(operation, "Update") {
+		changed["id"] = input[map[string]string{"UpdateEntity": "entityId", "UpdateField": "fieldId"}[operation]]
+	}
+	f.revisions[appOf(parts)]++
+	writeData(w, map[string]any{strings.ToLower(operation[:1]) + operation[1:]: changed})
+}
+
+// appOf is the application a scope names, or "" for a client-only or empty scope.
+func appOf(parts []string) string {
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[1]
+}
+
+func pageOf(rows []map[string]any, variables map[string]any) map[string]any {
+	input, _ := variables["page"].(map[string]any)
+	number, _ := input["page"].(float64)
+	size, _ := input["pageSize"].(float64)
+	start, end := min(int(number*size), len(rows)), min(int((number+1)*size), len(rows))
+	return map[string]any{"items": append([]map[string]any{}, rows[start:end]...), "pageInfo": map[string]any{"hasMore": end < len(rows)}}
 }

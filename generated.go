@@ -9,6 +9,14 @@ import (
 	"github.com/Khan/genqlient/graphql"
 )
 
+// ApiSchemaResponse is returned by ApiSchema on success.
+type ApiSchemaResponse struct {
+	ApiSchema string `json:"apiSchema"`
+}
+
+// GetApiSchema returns ApiSchemaResponse.ApiSchema, and is useful for accessing the field via an interface.
+func (v *ApiSchemaResponse) GetApiSchema() string { return v.ApiSchema }
+
 // AppTenantsAppTenantsAppTenantPage includes the requested fields of the GraphQL type AppTenantPage.
 type AppTenantsAppTenantsAppTenantPage struct {
 	Items    []AppTenantsAppTenantsAppTenantPageItemsAppTenant `json:"items"`
@@ -551,6 +559,190 @@ type CreateFieldResponse struct {
 // GetCreateField returns CreateFieldResponse.CreateField, and is useful for accessing the field via an interface.
 func (v *CreateFieldResponse) GetCreateField() CreateFieldCreateField { return v.CreateField }
 
+// CreateOAuthClientCreateOAuthClient includes the requested fields of the GraphQL type OAuthClient.
+type CreateOAuthClientCreateOAuthClient struct {
+	OAuthClientParts `json:"-"`
+}
+
+// GetId returns CreateOAuthClientCreateOAuthClient.Id, and is useful for accessing the field via an interface.
+func (v *CreateOAuthClientCreateOAuthClient) GetId() string { return v.OAuthClientParts.Id }
+
+// GetName returns CreateOAuthClientCreateOAuthClient.Name, and is useful for accessing the field via an interface.
+func (v *CreateOAuthClientCreateOAuthClient) GetName() string { return v.OAuthClientParts.Name }
+
+// GetRedirectUris returns CreateOAuthClientCreateOAuthClient.RedirectUris, and is useful for accessing the field via an interface.
+func (v *CreateOAuthClientCreateOAuthClient) GetRedirectUris() []string {
+	return v.OAuthClientParts.RedirectUris
+}
+
+// GetCreatedAt returns CreateOAuthClientCreateOAuthClient.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateOAuthClientCreateOAuthClient) GetCreatedAt() string {
+	return v.OAuthClientParts.CreatedAt
+}
+
+func (v *CreateOAuthClientCreateOAuthClient) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateOAuthClientCreateOAuthClient
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateOAuthClientCreateOAuthClient = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.OAuthClientParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateOAuthClientCreateOAuthClient struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	RedirectUris []string `json:"redirectUris"`
+
+	CreatedAt string `json:"createdAt"`
+}
+
+func (v *CreateOAuthClientCreateOAuthClient) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateOAuthClientCreateOAuthClient) __premarshalJSON() (*__premarshalCreateOAuthClientCreateOAuthClient, error) {
+	var retval __premarshalCreateOAuthClientCreateOAuthClient
+
+	retval.Id = v.OAuthClientParts.Id
+	retval.Name = v.OAuthClientParts.Name
+	retval.RedirectUris = v.OAuthClientParts.RedirectUris
+	retval.CreatedAt = v.OAuthClientParts.CreatedAt
+	return &retval, nil
+}
+
+type CreateOAuthClientInput struct {
+	Name         string   `json:"name"`
+	RedirectUris []string `json:"redirectUris"`
+}
+
+// GetName returns CreateOAuthClientInput.Name, and is useful for accessing the field via an interface.
+func (v *CreateOAuthClientInput) GetName() string { return v.Name }
+
+// GetRedirectUris returns CreateOAuthClientInput.RedirectUris, and is useful for accessing the field via an interface.
+func (v *CreateOAuthClientInput) GetRedirectUris() []string { return v.RedirectUris }
+
+// CreateOAuthClientResponse is returned by CreateOAuthClient on success.
+type CreateOAuthClientResponse struct {
+	CreateOAuthClient CreateOAuthClientCreateOAuthClient `json:"createOAuthClient"`
+}
+
+// GetCreateOAuthClient returns CreateOAuthClientResponse.CreateOAuthClient, and is useful for accessing the field via an interface.
+func (v *CreateOAuthClientResponse) GetCreateOAuthClient() CreateOAuthClientCreateOAuthClient {
+	return v.CreateOAuthClient
+}
+
+// CreateRecordCreateRecord includes the requested fields of the GraphQL type Record.
+type CreateRecordCreateRecord struct {
+	RecordParts `json:"-"`
+}
+
+// GetId returns CreateRecordCreateRecord.Id, and is useful for accessing the field via an interface.
+func (v *CreateRecordCreateRecord) GetId() string { return v.RecordParts.Id }
+
+// GetData returns CreateRecordCreateRecord.Data, and is useful for accessing the field via an interface.
+func (v *CreateRecordCreateRecord) GetData() json.RawMessage { return v.RecordParts.Data }
+
+// GetCreatedAt returns CreateRecordCreateRecord.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateRecordCreateRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
+
+// GetUpdatedAt returns CreateRecordCreateRecord.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *CreateRecordCreateRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+func (v *CreateRecordCreateRecord) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateRecordCreateRecord
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateRecordCreateRecord = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RecordParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateRecordCreateRecord struct {
+	Id string `json:"id"`
+
+	Data json.RawMessage `json:"data"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *CreateRecordCreateRecord) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateRecordCreateRecord) __premarshalJSON() (*__premarshalCreateRecordCreateRecord, error) {
+	var retval __premarshalCreateRecordCreateRecord
+
+	retval.Id = v.RecordParts.Id
+	retval.Data = v.RecordParts.Data
+	retval.CreatedAt = v.RecordParts.CreatedAt
+	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	return &retval, nil
+}
+
+type CreateRecordInput struct {
+	Data     json.RawMessage `json:"data"`
+	EntityId string          `json:"entityId"`
+}
+
+// GetData returns CreateRecordInput.Data, and is useful for accessing the field via an interface.
+func (v *CreateRecordInput) GetData() json.RawMessage { return v.Data }
+
+// GetEntityId returns CreateRecordInput.EntityId, and is useful for accessing the field via an interface.
+func (v *CreateRecordInput) GetEntityId() string { return v.EntityId }
+
+// CreateRecordResponse is returned by CreateRecord on success.
+type CreateRecordResponse struct {
+	CreateRecord CreateRecordCreateRecord `json:"createRecord"`
+}
+
+// GetCreateRecord returns CreateRecordResponse.CreateRecord, and is useful for accessing the field via an interface.
+func (v *CreateRecordResponse) GetCreateRecord() CreateRecordCreateRecord { return v.CreateRecord }
+
 // EntitiesEntitiesEntityPage includes the requested fields of the GraphQL type EntityPage.
 type EntitiesEntitiesEntityPage struct {
 	Items    []EntitiesEntitiesEntityPageItemsEntity `json:"items"`
@@ -959,6 +1151,54 @@ type MeResponse struct {
 // GetMe returns MeResponse.Me, and is useful for accessing the field via an interface.
 func (v *MeResponse) GetMe() MeMeUser { return v.Me }
 
+// ModelRevisionsModelRevisionsModelRevisionPage includes the requested fields of the GraphQL type ModelRevisionPage.
+type ModelRevisionsModelRevisionsModelRevisionPage struct {
+	Items    []ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision `json:"items"`
+	PageInfo ModelRevisionsModelRevisionsModelRevisionPagePageInfo             `json:"pageInfo"`
+}
+
+// GetItems returns ModelRevisionsModelRevisionsModelRevisionPage.Items, and is useful for accessing the field via an interface.
+func (v *ModelRevisionsModelRevisionsModelRevisionPage) GetItems() []ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision {
+	return v.Items
+}
+
+// GetPageInfo returns ModelRevisionsModelRevisionsModelRevisionPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *ModelRevisionsModelRevisionsModelRevisionPage) GetPageInfo() ModelRevisionsModelRevisionsModelRevisionPagePageInfo {
+	return v.PageInfo
+}
+
+// ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision includes the requested fields of the GraphQL type ModelRevision.
+type ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision struct {
+	Id        string `json:"id"`
+	CreatedAt string `json:"createdAt"`
+}
+
+// GetId returns ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision.Id, and is useful for accessing the field via an interface.
+func (v *ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision) GetId() string { return v.Id }
+
+// GetCreatedAt returns ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision.CreatedAt, and is useful for accessing the field via an interface.
+func (v *ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision) GetCreatedAt() string {
+	return v.CreatedAt
+}
+
+// ModelRevisionsModelRevisionsModelRevisionPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type ModelRevisionsModelRevisionsModelRevisionPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns ModelRevisionsModelRevisionsModelRevisionPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *ModelRevisionsModelRevisionsModelRevisionPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// ModelRevisionsResponse is returned by ModelRevisions on success.
+type ModelRevisionsResponse struct {
+	ModelRevisions ModelRevisionsModelRevisionsModelRevisionPage `json:"modelRevisions"`
+}
+
+// GetModelRevisions returns ModelRevisionsResponse.ModelRevisions, and is useful for accessing the field via an interface.
+func (v *ModelRevisionsResponse) GetModelRevisions() ModelRevisionsModelRevisionsModelRevisionPage {
+	return v.ModelRevisions
+}
+
 // MyTenantsMyTenantsTenantOption includes the requested fields of the GraphQL type TenantOption.
 type MyTenantsMyTenantsTenantOption struct {
 	Client        MyTenantsMyTenantsTenantOptionClient `json:"client"`
@@ -997,6 +1237,110 @@ type MyTenantsResponse struct {
 // GetMyTenants returns MyTenantsResponse.MyTenants, and is useful for accessing the field via an interface.
 func (v *MyTenantsResponse) GetMyTenants() []MyTenantsMyTenantsTenantOption { return v.MyTenants }
 
+// OAuthClientParts includes the GraphQL fields of OAuthClient requested by the fragment OAuthClientParts.
+type OAuthClientParts struct {
+	Id           string   `json:"id"`
+	Name         string   `json:"name"`
+	RedirectUris []string `json:"redirectUris"`
+	CreatedAt    string   `json:"createdAt"`
+}
+
+// GetId returns OAuthClientParts.Id, and is useful for accessing the field via an interface.
+func (v *OAuthClientParts) GetId() string { return v.Id }
+
+// GetName returns OAuthClientParts.Name, and is useful for accessing the field via an interface.
+func (v *OAuthClientParts) GetName() string { return v.Name }
+
+// GetRedirectUris returns OAuthClientParts.RedirectUris, and is useful for accessing the field via an interface.
+func (v *OAuthClientParts) GetRedirectUris() []string { return v.RedirectUris }
+
+// GetCreatedAt returns OAuthClientParts.CreatedAt, and is useful for accessing the field via an interface.
+func (v *OAuthClientParts) GetCreatedAt() string { return v.CreatedAt }
+
+// OAuthClientsOauthClientsOAuthClient includes the requested fields of the GraphQL type OAuthClient.
+type OAuthClientsOauthClientsOAuthClient struct {
+	OAuthClientParts `json:"-"`
+}
+
+// GetId returns OAuthClientsOauthClientsOAuthClient.Id, and is useful for accessing the field via an interface.
+func (v *OAuthClientsOauthClientsOAuthClient) GetId() string { return v.OAuthClientParts.Id }
+
+// GetName returns OAuthClientsOauthClientsOAuthClient.Name, and is useful for accessing the field via an interface.
+func (v *OAuthClientsOauthClientsOAuthClient) GetName() string { return v.OAuthClientParts.Name }
+
+// GetRedirectUris returns OAuthClientsOauthClientsOAuthClient.RedirectUris, and is useful for accessing the field via an interface.
+func (v *OAuthClientsOauthClientsOAuthClient) GetRedirectUris() []string {
+	return v.OAuthClientParts.RedirectUris
+}
+
+// GetCreatedAt returns OAuthClientsOauthClientsOAuthClient.CreatedAt, and is useful for accessing the field via an interface.
+func (v *OAuthClientsOauthClientsOAuthClient) GetCreatedAt() string {
+	return v.OAuthClientParts.CreatedAt
+}
+
+func (v *OAuthClientsOauthClientsOAuthClient) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*OAuthClientsOauthClientsOAuthClient
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.OAuthClientsOauthClientsOAuthClient = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.OAuthClientParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalOAuthClientsOauthClientsOAuthClient struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	RedirectUris []string `json:"redirectUris"`
+
+	CreatedAt string `json:"createdAt"`
+}
+
+func (v *OAuthClientsOauthClientsOAuthClient) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *OAuthClientsOauthClientsOAuthClient) __premarshalJSON() (*__premarshalOAuthClientsOauthClientsOAuthClient, error) {
+	var retval __premarshalOAuthClientsOauthClientsOAuthClient
+
+	retval.Id = v.OAuthClientParts.Id
+	retval.Name = v.OAuthClientParts.Name
+	retval.RedirectUris = v.OAuthClientParts.RedirectUris
+	retval.CreatedAt = v.OAuthClientParts.CreatedAt
+	return &retval, nil
+}
+
+// OAuthClientsResponse is returned by OAuthClients on success.
+type OAuthClientsResponse struct {
+	OauthClients []OAuthClientsOauthClientsOAuthClient `json:"oauthClients"`
+}
+
+// GetOauthClients returns OAuthClientsResponse.OauthClients, and is useful for accessing the field via an interface.
+func (v *OAuthClientsResponse) GetOauthClients() []OAuthClientsOauthClientsOAuthClient {
+	return v.OauthClients
+}
+
 type PageInput struct {
 	Page     int `json:"page"`
 	PageSize int `json:"pageSize"`
@@ -1007,6 +1351,124 @@ func (v *PageInput) GetPage() int { return v.Page }
 
 // GetPageSize returns PageInput.PageSize, and is useful for accessing the field via an interface.
 func (v *PageInput) GetPageSize() int { return v.PageSize }
+
+// RecordParts includes the GraphQL fields of Record requested by the fragment RecordParts.
+type RecordParts struct {
+	Id        string          `json:"id"`
+	Data      json.RawMessage `json:"data"`
+	CreatedAt string          `json:"createdAt"`
+	UpdatedAt string          `json:"updatedAt"`
+}
+
+// GetId returns RecordParts.Id, and is useful for accessing the field via an interface.
+func (v *RecordParts) GetId() string { return v.Id }
+
+// GetData returns RecordParts.Data, and is useful for accessing the field via an interface.
+func (v *RecordParts) GetData() json.RawMessage { return v.Data }
+
+// GetCreatedAt returns RecordParts.CreatedAt, and is useful for accessing the field via an interface.
+func (v *RecordParts) GetCreatedAt() string { return v.CreatedAt }
+
+// GetUpdatedAt returns RecordParts.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *RecordParts) GetUpdatedAt() string { return v.UpdatedAt }
+
+// RecordsRecordsRecordPage includes the requested fields of the GraphQL type RecordPage.
+type RecordsRecordsRecordPage struct {
+	Items    []RecordsRecordsRecordPageItemsRecord `json:"items"`
+	PageInfo RecordsRecordsRecordPagePageInfo      `json:"pageInfo"`
+}
+
+// GetItems returns RecordsRecordsRecordPage.Items, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPage) GetItems() []RecordsRecordsRecordPageItemsRecord { return v.Items }
+
+// GetPageInfo returns RecordsRecordsRecordPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPage) GetPageInfo() RecordsRecordsRecordPagePageInfo { return v.PageInfo }
+
+// RecordsRecordsRecordPageItemsRecord includes the requested fields of the GraphQL type Record.
+type RecordsRecordsRecordPageItemsRecord struct {
+	RecordParts `json:"-"`
+}
+
+// GetId returns RecordsRecordsRecordPageItemsRecord.Id, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPageItemsRecord) GetId() string { return v.RecordParts.Id }
+
+// GetData returns RecordsRecordsRecordPageItemsRecord.Data, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPageItemsRecord) GetData() json.RawMessage { return v.RecordParts.Data }
+
+// GetCreatedAt returns RecordsRecordsRecordPageItemsRecord.CreatedAt, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPageItemsRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
+
+// GetUpdatedAt returns RecordsRecordsRecordPageItemsRecord.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPageItemsRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+func (v *RecordsRecordsRecordPageItemsRecord) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RecordsRecordsRecordPageItemsRecord
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RecordsRecordsRecordPageItemsRecord = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RecordParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRecordsRecordsRecordPageItemsRecord struct {
+	Id string `json:"id"`
+
+	Data json.RawMessage `json:"data"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *RecordsRecordsRecordPageItemsRecord) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RecordsRecordsRecordPageItemsRecord) __premarshalJSON() (*__premarshalRecordsRecordsRecordPageItemsRecord, error) {
+	var retval __premarshalRecordsRecordsRecordPageItemsRecord
+
+	retval.Id = v.RecordParts.Id
+	retval.Data = v.RecordParts.Data
+	retval.CreatedAt = v.RecordParts.CreatedAt
+	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	return &retval, nil
+}
+
+// RecordsRecordsRecordPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type RecordsRecordsRecordPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns RecordsRecordsRecordPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// RecordsResponse is returned by Records on success.
+type RecordsResponse struct {
+	Records RecordsRecordsRecordPage `json:"records"`
+}
+
+// GetRecords returns RecordsResponse.Records, and is useful for accessing the field via an interface.
+func (v *RecordsResponse) GetRecords() RecordsRecordsRecordPage { return v.Records }
 
 // RetireConstraintResponse is returned by RetireConstraint on success.
 type RetireConstraintResponse struct {
@@ -1302,6 +1764,95 @@ func (v *RetireFieldRetireField) __premarshalJSON() (*__premarshalRetireFieldRet
 	return &retval, nil
 }
 
+type RetireRecordInput struct {
+	EntityId string `json:"entityId"`
+	RecordId string `json:"recordId"`
+}
+
+// GetEntityId returns RetireRecordInput.EntityId, and is useful for accessing the field via an interface.
+func (v *RetireRecordInput) GetEntityId() string { return v.EntityId }
+
+// GetRecordId returns RetireRecordInput.RecordId, and is useful for accessing the field via an interface.
+func (v *RetireRecordInput) GetRecordId() string { return v.RecordId }
+
+// RetireRecordResponse is returned by RetireRecord on success.
+type RetireRecordResponse struct {
+	RetireRecord RetireRecordRetireRecord `json:"retireRecord"`
+}
+
+// GetRetireRecord returns RetireRecordResponse.RetireRecord, and is useful for accessing the field via an interface.
+func (v *RetireRecordResponse) GetRetireRecord() RetireRecordRetireRecord { return v.RetireRecord }
+
+// RetireRecordRetireRecord includes the requested fields of the GraphQL type Record.
+type RetireRecordRetireRecord struct {
+	RecordParts `json:"-"`
+}
+
+// GetId returns RetireRecordRetireRecord.Id, and is useful for accessing the field via an interface.
+func (v *RetireRecordRetireRecord) GetId() string { return v.RecordParts.Id }
+
+// GetData returns RetireRecordRetireRecord.Data, and is useful for accessing the field via an interface.
+func (v *RetireRecordRetireRecord) GetData() json.RawMessage { return v.RecordParts.Data }
+
+// GetCreatedAt returns RetireRecordRetireRecord.CreatedAt, and is useful for accessing the field via an interface.
+func (v *RetireRecordRetireRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
+
+// GetUpdatedAt returns RetireRecordRetireRecord.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *RetireRecordRetireRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+func (v *RetireRecordRetireRecord) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RetireRecordRetireRecord
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RetireRecordRetireRecord = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RecordParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRetireRecordRetireRecord struct {
+	Id string `json:"id"`
+
+	Data json.RawMessage `json:"data"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *RetireRecordRetireRecord) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RetireRecordRetireRecord) __premarshalJSON() (*__premarshalRetireRecordRetireRecord, error) {
+	var retval __premarshalRetireRecordRetireRecord
+
+	retval.Id = v.RecordParts.Id
+	retval.Data = v.RecordParts.Data
+	retval.CreatedAt = v.RecordParts.CreatedAt
+	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	return &retval, nil
+}
+
 // ScopedAppTenantMeUser includes the requested fields of the GraphQL type User.
 type ScopedAppTenantMeUser struct {
 	Application ScopedAppTenantMeUserApplication `json:"application"`
@@ -1558,6 +2109,210 @@ func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpd
 	return &retval, nil
 }
 
+type UpdateOAuthClientInput struct {
+	Id           string   `json:"id"`
+	Name         string   `json:"name"`
+	RedirectUris []string `json:"redirectUris"`
+}
+
+// GetId returns UpdateOAuthClientInput.Id, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientInput) GetId() string { return v.Id }
+
+// GetName returns UpdateOAuthClientInput.Name, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientInput) GetName() string { return v.Name }
+
+// GetRedirectUris returns UpdateOAuthClientInput.RedirectUris, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientInput) GetRedirectUris() []string { return v.RedirectUris }
+
+// UpdateOAuthClientResponse is returned by UpdateOAuthClient on success.
+type UpdateOAuthClientResponse struct {
+	UpdateOAuthClient UpdateOAuthClientUpdateOAuthClient `json:"updateOAuthClient"`
+}
+
+// GetUpdateOAuthClient returns UpdateOAuthClientResponse.UpdateOAuthClient, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientResponse) GetUpdateOAuthClient() UpdateOAuthClientUpdateOAuthClient {
+	return v.UpdateOAuthClient
+}
+
+// UpdateOAuthClientUpdateOAuthClient includes the requested fields of the GraphQL type OAuthClient.
+type UpdateOAuthClientUpdateOAuthClient struct {
+	OAuthClientParts `json:"-"`
+}
+
+// GetId returns UpdateOAuthClientUpdateOAuthClient.Id, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientUpdateOAuthClient) GetId() string { return v.OAuthClientParts.Id }
+
+// GetName returns UpdateOAuthClientUpdateOAuthClient.Name, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientUpdateOAuthClient) GetName() string { return v.OAuthClientParts.Name }
+
+// GetRedirectUris returns UpdateOAuthClientUpdateOAuthClient.RedirectUris, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientUpdateOAuthClient) GetRedirectUris() []string {
+	return v.OAuthClientParts.RedirectUris
+}
+
+// GetCreatedAt returns UpdateOAuthClientUpdateOAuthClient.CreatedAt, and is useful for accessing the field via an interface.
+func (v *UpdateOAuthClientUpdateOAuthClient) GetCreatedAt() string {
+	return v.OAuthClientParts.CreatedAt
+}
+
+func (v *UpdateOAuthClientUpdateOAuthClient) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateOAuthClientUpdateOAuthClient
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateOAuthClientUpdateOAuthClient = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.OAuthClientParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateOAuthClientUpdateOAuthClient struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	RedirectUris []string `json:"redirectUris"`
+
+	CreatedAt string `json:"createdAt"`
+}
+
+func (v *UpdateOAuthClientUpdateOAuthClient) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateOAuthClientUpdateOAuthClient) __premarshalJSON() (*__premarshalUpdateOAuthClientUpdateOAuthClient, error) {
+	var retval __premarshalUpdateOAuthClientUpdateOAuthClient
+
+	retval.Id = v.OAuthClientParts.Id
+	retval.Name = v.OAuthClientParts.Name
+	retval.RedirectUris = v.OAuthClientParts.RedirectUris
+	retval.CreatedAt = v.OAuthClientParts.CreatedAt
+	return &retval, nil
+}
+
+type UpdateRecordInput struct {
+	ClearFieldIds []string        `json:"clearFieldIds"`
+	Data          json.RawMessage `json:"data"`
+	EntityId      string          `json:"entityId"`
+	RecordId      string          `json:"recordId"`
+}
+
+// GetClearFieldIds returns UpdateRecordInput.ClearFieldIds, and is useful for accessing the field via an interface.
+func (v *UpdateRecordInput) GetClearFieldIds() []string { return v.ClearFieldIds }
+
+// GetData returns UpdateRecordInput.Data, and is useful for accessing the field via an interface.
+func (v *UpdateRecordInput) GetData() json.RawMessage { return v.Data }
+
+// GetEntityId returns UpdateRecordInput.EntityId, and is useful for accessing the field via an interface.
+func (v *UpdateRecordInput) GetEntityId() string { return v.EntityId }
+
+// GetRecordId returns UpdateRecordInput.RecordId, and is useful for accessing the field via an interface.
+func (v *UpdateRecordInput) GetRecordId() string { return v.RecordId }
+
+// UpdateRecordResponse is returned by UpdateRecord on success.
+type UpdateRecordResponse struct {
+	UpdateRecord UpdateRecordUpdateRecord `json:"updateRecord"`
+}
+
+// GetUpdateRecord returns UpdateRecordResponse.UpdateRecord, and is useful for accessing the field via an interface.
+func (v *UpdateRecordResponse) GetUpdateRecord() UpdateRecordUpdateRecord { return v.UpdateRecord }
+
+// UpdateRecordUpdateRecord includes the requested fields of the GraphQL type Record.
+type UpdateRecordUpdateRecord struct {
+	RecordParts `json:"-"`
+}
+
+// GetId returns UpdateRecordUpdateRecord.Id, and is useful for accessing the field via an interface.
+func (v *UpdateRecordUpdateRecord) GetId() string { return v.RecordParts.Id }
+
+// GetData returns UpdateRecordUpdateRecord.Data, and is useful for accessing the field via an interface.
+func (v *UpdateRecordUpdateRecord) GetData() json.RawMessage { return v.RecordParts.Data }
+
+// GetCreatedAt returns UpdateRecordUpdateRecord.CreatedAt, and is useful for accessing the field via an interface.
+func (v *UpdateRecordUpdateRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
+
+// GetUpdatedAt returns UpdateRecordUpdateRecord.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *UpdateRecordUpdateRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+func (v *UpdateRecordUpdateRecord) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateRecordUpdateRecord
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateRecordUpdateRecord = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RecordParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateRecordUpdateRecord struct {
+	Id string `json:"id"`
+
+	Data json.RawMessage `json:"data"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *UpdateRecordUpdateRecord) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateRecordUpdateRecord) __premarshalJSON() (*__premarshalUpdateRecordUpdateRecord, error) {
+	var retval __premarshalUpdateRecordUpdateRecord
+
+	retval.Id = v.RecordParts.Id
+	retval.Data = v.RecordParts.Data
+	retval.CreatedAt = v.RecordParts.CreatedAt
+	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	return &retval, nil
+}
+
+// __ApiSchemaInput is used internally by genqlient
+type __ApiSchemaInput struct {
+	RevisionId string `json:"revisionId"`
+}
+
+// GetRevisionId returns __ApiSchemaInput.RevisionId, and is useful for accessing the field via an interface.
+func (v *__ApiSchemaInput) GetRevisionId() string { return v.RevisionId }
+
 // __AppTenantsInput is used internally by genqlient
 type __AppTenantsInput struct {
 	Page PageInput `json:"page"`
@@ -1610,6 +2365,22 @@ type __CreateFieldInput struct {
 // GetInput returns __CreateFieldInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateFieldInput) GetInput() map[string]any { return v.Input }
 
+// __CreateOAuthClientInput is used internally by genqlient
+type __CreateOAuthClientInput struct {
+	Input CreateOAuthClientInput `json:"input"`
+}
+
+// GetInput returns __CreateOAuthClientInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateOAuthClientInput) GetInput() CreateOAuthClientInput { return v.Input }
+
+// __CreateRecordInput is used internally by genqlient
+type __CreateRecordInput struct {
+	Input CreateRecordInput `json:"input"`
+}
+
+// GetInput returns __CreateRecordInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateRecordInput) GetInput() CreateRecordInput { return v.Input }
+
 // __EntitiesInput is used internally by genqlient
 type __EntitiesInput struct {
 	Page PageInput `json:"page"`
@@ -1629,6 +2400,26 @@ func (v *__FieldsInput) GetEntityId() string { return v.EntityId }
 
 // GetPage returns __FieldsInput.Page, and is useful for accessing the field via an interface.
 func (v *__FieldsInput) GetPage() PageInput { return v.Page }
+
+// __ModelRevisionsInput is used internally by genqlient
+type __ModelRevisionsInput struct {
+	Page PageInput `json:"page"`
+}
+
+// GetPage returns __ModelRevisionsInput.Page, and is useful for accessing the field via an interface.
+func (v *__ModelRevisionsInput) GetPage() PageInput { return v.Page }
+
+// __RecordsInput is used internally by genqlient
+type __RecordsInput struct {
+	EntityId string    `json:"entityId"`
+	Page     PageInput `json:"page"`
+}
+
+// GetEntityId returns __RecordsInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__RecordsInput) GetEntityId() string { return v.EntityId }
+
+// GetPage returns __RecordsInput.Page, and is useful for accessing the field via an interface.
+func (v *__RecordsInput) GetPage() PageInput { return v.Page }
 
 // __RetireConstraintInput is used internally by genqlient
 type __RetireConstraintInput struct {
@@ -1654,6 +2445,14 @@ type __RetireFieldInput struct {
 // GetFieldId returns __RetireFieldInput.FieldId, and is useful for accessing the field via an interface.
 func (v *__RetireFieldInput) GetFieldId() string { return v.FieldId }
 
+// __RetireRecordInput is used internally by genqlient
+type __RetireRecordInput struct {
+	Input RetireRecordInput `json:"input"`
+}
+
+// GetInput returns __RetireRecordInput.Input, and is useful for accessing the field via an interface.
+func (v *__RetireRecordInput) GetInput() RetireRecordInput { return v.Input }
+
 // __UpdateEntityInput is used internally by genqlient
 type __UpdateEntityInput struct {
 	Input map[string]any `json:"input"`
@@ -1669,6 +2468,54 @@ type __UpdateFieldInput struct {
 
 // GetInput returns __UpdateFieldInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateFieldInput) GetInput() map[string]any { return v.Input }
+
+// __UpdateOAuthClientInput is used internally by genqlient
+type __UpdateOAuthClientInput struct {
+	Input UpdateOAuthClientInput `json:"input"`
+}
+
+// GetInput returns __UpdateOAuthClientInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateOAuthClientInput) GetInput() UpdateOAuthClientInput { return v.Input }
+
+// __UpdateRecordInput is used internally by genqlient
+type __UpdateRecordInput struct {
+	Input UpdateRecordInput `json:"input"`
+}
+
+// GetInput returns __UpdateRecordInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateRecordInput) GetInput() UpdateRecordInput { return v.Input }
+
+// The query executed by ApiSchema.
+const ApiSchema_Operation = `
+query ApiSchema ($revisionId: ID!) {
+	apiSchema(revisionId: $revisionId)
+}
+`
+
+func ApiSchema(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	revisionId string,
+) (data_ *ApiSchemaResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ApiSchema",
+		Query:  ApiSchema_Operation,
+		Variables: &__ApiSchemaInput{
+			RevisionId: revisionId,
+		},
+	}
+
+	data_ = &ApiSchemaResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
 
 // The query executed by AppTenants.
 const AppTenants_Operation = `
@@ -1943,6 +2790,86 @@ func CreateField(
 	return data_, err_
 }
 
+// The mutation executed by CreateOAuthClient.
+const CreateOAuthClient_Operation = `
+mutation CreateOAuthClient ($input: CreateOAuthClientInput!) {
+	createOAuthClient(input: $input) {
+		... OAuthClientParts
+	}
+}
+fragment OAuthClientParts on OAuthClient {
+	id
+	name
+	redirectUris
+	createdAt
+}
+`
+
+func CreateOAuthClient(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateOAuthClientInput,
+) (data_ *CreateOAuthClientResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateOAuthClient",
+		Query:  CreateOAuthClient_Operation,
+		Variables: &__CreateOAuthClientInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateOAuthClientResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateRecord.
+const CreateRecord_Operation = `
+mutation CreateRecord ($input: CreateRecordInput!) {
+	createRecord(input: $input) {
+		... RecordParts
+	}
+}
+fragment RecordParts on Record {
+	id
+	data
+	createdAt
+	updatedAt
+}
+`
+
+func CreateRecord(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateRecordInput,
+) (data_ *CreateRecordResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateRecord",
+		Query:  CreateRecord_Operation,
+		Variables: &__CreateRecordInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateRecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Entities.
 const Entities_Operation = `
 query Entities ($page: PageInput!) {
@@ -2113,6 +3040,46 @@ func Me(
 	return data_, err_
 }
 
+// The query executed by ModelRevisions.
+const ModelRevisions_Operation = `
+query ModelRevisions ($page: PageInput!) {
+	modelRevisions(page: $page) {
+		items {
+			id
+			createdAt
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+`
+
+func ModelRevisions(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	page PageInput,
+) (data_ *ModelRevisionsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ModelRevisions",
+		Query:  ModelRevisions_Operation,
+		Variables: &__ModelRevisionsInput{
+			Page: page,
+		},
+	}
+
+	data_ = &ModelRevisionsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by MyTenants.
 const MyTenants_Operation = `
 query MyTenants {
@@ -2137,6 +3104,89 @@ func MyTenants(
 	}
 
 	data_ = &MyTenantsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by OAuthClients.
+const OAuthClients_Operation = `
+query OAuthClients {
+	oauthClients {
+		... OAuthClientParts
+	}
+}
+fragment OAuthClientParts on OAuthClient {
+	id
+	name
+	redirectUris
+	createdAt
+}
+`
+
+func OAuthClients(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *OAuthClientsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "OAuthClients",
+		Query:  OAuthClients_Operation,
+	}
+
+	data_ = &OAuthClientsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Records.
+const Records_Operation = `
+query Records ($entityId: ID!, $page: PageInput!) {
+	records(entityId: $entityId, page: $page) {
+		items {
+			... RecordParts
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+fragment RecordParts on Record {
+	id
+	data
+	createdAt
+	updatedAt
+}
+`
+
+func Records(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+	page PageInput,
+) (data_ *RecordsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Records",
+		Query:  Records_Operation,
+		Variables: &__RecordsInput{
+			EntityId: entityId,
+			Page:     page,
+		},
+	}
+
+	data_ = &RecordsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -2288,6 +3338,46 @@ func RetireField(
 	return data_, err_
 }
 
+// The mutation executed by RetireRecord.
+const RetireRecord_Operation = `
+mutation RetireRecord ($input: RetireRecordInput!) {
+	retireRecord(input: $input) {
+		... RecordParts
+	}
+}
+fragment RecordParts on Record {
+	id
+	data
+	createdAt
+	updatedAt
+}
+`
+
+func RetireRecord(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input RetireRecordInput,
+) (data_ *RetireRecordResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RetireRecord",
+		Query:  RetireRecord_Operation,
+		Variables: &__RetireRecordInput{
+			Input: input,
+		},
+	}
+
+	data_ = &RetireRecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by ScopedAppTenant.
 const ScopedAppTenant_Operation = `
 query ScopedAppTenant {
@@ -2408,6 +3498,86 @@ func UpdateField(
 	}
 
 	data_ = &UpdateFieldResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateOAuthClient.
+const UpdateOAuthClient_Operation = `
+mutation UpdateOAuthClient ($input: UpdateOAuthClientInput!) {
+	updateOAuthClient(input: $input) {
+		... OAuthClientParts
+	}
+}
+fragment OAuthClientParts on OAuthClient {
+	id
+	name
+	redirectUris
+	createdAt
+}
+`
+
+func UpdateOAuthClient(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input UpdateOAuthClientInput,
+) (data_ *UpdateOAuthClientResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateOAuthClient",
+		Query:  UpdateOAuthClient_Operation,
+		Variables: &__UpdateOAuthClientInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateOAuthClientResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateRecord.
+const UpdateRecord_Operation = `
+mutation UpdateRecord ($input: UpdateRecordInput!) {
+	updateRecord(input: $input) {
+		... RecordParts
+	}
+}
+fragment RecordParts on Record {
+	id
+	data
+	createdAt
+	updatedAt
+}
+`
+
+func UpdateRecord(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input UpdateRecordInput,
+) (data_ *UpdateRecordResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateRecord",
+		Query:  UpdateRecord_Operation,
+		Variables: &__UpdateRecordInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateRecordResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

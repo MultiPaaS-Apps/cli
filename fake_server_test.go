@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -42,14 +43,17 @@ type fakeMultiPaaS struct {
 	release      chan struct{}          // closed at cleanup, to free handlers that never answer
 	accessTokens map[string]bool        // every access token minted, so a refresh grant can refuse one
 
-	entities     map[string][]map[string]any // app id -> its entities, as model show reads them
-	fields       map[string][]map[string]any // entity id -> its fields
-	constraints  map[string][]map[string]any // entity id -> its constraints
-	revisions    map[string]int              // app id -> how many revisions its model has
-	mutations    []map[string]any            // the variables of every model mutation received
-	noModelEdit  bool                        // the signed-in user lacks model.edit
-	refuseChange [2]string                   // a model mutation is refused with this code and message
-	failVersion  bool                        // LatestModelRevision answers HTTP 500
+	entities      map[string][]map[string]any // app id -> its entities, as model show reads them
+	fields        map[string][]map[string]any // entity id -> its fields
+	constraints   map[string][]map[string]any // entity id -> its constraints
+	revisions     map[string]int              // app id -> how many revisions its model has
+	mutations     []map[string]any            // the variables of every model mutation received
+	noModelEdit   bool                        // the signed-in user lacks model.edit
+	refuseChange  [2]string                   // a model mutation is refused with this code and message
+	failVersion   bool                        // LatestModelRevision answers HTTP 500
+	records       map[string][]map[string]any // entity id -> its live records, newest first
+	oauthClients  []map[string]any            // the application's sign-in clients
+	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
 }
 
 type pendingCode struct{ redirectURI, challenge string }
@@ -73,6 +77,7 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{},
 		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
+		records: map[string][]map[string]any{},
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /oauth/authorize", fake.authorize)
@@ -282,6 +287,33 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		writeData(w, map[string]any{"modelRevisions": map[string]any{"items": items}})
 	case "CreateEntity", "UpdateEntity", "RetireEntity", "CreateField", "UpdateField", "RetireField", "CreateConstraint", "RetireConstraint":
 		f.mutateModel(w, operation, parts, variables)
+	case "ModelRevisions":
+		if appOf(parts) == "" {
+			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+			return
+		}
+		writeData(w, map[string]any{"modelRevisions": pageOf(f.revisionRows(appOf(parts)), variables)})
+	case "ApiSchema":
+		var n int
+		revisionID, _ := variables["revisionId"].(string)
+		switch _, err := fmt.Sscanf(revisionID, "rev-%d", &n); {
+		case appOf(parts) == "":
+			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		case err != nil || n < 1 || n > f.revisions[appOf(parts)]:
+			graphQLRefusal(w, "NOT_FOUND", "modelRevision not found")
+		default:
+			writeData(w, map[string]any{"apiSchema": "type Query {\n  me: String\n}\n# " + revisionID + "\n"})
+		}
+	case "Records":
+		if len(parts) < 3 {
+			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized") // listRecords: no app-tenant selected
+			return
+		}
+		writeData(w, map[string]any{"records": pageOf(f.records[variables["entityId"].(string)], variables)})
+	case "CreateRecord", "UpdateRecord", "RetireRecord":
+		f.writeRecord(w, operation, parts, variables)
+	case "OAuthClients", "CreateOAuthClient", "UpdateOAuthClient":
+		f.manageOAuth(w, operation, parts, variables)
 	default:
 		http.Error(w, "unknown operation "+operation, http.StatusBadRequest)
 	}
@@ -439,4 +471,86 @@ func pageOf(rows []map[string]any, variables map[string]any) map[string]any {
 	size, _ := input["pageSize"].(float64)
 	start, end := min(int(number*size), len(rows)), min(int((number+1)*size), len(rows))
 	return map[string]any{"items": append([]map[string]any{}, rows[start:end]...), "pageInfo": map[string]any{"hasMore": end < len(rows)}}
+}
+
+// revisionRows are an app's revisions as modelRevisions lists them, newest first: rev-n down to rev-1.
+func (f *fakeMultiPaaS) revisionRows(app string) []map[string]any {
+	rows := []map[string]any{}
+	for n := f.revisions[app]; n > 0; n-- {
+		rows = append(rows, map[string]any{"id": fmt.Sprintf("rev-%d", n), "createdAt": "2026-10-11T00:00:00.000Z"})
+	}
+	return rows
+}
+
+// writeRecord shares these steps with the server, in order: an app-tenant in scope, then the write. An
+// update merges data into the record after dropping clearFieldIds, as the server's does; it does not
+// check the data against the entity's fields.
+func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	f.mutations = append(f.mutations, variables)
+	if len(parts) < 3 {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	input := variables["input"].(map[string]any)
+	entity := input["entityId"].(string)
+	field := strings.ToLower(operation[:1]) + operation[1:]
+	if operation == "CreateRecord" {
+		stamp := "2026-10-11T00:00:00.000Z"
+		created := map[string]any{"id": fmt.Sprintf("record-%d", len(f.records[entity])+1), "data": input["data"], "createdAt": stamp, "updatedAt": stamp}
+		f.records[entity] = append([]map[string]any{created}, f.records[entity]...)
+		writeData(w, map[string]any{field: created})
+		return
+	}
+	i := slices.IndexFunc(f.records[entity], func(r map[string]any) bool { return r["id"] == input["recordId"] })
+	if i < 0 {
+		graphQLRefusal(w, "NOT_FOUND", "record not found")
+		return
+	}
+	record := maps.Clone(f.records[entity][i])
+	if operation == "RetireRecord" {
+		f.records[entity] = slices.Delete(f.records[entity], i, i+1)
+		writeData(w, map[string]any{field: record})
+		return
+	}
+	data := maps.Clone(record["data"].(map[string]any))
+	cleared, _ := input["clearFieldIds"].([]any)
+	for _, id := range cleared {
+		delete(data, id.(string))
+	}
+	maps.Copy(data, input["data"].(map[string]any))
+	record["data"] = data
+	f.records[entity][i] = record
+	writeData(w, map[string]any{field: record})
+}
+
+// manageOAuth shares these steps with the server, in order: an application in scope
+// (requireApplication), application.manage_oauth (listing included), then the change. It does not check
+// the redirect URIs, which the server does.
+func (f *fakeMultiPaaS) manageOAuth(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	if operation != "OAuthClients" {
+		f.mutations = append(f.mutations, variables)
+	}
+	if appOf(parts) == "" || f.noManageOAuth {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	input, _ := variables["input"].(map[string]any)
+	switch operation {
+	case "OAuthClients":
+		writeData(w, map[string]any{"oauthClients": append([]map[string]any{}, f.oauthClients...)})
+	case "CreateOAuthClient":
+		created := map[string]any{"id": fmt.Sprintf("oauth-client-%d", len(f.oauthClients)+1), "name": input["name"], "redirectUris": input["redirectUris"], "createdAt": "2026-10-11T00:00:00.000Z"}
+		f.oauthClients = append(f.oauthClients, created)
+		writeData(w, map[string]any{"createOAuthClient": created})
+	case "UpdateOAuthClient":
+		i := slices.IndexFunc(f.oauthClients, func(c map[string]any) bool { return c["id"] == input["id"] })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "oauthClient not found")
+			return
+		}
+		updated := maps.Clone(f.oauthClients[i])
+		updated["name"], updated["redirectUris"] = input["name"], input["redirectUris"]
+		f.oauthClients[i] = updated
+		writeData(w, map[string]any{"updateOAuthClient": updated})
+	}
 }

@@ -24,10 +24,18 @@ multipaas model show --app <app id>
 multipaas entity create --app <app id> --name Order
 multipaas field add --app <app id> --entity <entity id> --type text --name Title --required
 multipaas constraint add --app <app id> --entity <entity id> --fields <field id>,<field id>
+multipaas init --app <app id> --tenant <app-tenant id>   # in your app's directory: writes multipaas.json
+multipaas versions list
+multipaas pin --api-version <id>
+multipaas schema pull                                    # writes multipaas.graphql for your codegen
+multipaas records create --entity <entity id> --data '{"<field id>": "value"}'
+multipaas oauth-client create --name "My app" --redirect-uri http://localhost:5173/callback
 multipaas logout
 ```
 
 The model commands are `model show`, `entity create|update|retire`, `field add|update|retire` and `constraint add|retire`; `--help` on each lists its flags. Each change prints the changed entity, field or constraint and `apiVersion`: the API version the model is at after the change.
+
+In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `records list|create|update|retire` read and write an entity's records in an app-tenant, with `--data` a JSON object keyed by field id. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`.
 
 Every command takes `--json`, which prints exactly one JSON document on stdout.
 

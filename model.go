@@ -221,7 +221,7 @@ type shownEntity struct {
 
 // model reads appID's model. The version is read first, so the model shown is at least that version.
 func (s *session) model(ctx context.Context, appID string) (shownModel, error) {
-	scope, err := s.appScope(ctx, appID)
+	scope, err := s.appScope(ctx, appID, "")
 	if err != nil {
 		return shownModel{}, err
 	}
@@ -295,7 +295,7 @@ func (s *session) model(ctx context.Context, appID string) (shownModel, error) {
 // ponytail: the newest revision, not the one this write minted; someone else's change in between is reported instead.
 // The exact id needs the mutations to return it.
 func (s *session) change(ctx context.Context, appID string, mutate func(graphql.Client) error) (string, error) {
-	scope, err := s.appScope(ctx, appID)
+	scope, err := s.appScope(ctx, appID, "")
 	if err != nil {
 		return "", err
 	}
@@ -322,15 +322,16 @@ func (s *session) latestVersion(ctx context.Context, scope string) (string, erro
 	return latest.ModelRevisions.Items[0].Id, nil
 }
 
-// appScope is the scope model commands send for appID: the first entitlement that reaches it.
-func (s *session) appScope(ctx context.Context, appID string) (string, error) {
+// appScope is the scope sent for appID, or for its app-tenant tenantID when that is not "": the first
+// entitlement that reaches it. An app-tenant-level entitlement reaches only its own app-tenant.
+func (s *session) appScope(ctx context.Context, appID, tenantID string) (string, error) {
 	entitlements, err := s.entitlements(ctx)
 	if err != nil {
 		return "", err
 	}
 	for _, entitlement := range entitlements {
 		if entitlement.AppTenantId != "" {
-			if entitlement.ApplicationId == appID {
+			if entitlement.ApplicationId == appID && (tenantID == "" || tenantID == entitlement.AppTenantId) {
 				return entitlement.Client.Id + "/" + appID + "/" + entitlement.AppTenantId, nil
 			}
 			continue
@@ -341,11 +342,23 @@ func (s *session) appScope(ctx context.Context, appID string) (string, error) {
 		}
 		for _, candidate := range apps {
 			if candidate.ID == appID {
-				return entitlement.Client.Id + "/" + appID, nil
+				return strings.TrimSuffix(entitlement.Client.Id+"/"+appID+"/"+tenantID, "/"), nil
 			}
 		}
 	}
+	if tenantID != "" {
+		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no app-tenant " + tenantID + " of application " + appID + " that you can reach"}
+	}
 	return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no application " + appID + " that you can reach"}
+}
+
+// inApp runs one operation in appID's scope.
+func (s *session) inApp(ctx context.Context, appID string, operation func(graphql.Client) error) error {
+	scope, err := s.appScope(ctx, appID, "")
+	if err != nil {
+		return err
+	}
+	return s.call(ctx, scope, operation)
 }
 
 func printModel(out io.Writer, shown shownModel) {
@@ -371,7 +384,8 @@ func group(use, short string, children ...*cobra.Command) *cobra.Command {
 	return parent
 }
 
+// appFlag is --app, which defaults to multipaas.json's applicationId.
 func appFlag(cmd *cobra.Command, appID *string) {
-	cmd.Flags().StringVar(appID, "app", "", "the application's id (from apps list)")
-	_ = cmd.MarkFlagRequired("app")
+	cmd.Flags().StringVar(appID, "app", "", "the application's id (from apps list; default: multipaas.json's applicationId)")
+	defaultFrom(cmd, appID, "app", func(config projectConfig) string { return config.ApplicationID })
 }

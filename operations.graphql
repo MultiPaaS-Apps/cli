@@ -187,3 +187,80 @@ mutation RetireConstraint($constraintId: ID!) {
     ...ConstraintParts
   }
 }
+
+query ModelRevisions($page: PageInput!) {
+  modelRevisions(page: $page) {
+    items {
+      id
+      createdAt
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query ApiSchema($revisionId: ID!) {
+  apiSchema(revisionId: $revisionId)
+}
+
+fragment RecordParts on Record {
+  id
+  data
+  createdAt
+  updatedAt
+}
+
+query Records($entityId: ID!, $page: PageInput!) {
+  records(entityId: $entityId, page: $page) {
+    items {
+      ...RecordParts
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+mutation CreateRecord($input: CreateRecordInput!) {
+  createRecord(input: $input) {
+    ...RecordParts
+  }
+}
+
+mutation UpdateRecord($input: UpdateRecordInput!) {
+  updateRecord(input: $input) {
+    ...RecordParts
+  }
+}
+
+mutation RetireRecord($input: RetireRecordInput!) {
+  retireRecord(input: $input) {
+    ...RecordParts
+  }
+}
+
+fragment OAuthClientParts on OAuthClient {
+  id
+  name
+  redirectUris
+  createdAt
+}
+
+query OAuthClients {
+  oauthClients {
+    ...OAuthClientParts
+  }
+}
+
+mutation CreateOAuthClient($input: CreateOAuthClientInput!) {
+  createOAuthClient(input: $input) {
+    ...OAuthClientParts
+  }
+}
+
+mutation UpdateOAuthClient($input: UpdateOAuthClientInput!) {
+  updateOAuthClient(input: $input) {
+    ...OAuthClientParts
+  }
+}

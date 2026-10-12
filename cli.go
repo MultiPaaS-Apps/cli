@@ -106,11 +106,12 @@ func run(args []string, env environment) int {
 			table(out, "NAME\tID", list, func(t appTenant) string { return t.Name + "\t" + t.ID })
 		}, err
 	})
-	tenantsList.Flags().StringVar(&appID, "app", "", "the application's id (from apps list)")
-	_ = tenantsList.MarkFlagRequired("app")
+	appFlag(tenantsList, &appID)
 	tenants.AddCommand(tenantsList)
 	root.AddCommand(apps, tenants)
 	root.AddCommand(modelCommands(command)...)
+	root.AddCommand(projectCommands(command)...)
+	root.AddCommand(recordCommands(command), oauthClientCommands(command))
 
 	root.SetArgs(args)
 	root.SetOut(env.stdout)

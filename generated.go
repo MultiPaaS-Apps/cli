@@ -9,6 +9,14 @@ import (
 	"github.com/Khan/genqlient/graphql"
 )
 
+// ApiSchemaDiffResponse is returned by ApiSchemaDiff on success.
+type ApiSchemaDiffResponse struct {
+	ApiSchemaDiff versionDiff `json:"apiSchemaDiff"`
+}
+
+// GetApiSchemaDiff returns ApiSchemaDiffResponse.ApiSchemaDiff, and is useful for accessing the field via an interface.
+func (v *ApiSchemaDiffResponse) GetApiSchemaDiff() versionDiff { return v.ApiSchemaDiff }
+
 // ApiSchemaResponse is returned by ApiSchema on success.
 type ApiSchemaResponse struct {
 	ApiSchema string `json:"apiSchema"`
@@ -2305,6 +2313,18 @@ func (v *UpdateRecordUpdateRecord) __premarshalJSON() (*__premarshalUpdateRecord
 	return &retval, nil
 }
 
+// __ApiSchemaDiffInput is used internally by genqlient
+type __ApiSchemaDiffInput struct {
+	FromRevisionId string `json:"fromRevisionId"`
+	ToRevisionId   string `json:"toRevisionId"`
+}
+
+// GetFromRevisionId returns __ApiSchemaDiffInput.FromRevisionId, and is useful for accessing the field via an interface.
+func (v *__ApiSchemaDiffInput) GetFromRevisionId() string { return v.FromRevisionId }
+
+// GetToRevisionId returns __ApiSchemaDiffInput.ToRevisionId, and is useful for accessing the field via an interface.
+func (v *__ApiSchemaDiffInput) GetToRevisionId() string { return v.ToRevisionId }
+
 // __ApiSchemaInput is used internally by genqlient
 type __ApiSchemaInput struct {
 	RevisionId string `json:"revisionId"`
@@ -2485,6 +2505,34 @@ type __UpdateRecordInput struct {
 // GetInput returns __UpdateRecordInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateRecordInput) GetInput() UpdateRecordInput { return v.Input }
 
+// schemaChange includes the requested fields of the GraphQL type SchemaChange.
+type schemaChange struct {
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
+// GetType returns schemaChange.Type, and is useful for accessing the field via an interface.
+func (v *schemaChange) GetType() string { return v.Type }
+
+// GetDescription returns schemaChange.Description, and is useful for accessing the field via an interface.
+func (v *schemaChange) GetDescription() string { return v.Description }
+
+// versionDiff includes the requested fields of the GraphQL type ApiSchemaDiff.
+type versionDiff struct {
+	Breaking  []schemaChange `json:"breaking"`
+	Dangerous []schemaChange `json:"dangerous"`
+	Added     []schemaChange `json:"added"`
+}
+
+// GetBreaking returns versionDiff.Breaking, and is useful for accessing the field via an interface.
+func (v *versionDiff) GetBreaking() []schemaChange { return v.Breaking }
+
+// GetDangerous returns versionDiff.Dangerous, and is useful for accessing the field via an interface.
+func (v *versionDiff) GetDangerous() []schemaChange { return v.Dangerous }
+
+// GetAdded returns versionDiff.Added, and is useful for accessing the field via an interface.
+func (v *versionDiff) GetAdded() []schemaChange { return v.Added }
+
 // The query executed by ApiSchema.
 const ApiSchema_Operation = `
 query ApiSchema ($revisionId: ID!) {
@@ -2506,6 +2554,53 @@ func ApiSchema(
 	}
 
 	data_ = &ApiSchemaResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by ApiSchemaDiff.
+const ApiSchemaDiff_Operation = `
+query ApiSchemaDiff ($fromRevisionId: ID!, $toRevisionId: ID!) {
+	apiSchemaDiff(fromRevisionId: $fromRevisionId, toRevisionId: $toRevisionId) {
+		breaking {
+			type
+			description
+		}
+		dangerous {
+			type
+			description
+		}
+		added {
+			type
+			description
+		}
+	}
+}
+`
+
+func ApiSchemaDiff(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	fromRevisionId string,
+	toRevisionId string,
+) (data_ *ApiSchemaDiffResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ApiSchemaDiff",
+		Query:  ApiSchemaDiff_Operation,
+		Variables: &__ApiSchemaDiffInput{
+			FromRevisionId: fromRevisionId,
+			ToRevisionId:   toRevisionId,
+		},
+	}
+
+	data_ = &ApiSchemaDiffResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

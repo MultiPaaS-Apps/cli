@@ -204,6 +204,27 @@ query ApiSchema($revisionId: ID!) {
   apiSchema(revisionId: $revisionId)
 }
 
+query ApiSchemaDiff($fromRevisionId: ID!, $toRevisionId: ID!) {
+  # @genqlient(typename: "versionDiff")
+  apiSchemaDiff(fromRevisionId: $fromRevisionId, toRevisionId: $toRevisionId) {
+    # @genqlient(typename: "schemaChange")
+    breaking {
+      type
+      description
+    }
+    # @genqlient(typename: "schemaChange")
+    dangerous {
+      type
+      description
+    }
+    # @genqlient(typename: "schemaChange")
+    added {
+      type
+      description
+    }
+  }
+}
+
 fragment RecordParts on Record {
   id
   data

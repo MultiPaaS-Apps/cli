@@ -304,6 +304,20 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		default:
 			writeData(w, map[string]any{"apiSchema": "type Query {\n  me: String\n}\n# " + revisionID + "\n"})
 		}
+	case "ApiSchemaDiff":
+		from, _ := variables["fromRevisionId"].(string)
+		to, _ := variables["toRevisionId"].(string)
+		switch {
+		case appOf(parts) == "":
+			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		case !f.hasRevision(appOf(parts), from) || !f.hasRevision(appOf(parts), to):
+			graphQLRefusal(w, "NOT_FOUND", "modelRevision not found")
+		default:
+			change := func(kind string) []map[string]any {
+				return []map[string]any{{"type": kind, "description": from + " to " + to}}
+			}
+			writeData(w, map[string]any{"apiSchemaDiff": map[string]any{"breaking": change("FIELD_REMOVED"), "dangerous": []map[string]any{}, "added": change("FIELD_ADDED")}})
+		}
 	case "Records":
 		if len(parts) < 3 {
 			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized") // listRecords: no app-tenant selected
@@ -471,6 +485,13 @@ func pageOf(rows []map[string]any, variables map[string]any) map[string]any {
 	size, _ := input["pageSize"].(float64)
 	start, end := min(int(number*size), len(rows)), min(int((number+1)*size), len(rows))
 	return map[string]any{"items": append([]map[string]any{}, rows[start:end]...), "pageInfo": map[string]any{"hasMore": end < len(rows)}}
+}
+
+// hasRevision is whether id is one of app's API versions, rev-1 to rev-N.
+func (f *fakeMultiPaaS) hasRevision(app, id string) bool {
+	var n int
+	_, err := fmt.Sscanf(id, "rev-%d", &n)
+	return err == nil && n >= 1 && n <= f.revisions[app]
 }
 
 // revisionRows are an app's revisions as modelRevisions lists them, newest first: rev-n down to rev-1.

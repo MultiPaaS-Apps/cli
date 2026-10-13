@@ -156,3 +156,41 @@ func readProjectForTest(t *testing.T) projectConfig {
 	}
 	return config
 }
+
+func TestVersionsDiffComparesThePinWithTheNewest(t *testing.T) {
+	fake := projectFake(t)
+	fake.revisions["app-a-000"] = 3
+	fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--api-version", "rev-1", "--json")
+	got := fake.run(t, "versions", "diff", "--json")
+	want := `{"from":"rev-1","to":"rev-3","breaking":[{"type":"FIELD_REMOVED","description":"rev-1 to rev-3"}],"dangerous":[],"added":[{"type":"FIELD_ADDED","description":"rev-1 to rev-3"}]}`
+	if compact(got.stdout) != want {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+}
+
+func TestVersionsDiffTakesFromAndToAndPrintsEachKindUnderItsHeading(t *testing.T) {
+	fake := projectFake(t)
+	fake.revisions["app-a-000"] = 3
+	got := fake.run(t, "versions", "diff", "--app", "app-a-000", "--from", "rev-3", "--to", "rev-2")
+	want := "API version rev-3 to rev-2\n\nBreaking:\n  rev-3 to rev-2\n\nAdded:\n  rev-3 to rev-2\n"
+	if got.exit != 0 || got.stdout != want {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+}
+
+func TestVersionsDiffDoesNotTakeAnotherApplicationsPin(t *testing.T) {
+	fake := projectFake(t)
+	fake.revisions["app-a-000"] = 3
+	fake.revisions["app-b"] = 3
+	fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--api-version", "rev-1", "--json")
+	assertFailure(t, fake.run(t, "versions", "diff", "--app", "app-b", "--json"), exitRefused, "NOT_PINNED")
+	if got := fake.run(t, "versions", "diff", "--app", "app-b", "--from", "rev-1", "--json"); got.exit != 0 {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+}
+
+func TestVersionsDiffWithoutAPinIsRefusedNotPinned(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--json")
+	assertFailure(t, fake.run(t, "versions", "diff", "--json"), exitRefused, "NOT_PINNED")
+}

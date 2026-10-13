@@ -69,6 +69,12 @@ enum AiTurnStatus {
 	succeeded
 }
 
+type ApiSchemaDiff {
+	added: [SchemaChange!]!
+	breaking: [SchemaChange!]!
+	dangerous: [SchemaChange!]!
+}
+
 type ApiToken implements Receipt{
 	_receipt: Boolean!
 	accessToken: String!
@@ -216,12 +222,14 @@ input CreateEntityInput {
 }
 
 input CreateFieldInput {
+	defaultValue: JSON
 	entityId: ID!
 	enumValues: [String!]
 	graphqlFieldName: String
 	isLifecycle: Boolean
 	isParent: Boolean
 	name: String
+	notNull: Boolean
 	referencesEntityId: ID
 	relatedFieldId: ID
 	required: Boolean
@@ -293,6 +301,7 @@ type EntityPage {
 
 type Field {
 	createdAt: DateTime!
+	defaultValue: JSON
 	entity: Entity!
 	enumValues: [String!]
 	graphqlFieldName: String!
@@ -300,6 +309,7 @@ type Field {
 	isLifecycle: Boolean!
 	isParent: Boolean!
 	name: String
+	notNull: Boolean!
 	referencesEntity: Entity
 	relatedField: Field
 	required: Boolean!
@@ -574,6 +584,10 @@ type Query {
 	apiSchema(
 		revisionId: ID!
 	): String!
+	apiSchemaDiff(
+		fromRevisionId: ID!
+		toRevisionId: ID!
+	): ApiSchemaDiff!
 	appTenant(
 		id: ID!
 	): AppTenant
@@ -805,6 +819,11 @@ input RolePermissionInput {
 	permission: String!
 }
 
+type SchemaChange {
+	description: String!
+	type: String!
+}
+
 input SendPromptInput {
 	conversationId: ID!
 	text: String!
@@ -904,11 +923,13 @@ input UpdateEntityInput {
 }
 
 input UpdateFieldInput {
+	defaultValue: JSON
 	enumValues: [String!]
 	fieldId: ID!
 	graphqlFieldName: String
 	isParent: Boolean
 	name: String
+	notNull: Boolean
 	referencesEntityId: ID
 	relatedFieldId: ID
 	required: Boolean

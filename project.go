@@ -43,12 +43,12 @@ type revision struct {
 
 var errNotInitialized = &cliError{exit: exitRefused, Code: "NOT_INITIALIZED", Message: "no multipaas.json with an applicationId here: run multipaas init first"}
 
-// projectCommands are init, pin, versions list and schema pull: what pins an app to an API version.
+// projectCommands are init, pin, versions list|diff and schema pull: what pins an app to an API version.
 func projectCommands(command commandFunc) []*cobra.Command {
 	return []*cobra.Command{
 		initProject(command),
 		pin(command),
-		group("versions", "An application's API versions", versionsList(command)),
+		group("versions", "An application's API versions", versionsList(command), versionsDiff(command)),
 		group("schema", "An API version's GraphQL schema", schemaPull(command)),
 	}
 }
@@ -127,6 +127,76 @@ func versionsList(command commandFunc) *cobra.Command {
 	})
 	appFlag(cmd, &appID)
 	return cmd
+}
+
+// versionsDiffResult is what versions diff prints: the two API versions and what changed between them.
+type versionsDiffResult struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+	versionDiff
+}
+
+func versionsDiff(command commandFunc) *cobra.Command {
+	var appID, from, to string
+	cmd := command("diff", "Show what changed between two API versions: breaking, dangerous and added", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		if from == "" {
+			config, err := readProject()
+			if err != nil {
+				return nil, nil, err
+			}
+			if config.ApplicationID != appID || config.APIVersion == "" {
+				return nil, nil, &cliError{exit: exitRefused, Code: "NOT_PINNED", Message: "multipaas.json pins no API version of application " + appID + ": run multipaas pin, or pass --from"}
+			}
+			from = config.APIVersion
+		}
+		if to == "" {
+			newest, err := s.pinnable(ctx, appID, "")
+			if err != nil {
+				return nil, nil, err
+			}
+			if newest == "" {
+				return nil, nil, &cliError{exit: exitRefused, Code: "NO_API_VERSION", Message: "application " + appID + " has no API version yet: change its model first"}
+			}
+			to = newest
+		}
+		var diffed *ApiSchemaDiffResponse
+		err := s.inApp(ctx, appID, func(client graphql.Client) (err error) {
+			diffed, err = ApiSchemaDiff(ctx, client, from, to)
+			return err
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		result := versionsDiffResult{From: from, To: to, versionDiff: diffed.ApiSchemaDiff}
+		return result, func(out io.Writer) { printVersionsDiff(out, result) }, nil
+	})
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&from, "from", "", "the API version to compare from (default: multipaas.json's apiVersion)")
+	cmd.Flags().StringVar(&to, "to", "", "the API version to compare to (default: the newest)")
+	return cmd
+}
+
+// printVersionsDiff prints each kind of change under its own heading, or that there are none.
+func printVersionsDiff(out io.Writer, diff versionsDiffResult) {
+	fmt.Fprintf(out, "API version %s to %s\n", diff.From, diff.To)
+	sections := []struct {
+		heading string
+		changes []schemaChange
+	}{{"Breaking", diff.Breaking}, {"Dangerous", diff.Dangerous}, {"Added", diff.Added}}
+	none := true
+	for _, section := range sections {
+		if len(section.changes) == 0 {
+			continue
+		}
+		none = false
+		fmt.Fprintf(out, "\n%s:\n", section.heading)
+		for _, change := range section.changes {
+			fmt.Fprintf(out, "  %s\n", change.Description)
+		}
+	}
+	if none {
+		fmt.Fprintln(out, "No changes.")
+	}
 }
 
 func schemaPull(command commandFunc) *cobra.Command {

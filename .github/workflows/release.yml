@@ -1,8 +1,11 @@
 name: release
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
 
 permissions:
   contents: write
@@ -13,13 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
         with:
+          ref: ${{ inputs.tag }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-go@v7.0.0
         with:
           go-version-file: go.mod
           cache: false
-      - run: scripts/check-release-tag "$GITHUB_REF_NAME"
+      - run: scripts/check-release-tag "$TAG"
+        env:
+          TAG: ${{ inputs.tag }}
       - run: go test -race ./...
       - uses: goreleaser/goreleaser-action@v7.2.3
         with:
@@ -28,3 +34,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ inputs.tag }}

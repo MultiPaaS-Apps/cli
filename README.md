@@ -80,5 +80,6 @@ go tool genqlient
 
 A plain `go build` reports version `dev`, which MultiPaaS refuses. To try a build, stamp a version: `go build -ldflags "-X main.version=0.1.0-rc.1" -o multipaas .`
 
-To release, push a tag `vX.Y.Z` at or above `v0.1.0`. goreleaser publishes the binaries and the
+Releases are cut by release-please. Merging a `feat:` or `fix:` PR to `main` opens or updates a
+release PR with the changelog, and merging that PR tags `vX.Y.Z`, which publishes the binaries and the
 Homebrew formula.

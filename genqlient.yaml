@@ -13,6 +13,10 @@ bindings:
     type: map[string]any
   UpdateFieldInput:
     type: map[string]any
+  CreateEnumTypeInput:
+    type: map[string]any
+  UpdateEnumTypeInput:
+    type: map[string]any
   CreateConstraintInput:
     type: map[string]any
   JSON:

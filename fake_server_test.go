@@ -45,6 +45,7 @@ type fakeMultiPaaS struct {
 
 	entities      map[string][]map[string]any // app id -> its entities, as model show reads them
 	fields        map[string][]map[string]any // entity id -> its fields
+	enumTypes     map[string][]map[string]any // app id -> its enum types
 	constraints   map[string][]map[string]any // entity id -> its constraints
 	revisions     map[string]int              // app id -> how many revisions its model has
 	mutations     []map[string]any            // the variables of every model mutation received
@@ -77,7 +78,7 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
 		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{},
-		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
+		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
 		records: map[string][]map[string]any{},
 	}
 	mux := http.NewServeMux()
@@ -274,6 +275,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		}})
 	case "Entities":
 		writeData(w, map[string]any{"entities": pageOf(f.entities[appOf(parts)], variables)})
+	case "EnumTypes":
+		writeData(w, map[string]any{"enumTypes": pageOf(f.enumTypes[appOf(parts)], variables)})
 	case "Fields":
 		writeData(w, map[string]any{"fields": pageOf(f.fields[variables["entityId"].(string)], variables)})
 	case "Constraints":
@@ -288,7 +291,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			items = append(items, map[string]any{"id": fmt.Sprintf("rev-%d", n)})
 		}
 		writeData(w, map[string]any{"modelRevisions": map[string]any{"items": items}})
-	case "CreateEntity", "UpdateEntity", "RetireEntity", "CreateField", "UpdateField", "RetireField", "CreateConstraint", "RetireConstraint":
+	case "CreateEntity", "UpdateEntity", "RetireEntity", "CreateEnumType", "UpdateEnumType", "RetireEnumType", "CreateField", "UpdateField", "RetireField", "CreateConstraint", "RetireConstraint":
 		f.mutateModel(w, operation, parts, variables)
 	case "ModelRevisions":
 		if appOf(parts) == "" {
@@ -442,9 +445,18 @@ func writeJSONResponse(w http.ResponseWriter, status int, body any) {
 
 // mutateModel shares these steps with the server, in order: an application in scope (requireApplication),
 // model.edit, then the change, which mints one revision. It does not check the input or that the entity
-// exists, which the server does before model.edit. The changed row echoes the input with its id.
+// exists, which the server does before model.edit. The changed row echoes the input with its id. A field input
+// naming enumValues fails variable coercion, so it is answered HTTP 400 with no error code, before any of those steps.
 func (f *fakeMultiPaaS) mutateModel(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
 	f.mutations = append(f.mutations, variables)
+	if input, ok := variables["input"].(map[string]any); ok && strings.HasSuffix(operation, "Field") {
+		if _, named := input["enumValues"]; named {
+			writeJSONResponse(w, http.StatusBadRequest, map[string]any{"errors": []map[string]any{{
+				"message": "Variable \"$input\" got invalid value; Field \"enumValues\" is not defined by type \"" + operation + "Input\".",
+			}}})
+			return
+		}
+	}
 	switch {
 	case appOf(parts) == "":
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
@@ -462,13 +474,13 @@ func (f *fakeMultiPaaS) mutateModel(w http.ResponseWriter, operation string, par
 			changed[key] = value
 		}
 	}
-	for _, id := range []string{"entityId", "fieldId", "constraintId"} {
+	for _, id := range []string{"entityId", "fieldId", "constraintId", "enumTypeId"} {
 		if value, ok := variables[id]; ok {
 			changed["id"] = value
 		}
 	}
 	if input, ok := variables["input"].(map[string]any); ok && strings.HasPrefix(operation, "Update") {
-		changed["id"] = input[map[string]string{"UpdateEntity": "entityId", "UpdateField": "fieldId"}[operation]]
+		changed["id"] = input[map[string]string{"UpdateEntity": "entityId", "UpdateField": "fieldId", "UpdateEnumType": "enumTypeId"}[operation]]
 	}
 	f.revisions[appOf(parts)]++
 	writeData(w, map[string]any{strings.ToLower(operation[:1]) + operation[1:]: changed})

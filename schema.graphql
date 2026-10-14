@@ -221,10 +221,16 @@ input CreateEntityInput {
 	name: String!
 }
 
+input CreateEnumTypeInput {
+	graphqlTypeName: String
+	name: String!
+	values: [EnumValueInput!]!
+}
+
 input CreateFieldInput {
 	defaultValue: JSON
 	entityId: ID!
-	enumValues: [String!]
+	enumTypeId: ID
 	graphqlFieldName: String
 	isLifecycle: Boolean
 	isParent: Boolean
@@ -299,10 +305,35 @@ type EntityPage {
 	pageInfo: PageInfo!
 }
 
+type EnumType {
+	createdAt: DateTime!
+	graphqlTypeName: String!
+	id: ID!
+	name: String!
+	updatedAt: DateTime!
+	values: [EnumValue!]!
+}
+
+type EnumTypePage {
+	items: [EnumType!]!
+	pageInfo: PageInfo!
+}
+
+type EnumValue {
+	graphqlName: String!
+	value: String!
+}
+
+input EnumValueInput {
+	graphqlName: String
+	value: String!
+}
+
 type Field {
 	createdAt: DateTime!
 	defaultValue: JSON
 	entity: Entity!
+	enumType: EnumType
 	enumValues: [String!]
 	graphqlFieldName: String!
 	id: ID!
@@ -401,6 +432,9 @@ type Mutation {
 	createEntity(
 		input: CreateEntityInput!
 	): Entity!
+	createEnumType(
+		input: CreateEnumTypeInput!
+	): EnumType!
 	createField(
 		input: CreateFieldInput!
 	): Field!
@@ -468,6 +502,9 @@ type Mutation {
 	retireEntity(
 		entityId: ID!
 	): Entity!
+	retireEnumType(
+		enumTypeId: ID!
+	): EnumType!
 	retireField(
 		fieldId: ID!
 	): Field!
@@ -518,6 +555,9 @@ type Mutation {
 	updateEntity(
 		input: UpdateEntityInput!
 	): Entity!
+	updateEnumType(
+		input: UpdateEnumTypeInput!
+	): EnumType!
 	updateField(
 		input: UpdateFieldInput!
 	): Field!
@@ -556,6 +596,18 @@ type OAuthClient {
 type OAuthRedirect implements Receipt{
 	_receipt: Boolean!
 	redirectUrl: String!
+}
+
+input PageContextInput {
+	appTenantId: ID
+	applicationId: ID
+	entityId: ID
+	fieldId: ID
+	groupId: ID
+	label: String!
+	path: String!
+	recordId: ID
+	roleId: ID
 }
 
 type PageInfo {
@@ -619,6 +671,9 @@ type Query {
 	entities(
 		page: PageInput!
 	): EntityPage!
+	enumTypes(
+		page: PageInput!
+	): EnumTypePage!
 	fields(
 		entityId: ID!
 		page: PageInput!
@@ -752,13 +807,13 @@ type RecordPage {
 type RecordShare implements AccessGrant{
 	_accessGrant: Boolean!
 	createdAt: DateTime!
-	grantedBy: ID!
+	grantedBy: User
 	id: ID!
 	level: RecordAccessLevel!
-	principalId: ID
+	principal: SharePrincipal
 	principalName: String
 	principalType: SharePrincipalType!
-	recordId: ID!
+	record: Record
 }
 
 type RecordVersion {
@@ -826,8 +881,11 @@ type SchemaChange {
 
 input SendPromptInput {
 	conversationId: ID!
+	pageContext: PageContextInput
 	text: String!
 }
+
+union SharePrincipal =AccessGroup | User
 
 enum SharePrincipalType {
 	everyone
@@ -894,9 +952,7 @@ enum TurnStepKind {
 }
 
 input UnshareRecordInput {
-	principalId: ID
-	principalType: SharePrincipalType!
-	recordId: ID!
+	shareId: ID!
 }
 
 input UpdateAppTenantInput {
@@ -922,9 +978,16 @@ input UpdateEntityInput {
 	name: String
 }
 
+input UpdateEnumTypeInput {
+	enumTypeId: ID!
+	graphqlTypeName: String
+	name: String
+	values: [EnumValueInput!]
+}
+
 input UpdateFieldInput {
 	defaultValue: JSON
-	enumValues: [String!]
+	enumTypeId: ID
 	fieldId: ID!
 	graphqlFieldName: String
 	isParent: Boolean

@@ -10,6 +10,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/Khan/genqlient/graphql"
 	"github.com/spf13/cobra"
 )
 
@@ -107,7 +108,7 @@ func run(args []string, env environment) int {
 		}, err
 	})
 	appFlag(tenantsList, &appID)
-	tenants.AddCommand(tenantsList)
+	tenants.AddCommand(tenantsList, tenantsCreate(command))
 	root.AddCommand(apps, tenants)
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
@@ -117,6 +118,29 @@ func run(args []string, env environment) int {
 	root.SetOut(env.stdout)
 	root.SetErr(env.stderr)
 	return report(env, asJSON, root.Execute())
+}
+
+// tenantsCreate makes an app-tenant to build and test an app in. It needs access.manage.application on the
+// application, the same permission the web app's app-tenants page asks for.
+func tenantsCreate(command commandFunc) *cobra.Command {
+	var appID, name string
+	cmd := command("create", "Create an app-tenant to test your app in", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var created appTenant
+		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+			response, err := CreateAppTenant(ctx, client, CreateAppTenantInput{Name: name})
+			if err == nil {
+				created = appTenant{ID: response.CreateAppTenant.Id, Name: response.CreateAppTenant.Name}
+			}
+			return err
+		})
+		return map[string]appTenant{"appTenant": created}, func(out io.Writer) {
+			fmt.Fprintf(out, "app-tenant %s %q\n", created.ID, created.Name)
+		}, err
+	})
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&name, "name", "", "the app-tenant's name")
+	_ = cmd.MarkFlagRequired("name")
+	return cmd
 }
 
 // cliError is a failure carrying its exit code and the code and message --json reports.

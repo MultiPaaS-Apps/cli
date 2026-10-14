@@ -273,6 +273,35 @@ func (v *ConstraintsResponse) GetConstraints() ConstraintsConstraintsConstraintP
 	return v.Constraints
 }
 
+// CreateAppTenantCreateAppTenant includes the requested fields of the GraphQL type AppTenant.
+type CreateAppTenantCreateAppTenant struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns CreateAppTenantCreateAppTenant.Id, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantCreateAppTenant) GetId() string { return v.Id }
+
+// GetName returns CreateAppTenantCreateAppTenant.Name, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantCreateAppTenant) GetName() string { return v.Name }
+
+type CreateAppTenantInput struct {
+	Name string `json:"name"`
+}
+
+// GetName returns CreateAppTenantInput.Name, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantInput) GetName() string { return v.Name }
+
+// CreateAppTenantResponse is returned by CreateAppTenant on success.
+type CreateAppTenantResponse struct {
+	CreateAppTenant CreateAppTenantCreateAppTenant `json:"createAppTenant"`
+}
+
+// GetCreateAppTenant returns CreateAppTenantResponse.CreateAppTenant, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantResponse) GetCreateAppTenant() CreateAppTenantCreateAppTenant {
+	return v.CreateAppTenant
+}
+
 // CreateConstraintCreateConstraint includes the requested fields of the GraphQL type Constraint.
 type CreateConstraintCreateConstraint struct {
 	ConstraintParts `json:"-"`
@@ -443,6 +472,90 @@ type CreateEntityResponse struct {
 // GetCreateEntity returns CreateEntityResponse.CreateEntity, and is useful for accessing the field via an interface.
 func (v *CreateEntityResponse) GetCreateEntity() CreateEntityCreateEntity { return v.CreateEntity }
 
+// CreateEnumTypeCreateEnumType includes the requested fields of the GraphQL type EnumType.
+type CreateEnumTypeCreateEnumType struct {
+	EnumTypeParts `json:"-"`
+}
+
+// GetId returns CreateEnumTypeCreateEnumType.Id, and is useful for accessing the field via an interface.
+func (v *CreateEnumTypeCreateEnumType) GetId() string { return v.EnumTypeParts.Id }
+
+// GetName returns CreateEnumTypeCreateEnumType.Name, and is useful for accessing the field via an interface.
+func (v *CreateEnumTypeCreateEnumType) GetName() string { return v.EnumTypeParts.Name }
+
+// GetGraphqlTypeName returns CreateEnumTypeCreateEnumType.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *CreateEnumTypeCreateEnumType) GetGraphqlTypeName() string {
+	return v.EnumTypeParts.GraphqlTypeName
+}
+
+// GetValues returns CreateEnumTypeCreateEnumType.Values, and is useful for accessing the field via an interface.
+func (v *CreateEnumTypeCreateEnumType) GetValues() []EnumTypePartsValuesEnumValue {
+	return v.EnumTypeParts.Values
+}
+
+func (v *CreateEnumTypeCreateEnumType) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateEnumTypeCreateEnumType
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateEnumTypeCreateEnumType = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnumTypeParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateEnumTypeCreateEnumType struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	Values []EnumTypePartsValuesEnumValue `json:"values"`
+}
+
+func (v *CreateEnumTypeCreateEnumType) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateEnumTypeCreateEnumType) __premarshalJSON() (*__premarshalCreateEnumTypeCreateEnumType, error) {
+	var retval __premarshalCreateEnumTypeCreateEnumType
+
+	retval.Id = v.EnumTypeParts.Id
+	retval.Name = v.EnumTypeParts.Name
+	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Values = v.EnumTypeParts.Values
+	return &retval, nil
+}
+
+// CreateEnumTypeResponse is returned by CreateEnumType on success.
+type CreateEnumTypeResponse struct {
+	CreateEnumType CreateEnumTypeCreateEnumType `json:"createEnumType"`
+}
+
+// GetCreateEnumType returns CreateEnumTypeResponse.CreateEnumType, and is useful for accessing the field via an interface.
+func (v *CreateEnumTypeResponse) GetCreateEnumType() CreateEnumTypeCreateEnumType {
+	return v.CreateEnumType
+}
+
 // CreateFieldCreateField includes the requested fields of the GraphQL type Field.
 type CreateFieldCreateField struct {
 	FieldParts `json:"-"`
@@ -468,6 +581,9 @@ func (v *CreateFieldCreateField) GetRequired() bool { return v.FieldParts.Requir
 
 // GetEnumValues returns CreateFieldCreateField.EnumValues, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetEnumType returns CreateFieldCreateField.EnumType, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetEnumType() *FieldPartsEnumType { return v.FieldParts.EnumType }
 
 // GetIsLifecycle returns CreateFieldCreateField.IsLifecycle, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
@@ -525,6 +641,8 @@ type __premarshalCreateFieldCreateField struct {
 
 	EnumValues []string `json:"enumValues"`
 
+	EnumType *FieldPartsEnumType `json:"enumType"`
+
 	IsLifecycle bool `json:"isLifecycle"`
 
 	IsParent bool `json:"isParent"`
@@ -552,6 +670,7 @@ func (v *CreateFieldCreateField) __premarshalJSON() (*__premarshalCreateFieldCre
 	retval.Type = v.FieldParts.Type
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
+	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
 	retval.IsParent = v.FieldParts.IsParent
 	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
@@ -887,6 +1006,144 @@ func (v *EntityParts) GetGraphqlPluralName() string { return v.GraphqlPluralName
 // GetManaged returns EntityParts.Managed, and is useful for accessing the field via an interface.
 func (v *EntityParts) GetManaged() bool { return v.Managed }
 
+// EnumTypeParts includes the GraphQL fields of EnumType requested by the fragment EnumTypeParts.
+type EnumTypeParts struct {
+	Id              string                         `json:"id"`
+	Name            string                         `json:"name"`
+	GraphqlTypeName string                         `json:"graphqlTypeName"`
+	Values          []EnumTypePartsValuesEnumValue `json:"values"`
+}
+
+// GetId returns EnumTypeParts.Id, and is useful for accessing the field via an interface.
+func (v *EnumTypeParts) GetId() string { return v.Id }
+
+// GetName returns EnumTypeParts.Name, and is useful for accessing the field via an interface.
+func (v *EnumTypeParts) GetName() string { return v.Name }
+
+// GetGraphqlTypeName returns EnumTypeParts.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *EnumTypeParts) GetGraphqlTypeName() string { return v.GraphqlTypeName }
+
+// GetValues returns EnumTypeParts.Values, and is useful for accessing the field via an interface.
+func (v *EnumTypeParts) GetValues() []EnumTypePartsValuesEnumValue { return v.Values }
+
+// EnumTypePartsValuesEnumValue includes the requested fields of the GraphQL type EnumValue.
+type EnumTypePartsValuesEnumValue struct {
+	Value       string `json:"value"`
+	GraphqlName string `json:"graphqlName"`
+}
+
+// GetValue returns EnumTypePartsValuesEnumValue.Value, and is useful for accessing the field via an interface.
+func (v *EnumTypePartsValuesEnumValue) GetValue() string { return v.Value }
+
+// GetGraphqlName returns EnumTypePartsValuesEnumValue.GraphqlName, and is useful for accessing the field via an interface.
+func (v *EnumTypePartsValuesEnumValue) GetGraphqlName() string { return v.GraphqlName }
+
+// EnumTypesEnumTypesEnumTypePage includes the requested fields of the GraphQL type EnumTypePage.
+type EnumTypesEnumTypesEnumTypePage struct {
+	Items    []EnumTypesEnumTypesEnumTypePageItemsEnumType `json:"items"`
+	PageInfo EnumTypesEnumTypesEnumTypePagePageInfo        `json:"pageInfo"`
+}
+
+// GetItems returns EnumTypesEnumTypesEnumTypePage.Items, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePage) GetItems() []EnumTypesEnumTypesEnumTypePageItemsEnumType {
+	return v.Items
+}
+
+// GetPageInfo returns EnumTypesEnumTypesEnumTypePage.PageInfo, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePage) GetPageInfo() EnumTypesEnumTypesEnumTypePagePageInfo {
+	return v.PageInfo
+}
+
+// EnumTypesEnumTypesEnumTypePageItemsEnumType includes the requested fields of the GraphQL type EnumType.
+type EnumTypesEnumTypesEnumTypePageItemsEnumType struct {
+	EnumTypeParts `json:"-"`
+}
+
+// GetId returns EnumTypesEnumTypesEnumTypePageItemsEnumType.Id, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) GetId() string { return v.EnumTypeParts.Id }
+
+// GetName returns EnumTypesEnumTypesEnumTypePageItemsEnumType.Name, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) GetName() string { return v.EnumTypeParts.Name }
+
+// GetGraphqlTypeName returns EnumTypesEnumTypesEnumTypePageItemsEnumType.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) GetGraphqlTypeName() string {
+	return v.EnumTypeParts.GraphqlTypeName
+}
+
+// GetValues returns EnumTypesEnumTypesEnumTypePageItemsEnumType.Values, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) GetValues() []EnumTypePartsValuesEnumValue {
+	return v.EnumTypeParts.Values
+}
+
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*EnumTypesEnumTypesEnumTypePageItemsEnumType
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.EnumTypesEnumTypesEnumTypePageItemsEnumType = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnumTypeParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalEnumTypesEnumTypesEnumTypePageItemsEnumType struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	Values []EnumTypePartsValuesEnumValue `json:"values"`
+}
+
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) __premarshalJSON() (*__premarshalEnumTypesEnumTypesEnumTypePageItemsEnumType, error) {
+	var retval __premarshalEnumTypesEnumTypesEnumTypePageItemsEnumType
+
+	retval.Id = v.EnumTypeParts.Id
+	retval.Name = v.EnumTypeParts.Name
+	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Values = v.EnumTypeParts.Values
+	return &retval, nil
+}
+
+// EnumTypesEnumTypesEnumTypePagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type EnumTypesEnumTypesEnumTypePagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns EnumTypesEnumTypesEnumTypePagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// EnumTypesResponse is returned by EnumTypes on success.
+type EnumTypesResponse struct {
+	EnumTypes EnumTypesEnumTypesEnumTypePage `json:"enumTypes"`
+}
+
+// GetEnumTypes returns EnumTypesResponse.EnumTypes, and is useful for accessing the field via an interface.
+func (v *EnumTypesResponse) GetEnumTypes() EnumTypesEnumTypesEnumTypePage { return v.EnumTypes }
+
 // FieldParts includes the GraphQL fields of Field requested by the fragment FieldParts.
 type FieldParts struct {
 	Id               string                      `json:"id"`
@@ -896,6 +1153,7 @@ type FieldParts struct {
 	Type             string                      `json:"type"`
 	Required         bool                        `json:"required"`
 	EnumValues       []string                    `json:"enumValues"`
+	EnumType         *FieldPartsEnumType         `json:"enumType"`
 	IsLifecycle      bool                        `json:"isLifecycle"`
 	IsParent         bool                        `json:"isParent"`
 	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
@@ -923,6 +1181,9 @@ func (v *FieldParts) GetRequired() bool { return v.Required }
 // GetEnumValues returns FieldParts.EnumValues, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetEnumValues() []string { return v.EnumValues }
 
+// GetEnumType returns FieldParts.EnumType, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetEnumType() *FieldPartsEnumType { return v.EnumType }
+
 // GetIsLifecycle returns FieldParts.IsLifecycle, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetIsLifecycle() bool { return v.IsLifecycle }
 
@@ -942,6 +1203,18 @@ type FieldPartsEntity struct {
 
 // GetId returns FieldPartsEntity.Id, and is useful for accessing the field via an interface.
 func (v *FieldPartsEntity) GetId() string { return v.Id }
+
+// FieldPartsEnumType includes the requested fields of the GraphQL type EnumType.
+type FieldPartsEnumType struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns FieldPartsEnumType.Id, and is useful for accessing the field via an interface.
+func (v *FieldPartsEnumType) GetId() string { return v.Id }
+
+// GetName returns FieldPartsEnumType.Name, and is useful for accessing the field via an interface.
+func (v *FieldPartsEnumType) GetName() string { return v.Name }
 
 // FieldPartsReferencesEntity includes the requested fields of the GraphQL type Entity.
 type FieldPartsReferencesEntity struct {
@@ -999,6 +1272,11 @@ func (v *FieldsFieldsFieldPageItemsField) GetRequired() bool { return v.FieldPar
 // GetEnumValues returns FieldsFieldsFieldPageItemsField.EnumValues, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetEnumValues() []string { return v.FieldParts.EnumValues }
 
+// GetEnumType returns FieldsFieldsFieldPageItemsField.EnumType, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetEnumType() *FieldPartsEnumType {
+	return v.FieldParts.EnumType
+}
+
 // GetIsLifecycle returns FieldsFieldsFieldPageItemsField.IsLifecycle, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
 
@@ -1055,6 +1333,8 @@ type __premarshalFieldsFieldsFieldPageItemsField struct {
 
 	EnumValues []string `json:"enumValues"`
 
+	EnumType *FieldPartsEnumType `json:"enumType"`
+
 	IsLifecycle bool `json:"isLifecycle"`
 
 	IsParent bool `json:"isParent"`
@@ -1082,6 +1362,7 @@ func (v *FieldsFieldsFieldPageItemsField) __premarshalJSON() (*__premarshalField
 	retval.Type = v.FieldParts.Type
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
+	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
 	retval.IsParent = v.FieldParts.IsParent
 	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
@@ -1648,6 +1929,90 @@ func (v *RetireEntityRetireEntity) __premarshalJSON() (*__premarshalRetireEntity
 	return &retval, nil
 }
 
+// RetireEnumTypeResponse is returned by RetireEnumType on success.
+type RetireEnumTypeResponse struct {
+	RetireEnumType RetireEnumTypeRetireEnumType `json:"retireEnumType"`
+}
+
+// GetRetireEnumType returns RetireEnumTypeResponse.RetireEnumType, and is useful for accessing the field via an interface.
+func (v *RetireEnumTypeResponse) GetRetireEnumType() RetireEnumTypeRetireEnumType {
+	return v.RetireEnumType
+}
+
+// RetireEnumTypeRetireEnumType includes the requested fields of the GraphQL type EnumType.
+type RetireEnumTypeRetireEnumType struct {
+	EnumTypeParts `json:"-"`
+}
+
+// GetId returns RetireEnumTypeRetireEnumType.Id, and is useful for accessing the field via an interface.
+func (v *RetireEnumTypeRetireEnumType) GetId() string { return v.EnumTypeParts.Id }
+
+// GetName returns RetireEnumTypeRetireEnumType.Name, and is useful for accessing the field via an interface.
+func (v *RetireEnumTypeRetireEnumType) GetName() string { return v.EnumTypeParts.Name }
+
+// GetGraphqlTypeName returns RetireEnumTypeRetireEnumType.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *RetireEnumTypeRetireEnumType) GetGraphqlTypeName() string {
+	return v.EnumTypeParts.GraphqlTypeName
+}
+
+// GetValues returns RetireEnumTypeRetireEnumType.Values, and is useful for accessing the field via an interface.
+func (v *RetireEnumTypeRetireEnumType) GetValues() []EnumTypePartsValuesEnumValue {
+	return v.EnumTypeParts.Values
+}
+
+func (v *RetireEnumTypeRetireEnumType) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RetireEnumTypeRetireEnumType
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RetireEnumTypeRetireEnumType = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnumTypeParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRetireEnumTypeRetireEnumType struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	Values []EnumTypePartsValuesEnumValue `json:"values"`
+}
+
+func (v *RetireEnumTypeRetireEnumType) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RetireEnumTypeRetireEnumType) __premarshalJSON() (*__premarshalRetireEnumTypeRetireEnumType, error) {
+	var retval __premarshalRetireEnumTypeRetireEnumType
+
+	retval.Id = v.EnumTypeParts.Id
+	retval.Name = v.EnumTypeParts.Name
+	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Values = v.EnumTypeParts.Values
+	return &retval, nil
+}
+
 // RetireFieldResponse is returned by RetireField on success.
 type RetireFieldResponse struct {
 	RetireField RetireFieldRetireField `json:"retireField"`
@@ -1681,6 +2046,9 @@ func (v *RetireFieldRetireField) GetRequired() bool { return v.FieldParts.Requir
 
 // GetEnumValues returns RetireFieldRetireField.EnumValues, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetEnumType returns RetireFieldRetireField.EnumType, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetEnumType() *FieldPartsEnumType { return v.FieldParts.EnumType }
 
 // GetIsLifecycle returns RetireFieldRetireField.IsLifecycle, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
@@ -1738,6 +2106,8 @@ type __premarshalRetireFieldRetireField struct {
 
 	EnumValues []string `json:"enumValues"`
 
+	EnumType *FieldPartsEnumType `json:"enumType"`
+
 	IsLifecycle bool `json:"isLifecycle"`
 
 	IsParent bool `json:"isParent"`
@@ -1765,6 +2135,7 @@ func (v *RetireFieldRetireField) __premarshalJSON() (*__premarshalRetireFieldRet
 	retval.Type = v.FieldParts.Type
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
+	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
 	retval.IsParent = v.FieldParts.IsParent
 	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
@@ -1993,6 +2364,90 @@ func (v *UpdateEntityUpdateEntity) __premarshalJSON() (*__premarshalUpdateEntity
 	return &retval, nil
 }
 
+// UpdateEnumTypeResponse is returned by UpdateEnumType on success.
+type UpdateEnumTypeResponse struct {
+	UpdateEnumType UpdateEnumTypeUpdateEnumType `json:"updateEnumType"`
+}
+
+// GetUpdateEnumType returns UpdateEnumTypeResponse.UpdateEnumType, and is useful for accessing the field via an interface.
+func (v *UpdateEnumTypeResponse) GetUpdateEnumType() UpdateEnumTypeUpdateEnumType {
+	return v.UpdateEnumType
+}
+
+// UpdateEnumTypeUpdateEnumType includes the requested fields of the GraphQL type EnumType.
+type UpdateEnumTypeUpdateEnumType struct {
+	EnumTypeParts `json:"-"`
+}
+
+// GetId returns UpdateEnumTypeUpdateEnumType.Id, and is useful for accessing the field via an interface.
+func (v *UpdateEnumTypeUpdateEnumType) GetId() string { return v.EnumTypeParts.Id }
+
+// GetName returns UpdateEnumTypeUpdateEnumType.Name, and is useful for accessing the field via an interface.
+func (v *UpdateEnumTypeUpdateEnumType) GetName() string { return v.EnumTypeParts.Name }
+
+// GetGraphqlTypeName returns UpdateEnumTypeUpdateEnumType.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *UpdateEnumTypeUpdateEnumType) GetGraphqlTypeName() string {
+	return v.EnumTypeParts.GraphqlTypeName
+}
+
+// GetValues returns UpdateEnumTypeUpdateEnumType.Values, and is useful for accessing the field via an interface.
+func (v *UpdateEnumTypeUpdateEnumType) GetValues() []EnumTypePartsValuesEnumValue {
+	return v.EnumTypeParts.Values
+}
+
+func (v *UpdateEnumTypeUpdateEnumType) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateEnumTypeUpdateEnumType
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateEnumTypeUpdateEnumType = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnumTypeParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateEnumTypeUpdateEnumType struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	Values []EnumTypePartsValuesEnumValue `json:"values"`
+}
+
+func (v *UpdateEnumTypeUpdateEnumType) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateEnumTypeUpdateEnumType) __premarshalJSON() (*__premarshalUpdateEnumTypeUpdateEnumType, error) {
+	var retval __premarshalUpdateEnumTypeUpdateEnumType
+
+	retval.Id = v.EnumTypeParts.Id
+	retval.Name = v.EnumTypeParts.Name
+	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Values = v.EnumTypeParts.Values
+	return &retval, nil
+}
+
 // UpdateFieldResponse is returned by UpdateField on success.
 type UpdateFieldResponse struct {
 	UpdateField UpdateFieldUpdateField `json:"updateField"`
@@ -2026,6 +2481,9 @@ func (v *UpdateFieldUpdateField) GetRequired() bool { return v.FieldParts.Requir
 
 // GetEnumValues returns UpdateFieldUpdateField.EnumValues, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetEnumType returns UpdateFieldUpdateField.EnumType, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetEnumType() *FieldPartsEnumType { return v.FieldParts.EnumType }
 
 // GetIsLifecycle returns UpdateFieldUpdateField.IsLifecycle, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
@@ -2083,6 +2541,8 @@ type __premarshalUpdateFieldUpdateField struct {
 
 	EnumValues []string `json:"enumValues"`
 
+	EnumType *FieldPartsEnumType `json:"enumType"`
+
 	IsLifecycle bool `json:"isLifecycle"`
 
 	IsParent bool `json:"isParent"`
@@ -2110,6 +2570,7 @@ func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpd
 	retval.Type = v.FieldParts.Type
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
+	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
 	retval.IsParent = v.FieldParts.IsParent
 	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
@@ -2361,6 +2822,14 @@ func (v *__ConstraintsInput) GetEntityId() string { return v.EntityId }
 // GetPage returns __ConstraintsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ConstraintsInput) GetPage() PageInput { return v.Page }
 
+// __CreateAppTenantInput is used internally by genqlient
+type __CreateAppTenantInput struct {
+	Input CreateAppTenantInput `json:"input"`
+}
+
+// GetInput returns __CreateAppTenantInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateAppTenantInput) GetInput() CreateAppTenantInput { return v.Input }
+
 // __CreateConstraintInput is used internally by genqlient
 type __CreateConstraintInput struct {
 	Input map[string]any `json:"input"`
@@ -2376,6 +2845,14 @@ type __CreateEntityInput struct {
 
 // GetInput returns __CreateEntityInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateEntityInput) GetInput() map[string]any { return v.Input }
+
+// __CreateEnumTypeInput is used internally by genqlient
+type __CreateEnumTypeInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __CreateEnumTypeInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateEnumTypeInput) GetInput() map[string]any { return v.Input }
 
 // __CreateFieldInput is used internally by genqlient
 type __CreateFieldInput struct {
@@ -2408,6 +2885,14 @@ type __EntitiesInput struct {
 
 // GetPage returns __EntitiesInput.Page, and is useful for accessing the field via an interface.
 func (v *__EntitiesInput) GetPage() PageInput { return v.Page }
+
+// __EnumTypesInput is used internally by genqlient
+type __EnumTypesInput struct {
+	Page PageInput `json:"page"`
+}
+
+// GetPage returns __EnumTypesInput.Page, and is useful for accessing the field via an interface.
+func (v *__EnumTypesInput) GetPage() PageInput { return v.Page }
 
 // __FieldsInput is used internally by genqlient
 type __FieldsInput struct {
@@ -2457,6 +2942,14 @@ type __RetireEntityInput struct {
 // GetEntityId returns __RetireEntityInput.EntityId, and is useful for accessing the field via an interface.
 func (v *__RetireEntityInput) GetEntityId() string { return v.EntityId }
 
+// __RetireEnumTypeInput is used internally by genqlient
+type __RetireEnumTypeInput struct {
+	EnumTypeId string `json:"enumTypeId"`
+}
+
+// GetEnumTypeId returns __RetireEnumTypeInput.EnumTypeId, and is useful for accessing the field via an interface.
+func (v *__RetireEnumTypeInput) GetEnumTypeId() string { return v.EnumTypeId }
+
 // __RetireFieldInput is used internally by genqlient
 type __RetireFieldInput struct {
 	FieldId string `json:"fieldId"`
@@ -2480,6 +2973,14 @@ type __UpdateEntityInput struct {
 
 // GetInput returns __UpdateEntityInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateEntityInput) GetInput() map[string]any { return v.Input }
+
+// __UpdateEnumTypeInput is used internally by genqlient
+type __UpdateEnumTypeInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __UpdateEnumTypeInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateEnumTypeInput) GetInput() map[string]any { return v.Input }
 
 // __UpdateFieldInput is used internally by genqlient
 type __UpdateFieldInput struct {
@@ -2745,6 +3246,41 @@ func Constraints(
 	return data_, err_
 }
 
+// The mutation executed by CreateAppTenant.
+const CreateAppTenant_Operation = `
+mutation CreateAppTenant ($input: CreateAppTenantInput!) {
+	createAppTenant(input: $input) {
+		id
+		name
+	}
+}
+`
+
+func CreateAppTenant(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateAppTenantInput,
+) (data_ *CreateAppTenantResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateAppTenant",
+		Query:  CreateAppTenant_Operation,
+		Variables: &__CreateAppTenantInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateAppTenantResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by CreateConstraint.
 const CreateConstraint_Operation = `
 mutation CreateConstraint ($input: CreateConstraintInput!) {
@@ -2832,6 +3368,49 @@ func CreateEntity(
 	return data_, err_
 }
 
+// The mutation executed by CreateEnumType.
+const CreateEnumType_Operation = `
+mutation CreateEnumType ($input: CreateEnumTypeInput!) {
+	createEnumType(input: $input) {
+		... EnumTypeParts
+	}
+}
+fragment EnumTypeParts on EnumType {
+	id
+	name
+	graphqlTypeName
+	values {
+		value
+		graphqlName
+	}
+}
+`
+
+func CreateEnumType(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *CreateEnumTypeResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateEnumType",
+		Query:  CreateEnumType_Operation,
+		Variables: &__CreateEnumTypeInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateEnumTypeResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by CreateField.
 const CreateField_Operation = `
 mutation CreateField ($input: CreateFieldInput!) {
@@ -2849,6 +3428,10 @@ fragment FieldParts on Field {
 	type
 	required
 	enumValues
+	enumType {
+		id
+		name
+	}
 	isLifecycle
 	isParent
 	referencesEntity {
@@ -3011,6 +3594,54 @@ func Entities(
 	return data_, err_
 }
 
+// The query executed by EnumTypes.
+const EnumTypes_Operation = `
+query EnumTypes ($page: PageInput!) {
+	enumTypes(page: $page) {
+		items {
+			... EnumTypeParts
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+fragment EnumTypeParts on EnumType {
+	id
+	name
+	graphqlTypeName
+	values {
+		value
+		graphqlName
+	}
+}
+`
+
+func EnumTypes(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	page PageInput,
+) (data_ *EnumTypesResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "EnumTypes",
+		Query:  EnumTypes_Operation,
+		Variables: &__EnumTypesInput{
+			Page: page,
+		},
+	}
+
+	data_ = &EnumTypesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Fields.
 const Fields_Operation = `
 query Fields ($entityId: ID!, $page: PageInput!) {
@@ -3033,6 +3664,10 @@ fragment FieldParts on Field {
 	type
 	required
 	enumValues
+	enumType {
+		id
+		name
+	}
 	isLifecycle
 	isParent
 	referencesEntity {
@@ -3380,6 +4015,49 @@ func RetireEntity(
 	return data_, err_
 }
 
+// The mutation executed by RetireEnumType.
+const RetireEnumType_Operation = `
+mutation RetireEnumType ($enumTypeId: ID!) {
+	retireEnumType(enumTypeId: $enumTypeId) {
+		... EnumTypeParts
+	}
+}
+fragment EnumTypeParts on EnumType {
+	id
+	name
+	graphqlTypeName
+	values {
+		value
+		graphqlName
+	}
+}
+`
+
+func RetireEnumType(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	enumTypeId string,
+) (data_ *RetireEnumTypeResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RetireEnumType",
+		Query:  RetireEnumType_Operation,
+		Variables: &__RetireEnumTypeInput{
+			EnumTypeId: enumTypeId,
+		},
+	}
+
+	data_ = &RetireEnumTypeResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by RetireField.
 const RetireField_Operation = `
 mutation RetireField ($fieldId: ID!) {
@@ -3397,6 +4075,10 @@ fragment FieldParts on Field {
 	type
 	required
 	enumValues
+	enumType {
+		id
+		name
+	}
 	isLifecycle
 	isParent
 	referencesEntity {
@@ -3551,6 +4233,49 @@ func UpdateEntity(
 	return data_, err_
 }
 
+// The mutation executed by UpdateEnumType.
+const UpdateEnumType_Operation = `
+mutation UpdateEnumType ($input: UpdateEnumTypeInput!) {
+	updateEnumType(input: $input) {
+		... EnumTypeParts
+	}
+}
+fragment EnumTypeParts on EnumType {
+	id
+	name
+	graphqlTypeName
+	values {
+		value
+		graphqlName
+	}
+}
+`
+
+func UpdateEnumType(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *UpdateEnumTypeResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateEnumType",
+		Query:  UpdateEnumType_Operation,
+		Variables: &__UpdateEnumTypeInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateEnumTypeResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by UpdateField.
 const UpdateField_Operation = `
 mutation UpdateField ($input: UpdateFieldInput!) {
@@ -3568,6 +4293,10 @@ fragment FieldParts on Field {
 	type
 	required
 	enumValues
+	enumType {
+		id
+		name
+	}
 	isLifecycle
 	isParent
 	referencesEntity {

@@ -42,6 +42,13 @@ query AppTenants($page: PageInput!) {
   }
 }
 
+mutation CreateAppTenant($input: CreateAppTenantInput!) {
+  createAppTenant(input: $input) {
+    id
+    name
+  }
+}
+
 query ScopedAppTenant {
   me {
     application {
@@ -74,6 +81,11 @@ fragment FieldParts on Field {
   type
   required
   enumValues
+  # @genqlient(pointer: true)
+  enumType {
+    id
+    name
+  }
   isLifecycle
   isParent
   # @genqlient(pointer: true)
@@ -83,6 +95,16 @@ fragment FieldParts on Field {
   # @genqlient(pointer: true)
   relatedField {
     id
+  }
+}
+
+fragment EnumTypeParts on EnumType {
+  id
+  name
+  graphqlTypeName
+  values {
+    value
+    graphqlName
   }
 }
 
@@ -103,6 +125,17 @@ query Entities($page: PageInput!) {
   entities(page: $page) {
     items {
       ...EntityParts
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query EnumTypes($page: PageInput!) {
+  enumTypes(page: $page) {
+    items {
+      ...EnumTypeParts
     }
     pageInfo {
       hasMore
@@ -155,6 +188,24 @@ mutation UpdateEntity($input: UpdateEntityInput!) {
 mutation RetireEntity($entityId: ID!) {
   retireEntity(entityId: $entityId) {
     ...EntityParts
+  }
+}
+
+mutation CreateEnumType($input: CreateEnumTypeInput!) {
+  createEnumType(input: $input) {
+    ...EnumTypeParts
+  }
+}
+
+mutation UpdateEnumType($input: UpdateEnumTypeInput!) {
+  updateEnumType(input: $input) {
+    ...EnumTypeParts
+  }
+}
+
+mutation RetireEnumType($enumTypeId: ID!) {
+  retireEnumType(enumTypeId: $enumTypeId) {
+    ...EnumTypeParts
   }
 }
 

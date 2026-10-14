@@ -54,6 +54,7 @@ type fakeMultiPaaS struct {
 	records       map[string][]map[string]any // entity id -> its live records, newest first
 	oauthClients  []map[string]any            // the application's sign-in clients
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
+	noManageApp   bool                        // the signed-in user lacks access.manage.application
 }
 
 type pendingCode struct{ redirectURI, challenge string }
@@ -251,6 +252,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			return
 		}
 		writeData(w, map[string]any{"applications": page(f.apps[parts[0]], variables)})
+	case "CreateAppTenant":
+		f.createAppTenant(w, parts, variables)
 	case "AppTenants":
 		apps := []fakeRow{}
 		if len(parts) >= 2 {
@@ -542,6 +545,21 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 	record["data"] = data
 	f.records[entity][i] = record
 	writeData(w, map[string]any{field: record})
+}
+
+// createAppTenant shares these steps with the server, in order: an application in scope, then
+// access.manage.application, then the insert.
+func (f *fakeMultiPaaS) createAppTenant(w http.ResponseWriter, parts []string, variables map[string]any) {
+	f.mutations = append(f.mutations, variables)
+	app := appOf(parts)
+	if app == "" || f.noManageApp {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	name, _ := variables["input"].(map[string]any)["name"].(string)
+	created := fakeRow{id: fmt.Sprintf("tenant-new-%d", len(f.tenants[app])+1), name: name}
+	f.tenants[app] = append(f.tenants[app], created)
+	writeData(w, map[string]any{"createAppTenant": map[string]any{"id": created.id, "name": created.name}})
 }
 
 // manageOAuth shares these steps with the server, in order: an application in scope

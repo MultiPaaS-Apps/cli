@@ -20,6 +20,7 @@ multipaas login                        # opens your browser
 multipaas whoami
 multipaas apps list
 multipaas tenants list --app <app id>
+multipaas tenants create --app <app id> --name "Dev test"   # an app-tenant to test in
 multipaas model show --app <app id>
 multipaas entity create --app <app id> --name Order
 multipaas field add --app <app id> --entity <entity id> --type text --name Title --required
@@ -36,7 +37,7 @@ multipaas logout
 
 The model commands are `model show`, `entity create|update|retire`, `field add|update|retire` and `constraint add|retire`; `--help` on each lists its flags. Each change prints the changed entity, field or constraint and `apiVersion`: the API version the model is at after the change.
 
-In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `versions diff` shows what changed between two API versions, breaking, dangerous and added, from the pin to the newest unless `--from` and `--to` say otherwise. `records list|create|update|retire` read and write an entity's records in an app-tenant, with `--data` a JSON object keyed by field id. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`.
+In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `versions diff` shows what changed between two API versions, breaking, dangerous and added, from the pin to the newest unless `--from` and `--to` say otherwise. `records list|create|update|retire` read and write an entity's records in an app-tenant, with `--data` a JSON object keyed by field id. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`. `tenants create` makes an app-tenant to test in, which needs `access.manage.application`.
 
 Every command takes `--json`, which prints exactly one JSON document on stdout.
 

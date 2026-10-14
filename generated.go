@@ -273,6 +273,35 @@ func (v *ConstraintsResponse) GetConstraints() ConstraintsConstraintsConstraintP
 	return v.Constraints
 }
 
+// CreateAppTenantCreateAppTenant includes the requested fields of the GraphQL type AppTenant.
+type CreateAppTenantCreateAppTenant struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns CreateAppTenantCreateAppTenant.Id, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantCreateAppTenant) GetId() string { return v.Id }
+
+// GetName returns CreateAppTenantCreateAppTenant.Name, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantCreateAppTenant) GetName() string { return v.Name }
+
+type CreateAppTenantInput struct {
+	Name string `json:"name"`
+}
+
+// GetName returns CreateAppTenantInput.Name, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantInput) GetName() string { return v.Name }
+
+// CreateAppTenantResponse is returned by CreateAppTenant on success.
+type CreateAppTenantResponse struct {
+	CreateAppTenant CreateAppTenantCreateAppTenant `json:"createAppTenant"`
+}
+
+// GetCreateAppTenant returns CreateAppTenantResponse.CreateAppTenant, and is useful for accessing the field via an interface.
+func (v *CreateAppTenantResponse) GetCreateAppTenant() CreateAppTenantCreateAppTenant {
+	return v.CreateAppTenant
+}
+
 // CreateConstraintCreateConstraint includes the requested fields of the GraphQL type Constraint.
 type CreateConstraintCreateConstraint struct {
 	ConstraintParts `json:"-"`
@@ -2361,6 +2390,14 @@ func (v *__ConstraintsInput) GetEntityId() string { return v.EntityId }
 // GetPage returns __ConstraintsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ConstraintsInput) GetPage() PageInput { return v.Page }
 
+// __CreateAppTenantInput is used internally by genqlient
+type __CreateAppTenantInput struct {
+	Input CreateAppTenantInput `json:"input"`
+}
+
+// GetInput returns __CreateAppTenantInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateAppTenantInput) GetInput() CreateAppTenantInput { return v.Input }
+
 // __CreateConstraintInput is used internally by genqlient
 type __CreateConstraintInput struct {
 	Input map[string]any `json:"input"`
@@ -2734,6 +2771,41 @@ func Constraints(
 	}
 
 	data_ = &ConstraintsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateAppTenant.
+const CreateAppTenant_Operation = `
+mutation CreateAppTenant ($input: CreateAppTenantInput!) {
+	createAppTenant(input: $input) {
+		id
+		name
+	}
+}
+`
+
+func CreateAppTenant(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateAppTenantInput,
+) (data_ *CreateAppTenantResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateAppTenant",
+		Query:  CreateAppTenant_Operation,
+		Variables: &__CreateAppTenantInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateAppTenantResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

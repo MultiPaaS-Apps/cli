@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"sync"
@@ -163,6 +164,45 @@ func TestTenantsListReadsTheAppsTenantsInTheAppsScope(t *testing.T) {
 	}
 	if strings.Join(outcomes, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("got\n%s\nwant\n%s", strings.Join(outcomes, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+func TestTenantsCreateMakesOneInTheAppsScopeAndListShowsIt(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "tenants", "create", "--app", "app-a-000", "--name", "Dev test", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if compact(got.stdout) != `{"appTenant":{"id":"tenant-new-2","name":"Dev test"}}` {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"name": "Dev test"}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000" {
+		t.Fatalf("scope %q", last)
+	}
+	listed := fake.run(t, "tenants", "list", "--app", "app-a-000", "--json")
+	if compact(listed.stdout) != `[{"id":"tenant-a","name":"Test"},{"id":"tenant-new-2","name":"Dev test"}]` {
+		t.Fatalf("list %s", listed.stdout)
+	}
+}
+
+func TestTenantsCreateWithoutManageApplicationIsRefusedUnauthorized(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.noManageApp = true
+	assertFailure(t, fake.run(t, "tenants", "create", "--app", "app-a-000", "--name", "Dev test", "--json"), exitRefused, "UNAUTHORIZED")
+	if got := fake.run(t, "tenants", "list", "--app", "app-a-000", "--json"); compact(got.stdout) != `[{"id":"tenant-a","name":"Test"}]` {
+		t.Fatalf("a refused create changed the list: %s", got.stdout)
+	}
+}
+
+func TestTenantsCreateForAnApplicationYouCannotReachIsNotFoundAndSendsNothing(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	assertFailure(t, fake.run(t, "tenants", "create", "--app", "app-unknown", "--name", "Dev test", "--json"), exitRefused, "NOT_FOUND")
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
 	}
 }
 

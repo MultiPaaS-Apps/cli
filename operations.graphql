@@ -42,6 +42,13 @@ query AppTenants($page: PageInput!) {
   }
 }
 
+mutation CreateAppTenant($input: CreateAppTenantInput!) {
+  createAppTenant(input: $input) {
+    id
+    name
+  }
+}
+
 query ScopedAppTenant {
   me {
     application {

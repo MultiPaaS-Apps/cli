@@ -21,6 +21,10 @@ archives:
 checksum:
   name_template: checksums.txt
 
+# Re-running a publish that failed part-way replaces the assets the failed run already uploaded (goreleaser@v2.18.2 internal/client/github.go:836-855, githubClient.Upload).
+release:
+  replace_existing_artifacts: true
+
 # A Formula, not a Cask: see the README, Develop.
 brews:
   - name: multipaas

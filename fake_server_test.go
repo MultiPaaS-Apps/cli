@@ -329,7 +329,24 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized") // listRecords: no app-tenant selected
 			return
 		}
-		writeData(w, map[string]any{"records": pageOf(f.records[variables["entityId"].(string)], variables)})
+		rows := f.records[variables["entityId"].(string)]
+		if reference, ok := variables["reference"].(map[string]any); ok {
+			rows = slices.DeleteFunc(slices.Clone(rows), func(r map[string]any) bool {
+				return r["data"].(map[string]any)[reference["fieldId"].(string)] != reference["recordId"]
+			})
+		}
+		writeData(w, map[string]any{"records": pageOf(rows, variables)})
+	case "Record":
+		if len(parts) < 3 {
+			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized") // findRecord: no app-tenant selected
+			return
+		}
+		i := slices.IndexFunc(f.records[variables["entityId"].(string)], func(r map[string]any) bool { return r["id"] == variables["id"] })
+		if i < 0 {
+			writeData(w, map[string]any{"record": nil})
+			return
+		}
+		writeData(w, map[string]any{"record": f.records[variables["entityId"].(string)][i]})
 	case "CreateRecord", "UpdateRecord", "RetireRecord":
 		f.writeRecord(w, operation, parts, variables)
 	case "OAuthClients", "CreateOAuthClient", "UpdateOAuthClient":

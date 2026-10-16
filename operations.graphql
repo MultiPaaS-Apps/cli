@@ -283,8 +283,20 @@ fragment RecordParts on Record {
   updatedAt
 }
 
-query Records($entityId: ID!, $page: PageInput!) {
-  records(entityId: $entityId, page: $page) {
+query Record($entityId: ID!, $id: ID!) {
+  # @genqlient(pointer: true)
+  record(entityId: $entityId, id: $id) {
+    ...RecordParts
+  }
+}
+
+query Records(
+  $entityId: ID!
+  $page: PageInput!
+  # @genqlient(pointer: true)
+  $reference: RecordReferenceInput
+) {
+  records(entityId: $entityId, page: $page, reference: $reference) {
     items {
       ...RecordParts
     }

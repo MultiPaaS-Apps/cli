@@ -17,12 +17,20 @@ type recordTarget struct{ appID, tenantID, entityID string }
 // an app built on the application. A record's data is a JSON object keyed by field id.
 func recordCommands(command commandFunc) *cobra.Command {
 	return group("records", "Read and write an entity's records in an app-tenant",
-		recordsList(command), recordCreate(command), recordUpdate(command), recordRetire(command))
+		recordsList(command), recordGet(command), recordCreate(command), recordUpdate(command), recordRetire(command))
 }
 
 func recordsList(command commandFunc) *cobra.Command {
 	var target recordTarget
+	var parentField, parentRecord string
 	cmd := command("list", "List an entity's records, newest first", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var reference *RecordReferenceInput
+		if parentField != "" || parentRecord != "" {
+			if parentField == "" || parentRecord == "" {
+				return nil, nil, fmt.Errorf("--parent-field and --parent-record go together")
+			}
+			reference = &RecordReferenceInput{FieldId: parentField, RecordId: parentRecord}
+		}
 		scope, err := s.appScope(ctx, target.appID, target.tenantID)
 		if err != nil {
 			return nil, nil, err
@@ -30,7 +38,7 @@ func recordsList(command commandFunc) *cobra.Command {
 		list, err := pages(func(page PageInput) ([]RecordParts, bool, error) {
 			var listed *RecordsResponse
 			err := s.call(ctx, scope, func(client graphql.Client) (err error) {
-				listed, err = Records(ctx, client, target.entityID, page)
+				listed, err = Records(ctx, client, target.entityID, page, reference)
 				return err
 			})
 			if err != nil {
@@ -47,6 +55,35 @@ func recordsList(command commandFunc) *cobra.Command {
 		}, err
 	})
 	recordFlags(cmd, &target)
+	cmd.Flags().StringVar(&parentField, "parent-field", "", "keep the records whose parent reference field has this id (from model show), with --parent-record")
+	cmd.Flags().StringVar(&parentRecord, "parent-record", "", "the parent record's id, with --parent-field")
+	return cmd
+}
+
+func recordGet(command commandFunc) *cobra.Command {
+	var target recordTarget
+	var id string
+	cmd := command("get", "Show one record", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		scope, err := s.appScope(ctx, target.appID, target.tenantID)
+		if err != nil {
+			return nil, nil, err
+		}
+		var found *RecordResponse
+		err = s.call(ctx, scope, func(client graphql.Client) (err error) {
+			found, err = Record(ctx, client, target.entityID, id)
+			return err
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if found.Record == nil {
+			return nil, nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no record " + id + " of entity " + target.entityID}
+		}
+		record := found.Record.RecordParts
+		return map[string]RecordParts{"record": record}, func(out io.Writer) { fmt.Fprintf(out, "record %s %s\n", record.Id, record.Data) }, nil
+	})
+	recordFlags(cmd, &target)
+	recordID(cmd, &id)
 	return cmd
 }
 

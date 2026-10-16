@@ -652,6 +652,9 @@ type Query {
 	applications(
 		page: PageInput!
 	): ApplicationPage!
+	childFields(
+		entityId: ID!
+	): [Field!]!
 	client(
 		id: ID!
 	): Client
@@ -671,9 +674,18 @@ type Query {
 	entities(
 		page: PageInput!
 	): EntityPage!
+	entity(
+		id: ID!
+	): Entity
+	enumType(
+		id: ID!
+	): EnumType
 	enumTypes(
 		page: PageInput!
 	): EnumTypePage!
+	field(
+		id: ID!
+	): Field
 	fields(
 		entityId: ID!
 		page: PageInput!
@@ -703,6 +715,10 @@ type Query {
 	platformGrants(
 		userId: ID!
 	): [String!]!
+	record(
+		entityId: ID!
+		id: ID!
+	): Record
 	recordAccess(
 		recordId: ID!
 	): RecordAccess!
@@ -718,6 +734,7 @@ type Query {
 	records(
 		entityId: ID!
 		page: PageInput!
+		reference: RecordReferenceInput
 	): RecordPage!
 	referencingFields(
 		entityId: ID!
@@ -802,6 +819,11 @@ enum RecordAccessSourceKind {
 type RecordPage {
 	items: [Record!]!
 	pageInfo: PageInfo!
+}
+
+input RecordReferenceInput {
+	fieldId: ID!
+	recordId: ID!
 }
 
 type RecordShare implements AccessGrant{

@@ -85,3 +85,50 @@ func TestARecordCommandInAnAppTenantEntitlementReachesOnlyItsOwnAppTenant(t *tes
 		t.Fatalf("sent %v to an app-tenant the entitlement doesn't reach", fake.mutations)
 	}
 }
+
+func TestRecordsGetPrintsTheRecord(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "y"}}
+	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if compact(got.stdout) != `{"record":{"id":"record-1","data":{"field-1":"a"},"createdAt":"x","updatedAt":"y"}}` {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsGetSaysWhenThereIsNoSuchRecord(t *testing.T) {
+	fake := projectFake(t)
+	missing := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-9", "--json")
+	assertFailure(t, missing, exitRefused, "NOT_FOUND")
+	if !strings.Contains(missing.stdout, "record-9") {
+		t.Fatalf("printed %s", missing.stdout)
+	}
+}
+
+func TestRecordsListByParentKeepsTheParentsChildren(t *testing.T) {
+	fake := projectFake(t)
+	for _, row := range []struct{ id, parent string }{{"child-1", "parent-1"}, {"child-2", "parent-2"}, {"child-3", "parent-1"}} {
+		fake.records["entity-1"] = append(fake.records["entity-1"], map[string]any{"id": row.id, "data": map[string]any{"owner": row.parent}, "createdAt": "x", "updatedAt": "x"})
+	}
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1",
+		"--parent-field", "owner", "--parent-record", "parent-1", "--json")
+	var records []RecordParts
+	decode(t, got.stdout, &records)
+	if len(records) != 2 || records[0].Id != "child-1" || records[1].Id != "child-3" {
+		t.Fatalf("listed %s", got.stdout)
+	}
+}
+
+func TestRecordsListByParentNeedsBothFlags(t *testing.T) {
+	fake := projectFake(t)
+	for _, flags := range [][]string{{"--parent-field", "owner"}, {"--parent-record", "parent-1"}} {
+		seen := len(fake.scopes)
+		alone := fake.run(t, append([]string{"records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json"}, flags...)...)
+		assertFailure(t, alone, exitRefused, "CLI_ERROR")
+		if !strings.Contains(alone.stdout, "--parent-field and --parent-record go together") || len(fake.scopes) != seen {
+			t.Fatalf("printed %s after %d calls", alone.stdout, len(fake.scopes)-seen)
+		}
+	}
+}

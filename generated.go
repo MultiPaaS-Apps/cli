@@ -1661,6 +1661,95 @@ func (v *RecordParts) GetCreatedAt() string { return v.CreatedAt }
 // GetUpdatedAt returns RecordParts.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RecordParts) GetUpdatedAt() string { return v.UpdatedAt }
 
+// RecordRecord includes the requested fields of the GraphQL type Record.
+type RecordRecord struct {
+	RecordParts `json:"-"`
+}
+
+// GetId returns RecordRecord.Id, and is useful for accessing the field via an interface.
+func (v *RecordRecord) GetId() string { return v.RecordParts.Id }
+
+// GetData returns RecordRecord.Data, and is useful for accessing the field via an interface.
+func (v *RecordRecord) GetData() json.RawMessage { return v.RecordParts.Data }
+
+// GetCreatedAt returns RecordRecord.CreatedAt, and is useful for accessing the field via an interface.
+func (v *RecordRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
+
+// GetUpdatedAt returns RecordRecord.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *RecordRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+func (v *RecordRecord) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RecordRecord
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RecordRecord = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RecordParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRecordRecord struct {
+	Id string `json:"id"`
+
+	Data json.RawMessage `json:"data"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *RecordRecord) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RecordRecord) __premarshalJSON() (*__premarshalRecordRecord, error) {
+	var retval __premarshalRecordRecord
+
+	retval.Id = v.RecordParts.Id
+	retval.Data = v.RecordParts.Data
+	retval.CreatedAt = v.RecordParts.CreatedAt
+	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	return &retval, nil
+}
+
+type RecordReferenceInput struct {
+	FieldId  string `json:"fieldId"`
+	RecordId string `json:"recordId"`
+}
+
+// GetFieldId returns RecordReferenceInput.FieldId, and is useful for accessing the field via an interface.
+func (v *RecordReferenceInput) GetFieldId() string { return v.FieldId }
+
+// GetRecordId returns RecordReferenceInput.RecordId, and is useful for accessing the field via an interface.
+func (v *RecordReferenceInput) GetRecordId() string { return v.RecordId }
+
+// RecordResponse is returned by Record on success.
+type RecordResponse struct {
+	Record *RecordRecord `json:"record"`
+}
+
+// GetRecord returns RecordResponse.Record, and is useful for accessing the field via an interface.
+func (v *RecordResponse) GetRecord() *RecordRecord { return v.Record }
+
 // RecordsRecordsRecordPage includes the requested fields of the GraphQL type RecordPage.
 type RecordsRecordsRecordPage struct {
 	Items    []RecordsRecordsRecordPageItemsRecord `json:"items"`
@@ -2914,10 +3003,23 @@ type __ModelRevisionsInput struct {
 // GetPage returns __ModelRevisionsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ModelRevisionsInput) GetPage() PageInput { return v.Page }
 
+// __RecordInput is used internally by genqlient
+type __RecordInput struct {
+	EntityId string `json:"entityId"`
+	Id       string `json:"id"`
+}
+
+// GetEntityId returns __RecordInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__RecordInput) GetEntityId() string { return v.EntityId }
+
+// GetId returns __RecordInput.Id, and is useful for accessing the field via an interface.
+func (v *__RecordInput) GetId() string { return v.Id }
+
 // __RecordsInput is used internally by genqlient
 type __RecordsInput struct {
-	EntityId string    `json:"entityId"`
-	Page     PageInput `json:"page"`
+	EntityId  string                `json:"entityId"`
+	Page      PageInput             `json:"page"`
+	Reference *RecordReferenceInput `json:"reference"`
 }
 
 // GetEntityId returns __RecordsInput.EntityId, and is useful for accessing the field via an interface.
@@ -2925,6 +3027,9 @@ func (v *__RecordsInput) GetEntityId() string { return v.EntityId }
 
 // GetPage returns __RecordsInput.Page, and is useful for accessing the field via an interface.
 func (v *__RecordsInput) GetPage() PageInput { return v.Page }
+
+// GetReference returns __RecordsInput.Reference, and is useful for accessing the field via an interface.
+func (v *__RecordsInput) GetReference() *RecordReferenceInput { return v.Reference }
 
 // __RetireConstraintInput is used internally by genqlient
 type __RetireConstraintInput struct {
@@ -3881,10 +3986,52 @@ func OAuthClients(
 	return data_, err_
 }
 
+// The query executed by Record.
+const Record_Operation = `
+query Record ($entityId: ID!, $id: ID!) {
+	record(entityId: $entityId, id: $id) {
+		... RecordParts
+	}
+}
+fragment RecordParts on Record {
+	id
+	data
+	createdAt
+	updatedAt
+}
+`
+
+func Record(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+	id string,
+) (data_ *RecordResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Record",
+		Query:  Record_Operation,
+		Variables: &__RecordInput{
+			EntityId: entityId,
+			Id:       id,
+		},
+	}
+
+	data_ = &RecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Records.
 const Records_Operation = `
-query Records ($entityId: ID!, $page: PageInput!) {
-	records(entityId: $entityId, page: $page) {
+query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput) {
+	records(entityId: $entityId, page: $page, reference: $reference) {
 		items {
 			... RecordParts
 		}
@@ -3906,13 +4053,15 @@ func Records(
 	client_ graphql.Client,
 	entityId string,
 	page PageInput,
+	reference *RecordReferenceInput,
 ) (data_ *RecordsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "Records",
 		Query:  Records_Operation,
 		Variables: &__RecordsInput{
-			EntityId: entityId,
-			Page:     page,
+			EntityId:  entityId,
+			Page:      page,
+			Reference: reference,
 		},
 	}
 

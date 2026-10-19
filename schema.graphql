@@ -41,6 +41,16 @@ type AccessGroupMember implements AccessGrant{
 	user: User
 }
 
+input AddDataImportFileInput {
+	contentType: String!
+	entityId: ID
+	filename: String!
+	importId: ID!
+	kind: DataImportFileKind!
+	sha256: String!
+	sizeBytes: Int!
+}
+
 input AddMemberInput {
 	appTenantId: ID
 	userId: ID!
@@ -96,7 +106,6 @@ type AppTenantPage {
 type Application {
 	createdAt: DateTime!
 	id: ID!
-	key: String!
 	name: String!
 	updatedAt: DateTime!
 }
@@ -107,6 +116,7 @@ type ApplicationInvitation {
 	email: String!
 	expiresAt: DateTime!
 	id: ID!
+	kind: InvitationKind!
 	role: Role
 	scope: InvitationScope!
 	status: ApplicationInvitationStatus!
@@ -211,7 +221,6 @@ input CreateAppTenantInput {
 }
 
 input CreateApplicationInput {
-	key: String!
 	name: String!
 }
 
@@ -288,6 +297,57 @@ input CreateRoleInput {
 input CreateUserInput {
 	email: String!
 	name: String
+}
+
+type DataImport {
+	application: Application!
+	counts: [DataImportCount!]
+	createdAt: DateTime!
+	files: [DataImportFile!]!
+	finishedAt: DateTime
+	id: ID!
+	problemCount: Int
+"""
+A 15-minute download link for the full report, when it was too large to keep inline.
+"""
+	problemReportUrl: String
+	problems: [ImportProblem!]
+	startedAt: DateTime
+"""
+One of draft, checking, check-failed, checked, importing, import-failed, imported.
+"""
+	status: String!
+	updatedAt: DateTime!
+}
+
+type DataImportCount {
+	count: Int!
+	key: String!
+}
+
+type DataImportFile {
+	entity: Entity
+	file: File!
+	id: ID!
+	kind: DataImportFileKind!
+}
+
+enum DataImportFileKind {
+	memberships
+	records
+	tenants
+	users
+}
+
+type DataImportFileUpload {
+	importFile: DataImportFile!
+	uploadHeaders: [Header!]!
+	uploadUrl: String!
+}
+
+type DataImportPage {
+	items: [DataImport!]!
+	pageInfo: PageInfo!
 }
 
 """
@@ -380,6 +440,16 @@ type FieldPage {
 	pageInfo: PageInfo!
 }
 
+type File {
+	contentType: String!
+	createdAt: DateTime!
+	filename: String!
+	id: ID!
+	sha256: String!
+	sizeBytes: Int!
+	status: String!
+}
+
 type GroupRoleAssignment implements AccessGrant{
 	_accessGrant: Boolean!
 	group: AccessGroup
@@ -387,9 +457,28 @@ type GroupRoleAssignment implements AccessGrant{
 	role: Role
 }
 
+type Header {
+	name: String!
+	value: String!
+}
+
 type HeldPermission {
 	entityId: ID
 	permission: String!
+}
+
+type ImportProblem {
+	code: String!
+	field: String
+	file: String!
+	line: Int
+	message: String!
+	sourceId: String
+}
+
+enum InvitationKind {
+	email
+	import
 }
 
 enum InvitationScope {
@@ -427,6 +516,9 @@ type Mutation {
 		groupId: ID!
 		userId: ID!
 	): AccessGroupMember!
+	addDataImportFile(
+		input: AddDataImportFileInput!
+	): DataImportFileUpload!
 	addMember(
 		input: AddMemberInput!
 	): TenantMember!
@@ -444,6 +536,9 @@ type Mutation {
 		groupId: ID!
 		roleId: ID!
 	): GroupRoleAssignment!
+	checkDataImport(
+		importId: ID!
+	): DataImport!
 	createAccessGroup(
 		name: String!
 	): AccessGroup!
@@ -462,6 +557,9 @@ type Mutation {
 	createConstraint(
 		input: CreateConstraintInput!
 	): Constraint!
+	createDataImport(
+		applicationId: ID!
+	): DataImport!
 	createEntity(
 		input: CreateEntityInput!
 	): Entity!
@@ -513,6 +611,10 @@ type Mutation {
 	removeAccessGroupMember(
 		id: ID!
 	): AccessGroupMember!
+	removeDataImportFile(
+		fileId: ID!
+		importId: ID!
+	): DataImport!
 	removeMember(
 		input: RemoveMemberInput!
 	): TenantMember!
@@ -717,6 +819,13 @@ type Query {
 	conversations(
 		page: PageInput!
 	): ConversationPage!
+	dataImport(
+		id: ID!
+	): DataImport
+	dataImports(
+		applicationId: ID!
+		page: PageInput!
+	): DataImportPage!
 	entities(
 		page: PageInput!
 	): EntityPage!

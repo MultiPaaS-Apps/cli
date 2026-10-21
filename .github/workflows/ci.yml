@@ -59,13 +59,18 @@ jobs:
             echo "schema fetch failed"
             exit 1
           fi
-          go tool genqlient
+          genqlient_rc=0
+          go tool genqlient || genqlient_rc=$?
           if ! git diff --exit-code > "$RUNNER_TEMP/schema-drift.diff"; then
             {
               echo "## webapp-api schema drift"
               echo
               echo "The live webapp-api schema differs from the committed \`schema.graphql\`. Regenerate it as the README describes and open a PR."
               echo
+              if [ "$genqlient_rc" -ne 0 ]; then
+                echo "\`go tool genqlient\` also failed against the live schema. Its error is in the log."
+                echo
+              fi
               echo '```diff'
               cat "$RUNNER_TEMP/schema-drift.diff"
               echo '```'
@@ -73,3 +78,4 @@ jobs:
             cat "$RUNNER_TEMP/schema-drift.diff"
             exit 1
           fi
+          exit "$genqlient_rc"

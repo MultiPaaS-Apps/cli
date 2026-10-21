@@ -5,8 +5,9 @@ on:
   push:
     branches: [main]
   schedule:
-    # Nightly, so a breaking webapp-api change on dev fails here even when nobody pushes.
+    # Nightly, so schema-drift reports a webapp-api schema change even when nobody pushes.
     - cron: "17 6 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,21 +26,50 @@ jobs:
       - run: test -z "$(gofmt -l .)"
       - run: go vet ./...
       - run: go test -race ./...
-      - name: Regenerate against the live webapp-api schema
-        env:
-          SCHEMA_ENDPOINT: ${{ secrets.SCHEMA_ENDPOINT }}
+      - name: Generated code matches the committed schema
         run: |
-          if [ -z "$SCHEMA_ENDPOINT" ]; then
-            echo "SCHEMA_ENDPOINT is not available to this run, so the schema regenerate check did not run."
-            exit 0
-          fi
-          if ! go tool gqlfetch --endpoint "$SCHEMA_ENDPOINT" --without-builtins > schema.graphql 2>/dev/null; then
-            echo "schema fetch failed"
-            exit 1
-          fi
           go tool genqlient
           git diff --exit-code
       - uses: goreleaser/goreleaser-action@v7.2.3
         with:
           version: v2.18.2
           args: release --snapshot --clean
+
+  # Separate from test, so a webapp-api change fails this job and not every PR.
+  schema-drift:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Compare the committed schema with the live webapp-api schema
+        env:
+          SCHEMA_ENDPOINT: ${{ secrets.SCHEMA_ENDPOINT }}
+        run: |
+          if [ -z "$SCHEMA_ENDPOINT" ]; then
+            echo "::error::SCHEMA_ENDPOINT is not set, so schema drift cannot be checked."
+            exit 1
+          fi
+          if ! go tool gqlfetch --endpoint "$SCHEMA_ENDPOINT" --without-builtins > schema.graphql 2>/dev/null; then
+            echo "schema fetch failed"
+            exit 1
+          fi
+          go tool genqlient
+          if ! git diff --exit-code > "$RUNNER_TEMP/schema-drift.diff"; then
+            {
+              echo "## webapp-api schema drift"
+              echo
+              echo "The live webapp-api schema differs from the committed \`schema.graphql\`. Regenerate it as the README describes and open a PR."
+              echo
+              echo '```diff'
+              cat "$RUNNER_TEMP/schema-drift.diff"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            cat "$RUNNER_TEMP/schema-drift.diff"
+            exit 1
+          fi

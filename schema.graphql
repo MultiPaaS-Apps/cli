@@ -659,6 +659,9 @@ type Mutation {
 		permission: String!
 		userId: ID!
 	): User!
+	runDataImport(
+		importId: ID!
+	): DataImport!
 	sendPrompt(
 		input: SendPromptInput!
 	): AiTurn!

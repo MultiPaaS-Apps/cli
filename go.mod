@@ -10,7 +10,7 @@ tool (
 require (
 	github.com/Khan/genqlient v0.8.1
 	github.com/spf13/cobra v1.10.2
-	github.com/vektah/gqlparser/v2 v2.5.61
+	github.com/vektah/gqlparser/v2 v2.5.62
 )
 
 require (

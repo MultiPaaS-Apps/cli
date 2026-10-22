@@ -150,6 +150,11 @@ input AssignClientRoleInput {
 	userId: ID!
 }
 
+input AssignPlatformRoleInput {
+	roleId: ID!
+	userId: ID!
+}
+
 type AuthOkResult implements Receipt{
 	_receipt: Boolean!
 	ok: Boolean!
@@ -169,9 +174,7 @@ type ClientPage {
 
 type ClientRole implements AccessGrant{
 	_accessGrant: Boolean!
-	builtIn: Boolean!
 	id: ID!
-	key: String!
 	name: String!
 	permissions: [String!]!
 }
@@ -241,7 +244,6 @@ type CreateClientPayload {
 }
 
 input CreateClientRoleInput {
-	key: String!
 	name: String!
 	permissions: [String!]!
 }
@@ -281,6 +283,11 @@ input CreateFieldInput {
 input CreateOAuthClientInput {
 	name: String!
 	redirectUris: [String!]!
+}
+
+input CreatePlatformRoleInput {
+	name: String!
+	permissions: [String!]!
 }
 
 input CreateRecordInput {
@@ -528,6 +535,9 @@ type Mutation {
 	assignClientRole(
 		input: AssignClientRoleInput!
 	): ClientRoleAssignment!
+	assignPlatformRole(
+		input: AssignPlatformRoleInput!
+	): PlatformRoleAssignment!
 	assignRole(
 		roleId: ID!
 		userId: ID!
@@ -572,6 +582,9 @@ type Mutation {
 	createOAuthClient(
 		input: CreateOAuthClientInput!
 	): OAuthClient!
+	createPlatformRole(
+		input: CreatePlatformRoleInput!
+	): PlatformRole!
 	createRecord(
 		input: CreateRecordInput!
 	): Record!
@@ -596,10 +609,6 @@ type Mutation {
 	denyOAuthAuthorization(
 		input: DenyOAuthAuthorizationInput!
 	): OAuthRedirect!
-	grantPlatformPermission(
-		permission: String!
-		userId: ID!
-	): User!
 	inviteMember(
 		input: InviteMemberInput!
 	): ApplicationInvitation!
@@ -649,16 +658,15 @@ type Mutation {
 	retireOAuthClient(
 		id: ID!
 	): OAuthClient!
+	retirePlatformRole(
+		id: ID!
+	): PlatformRole!
 	retireRecord(
 		input: RetireRecordInput!
 	): Record!
 	retireRole(
 		id: ID!
 	): Role!
-	revokePlatformPermission(
-		permission: String!
-		userId: ID!
-	): User!
 	runDataImport(
 		importId: ID!
 	): DataImport!
@@ -681,6 +689,9 @@ type Mutation {
 	unassignGroupRole(
 		id: ID!
 	): GroupRoleAssignment!
+	unassignPlatformRole(
+		id: ID!
+	): PlatformRoleAssignment!
 	unassignRole(
 		id: ID!
 	): RoleAssignment!
@@ -711,6 +722,9 @@ type Mutation {
 	updateOAuthClient(
 		input: UpdateOAuthClientInput!
 	): OAuthClient!
+	updatePlatformRole(
+		input: UpdatePlatformRoleInput!
+	): PlatformRole!
 	updateRecord(
 		input: UpdateRecordInput!
 	): Record!
@@ -772,6 +786,25 @@ type PermissionInfo {
 	entityTargeted: Boolean!
 	key: String!
 	level: String!
+}
+
+type PlatformRole implements AccessGrant{
+	_accessGrant: Boolean!
+	id: ID!
+	name: String!
+	permissions: [String!]!
+}
+
+type PlatformRoleAssignment implements AccessGrant{
+	_accessGrant: Boolean!
+	id: ID!
+	role: PlatformRole!
+	user: User
+}
+
+type PlatformRolePage {
+	items: [PlatformRole!]!
+	pageInfo: PageInfo!
 }
 
 type Query {
@@ -870,9 +903,16 @@ type Query {
 	): OAuthAuthorizationRequest!
 	oauthClients: [OAuthClient!]!
 	permissionCatalog: [PermissionInfo!]!
-	platformGrants(
-		userId: ID!
-	): [String!]!
+	platformRole(
+		id: ID!
+	): PlatformRole
+	platformRoleAssignments(
+		userId: ID
+	): [PlatformRoleAssignment!]!
+	platformRolePage(
+		page: PageInput!
+	): PlatformRolePage!
+	platformRoles: [PlatformRole!]!
 	record(
 		entityId: ID!
 		id: ID!
@@ -966,7 +1006,7 @@ type RecordAccessSource {
 
 enum RecordAccessSourceKind {
 	group_role
-	platform_grant
+	platform_role
 	role
 	share_everyone
 	share_group
@@ -1188,6 +1228,12 @@ input UpdateOAuthClientInput {
 	id: ID!
 	name: String!
 	redirectUris: [String!]!
+}
+
+input UpdatePlatformRoleInput {
+	id: ID!
+	name: String
+	permissions: [String!]
 }
 
 input UpdateRecordInput {

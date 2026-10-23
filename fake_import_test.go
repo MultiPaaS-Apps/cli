@@ -93,6 +93,10 @@ func (f *fakeMultiPaaS) dataImport(w http.ResponseWriter, operation string, part
 		imp.status = "importing"
 		writeData(w, map[string]any{"runDataImport": f.importView(id)})
 	case "DataImport":
+		if f.refuseRead[0] != "" {
+			graphQLRefusal(w, f.refuseRead[0], f.refuseRead[1])
+			return
+		}
 		f.importReads++
 		if queue := f.statusQueue[id]; len(queue) > 0 {
 			imp.status, f.statusQueue[id] = queue[0], queue[1:]

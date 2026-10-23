@@ -83,8 +83,9 @@ func importCreate(command commandFunc) *cobra.Command {
 			added = append(added, filepath.Base(file.path))
 		}
 		if len(planned) > 0 {
-			if created, err = readImport(ctx, s, scope, created.Id); err != nil {
-				return nil, nil, err
+			importID := created.Id
+			if created, err = readImport(ctx, s, scope, importID); err != nil {
+				return nil, nil, partiallyCreated(err, importID, added)
 			}
 		}
 		return shownImport(created)

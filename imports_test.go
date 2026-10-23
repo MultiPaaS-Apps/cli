@@ -278,6 +278,22 @@ func TestImportCreateDirNamesTheImportWhenAnAddFails(t *testing.T) {
 	}
 }
 
+func TestImportCreateDirNamesTheImportWhenTheLastReadFails(t *testing.T) {
+	fake := projectFake(t)
+	fake.refuseRead = [2]string{"UNAVAILABLE", "the import could not be read"}
+	dir := t.TempDir()
+	writeExport(t, dir, "tenants.jsonl", "{\"id\":\"acct-17\",\"name\":\"Acme\"}\n")
+	writeExport(t, dir, "memberships.jsonl", "{\"user\":\"u-9\",\"tenant\":\"acct-17\",\"role\":\"Editor\"}\n")
+
+	got := fake.run(t, "import", "create", "--app", importApp, "--dir", dir, "--json")
+	assertFailure(t, got, exitRefused, "UNAVAILABLE")
+	for _, want := range []string{"import-1", "tenants.jsonl", "memberships.jsonl", "could not be read"} {
+		if !strings.Contains(got.stdout, want) {
+			t.Fatalf("the message should contain %q: %s", want, got.stdout)
+		}
+	}
+}
+
 func TestImportCheckWaitsUntilTheCheckFinishes(t *testing.T) {
 	fake := projectFake(t)
 	fastPolling(t)

@@ -62,6 +62,7 @@ type fakeMultiPaaS struct {
 	importReads  int                    // DataImport reads answered
 	refuseUpload bool                   // the presigned PUT answers 403
 	refuseImport [2]string              // an import mutation is refused with this code and message
+	refuseRead   [2]string              // a DataImport read is refused with this code and message
 	failReport   bool                   // GET /report answers HTTP 500
 	reportLines  []map[string]any       // GET /report serves these, one JSON line each
 	statusQueue  map[string][]string    // import id -> the statuses its later DataImport reads answer

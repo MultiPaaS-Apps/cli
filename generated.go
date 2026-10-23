@@ -9,6 +9,132 @@ import (
 	"github.com/Khan/genqlient/graphql"
 )
 
+// AddDataImportFileAddDataImportFileDataImportFileUpload includes the requested fields of the GraphQL type DataImportFileUpload.
+type AddDataImportFileAddDataImportFileDataImportFileUpload struct {
+	ImportFile    AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile `json:"importFile"`
+	UploadUrl     string                                                                         `json:"uploadUrl"`
+	UploadHeaders []AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader    `json:"uploadHeaders"`
+}
+
+// GetImportFile returns AddDataImportFileAddDataImportFileDataImportFileUpload.ImportFile, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUpload) GetImportFile() AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile {
+	return v.ImportFile
+}
+
+// GetUploadUrl returns AddDataImportFileAddDataImportFileDataImportFileUpload.UploadUrl, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUpload) GetUploadUrl() string {
+	return v.UploadUrl
+}
+
+// GetUploadHeaders returns AddDataImportFileAddDataImportFileDataImportFileUpload.UploadHeaders, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUpload) GetUploadHeaders() []AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader {
+	return v.UploadHeaders
+}
+
+// AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile includes the requested fields of the GraphQL type DataImportFile.
+type AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile struct {
+	DataImportFileParts `json:"-"`
+}
+
+// GetId returns AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile.Id, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile) GetId() string {
+	return v.DataImportFileParts.Id
+}
+
+// GetKind returns AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile.Kind, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile) GetKind() DataImportFileKind {
+	return v.DataImportFileParts.Kind
+}
+
+// GetEntity returns AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile.Entity, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile) GetEntity() *DataImportFilePartsEntity {
+	return v.DataImportFileParts.Entity
+}
+
+// GetFile returns AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile.File, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile) GetFile() DataImportFilePartsFile {
+	return v.DataImportFileParts.File
+}
+
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DataImportFileParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalAddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile struct {
+	Id string `json:"id"`
+
+	Kind DataImportFileKind `json:"kind"`
+
+	Entity *DataImportFilePartsEntity `json:"entity"`
+
+	File DataImportFilePartsFile `json:"file"`
+}
+
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile) __premarshalJSON() (*__premarshalAddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile, error) {
+	var retval __premarshalAddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile
+
+	retval.Id = v.DataImportFileParts.Id
+	retval.Kind = v.DataImportFileParts.Kind
+	retval.Entity = v.DataImportFileParts.Entity
+	retval.File = v.DataImportFileParts.File
+	return &retval, nil
+}
+
+// AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader includes the requested fields of the GraphQL type Header.
+type AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// GetName returns AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader.Name, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader) GetName() string {
+	return v.Name
+}
+
+// GetValue returns AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader.Value, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader) GetValue() string {
+	return v.Value
+}
+
+// AddDataImportFileResponse is returned by AddDataImportFile on success.
+type AddDataImportFileResponse struct {
+	AddDataImportFile AddDataImportFileAddDataImportFileDataImportFileUpload `json:"addDataImportFile"`
+}
+
+// GetAddDataImportFile returns AddDataImportFileResponse.AddDataImportFile, and is useful for accessing the field via an interface.
+func (v *AddDataImportFileResponse) GetAddDataImportFile() AddDataImportFileAddDataImportFileDataImportFileUpload {
+	return v.AddDataImportFile
+}
+
 // ApiSchemaDiffResponse is returned by ApiSchemaDiff on success.
 type ApiSchemaDiffResponse struct {
 	ApiSchemaDiff versionDiff `json:"apiSchemaDiff"`
@@ -113,6 +239,124 @@ type ApplicationsResponse struct {
 // GetApplications returns ApplicationsResponse.Applications, and is useful for accessing the field via an interface.
 func (v *ApplicationsResponse) GetApplications() ApplicationsApplicationsApplicationPage {
 	return v.Applications
+}
+
+// CheckDataImportCheckDataImport includes the requested fields of the GraphQL type DataImport.
+type CheckDataImportCheckDataImport struct {
+	DataImportParts `json:"-"`
+}
+
+// GetId returns CheckDataImportCheckDataImport.Id, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetId() string { return v.DataImportParts.Id }
+
+// GetStatus returns CheckDataImportCheckDataImport.Status, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetStatus() string { return v.DataImportParts.Status }
+
+// GetProblemCount returns CheckDataImportCheckDataImport.ProblemCount, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetProblemCount() int { return v.DataImportParts.ProblemCount }
+
+// GetProblemReportUrl returns CheckDataImportCheckDataImport.ProblemReportUrl, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetProblemReportUrl() *string {
+	return v.DataImportParts.ProblemReportUrl
+}
+
+// GetProblems returns CheckDataImportCheckDataImport.Problems, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetProblems() []DataImportPartsProblemsImportProblem {
+	return v.DataImportParts.Problems
+}
+
+// GetCounts returns CheckDataImportCheckDataImport.Counts, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetCounts() []DataImportPartsCountsDataImportCount {
+	return v.DataImportParts.Counts
+}
+
+// GetFiles returns CheckDataImportCheckDataImport.Files, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
+	return v.DataImportParts.Files
+}
+
+// GetStartedAt returns CheckDataImportCheckDataImport.StartedAt, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetStartedAt() *string { return v.DataImportParts.StartedAt }
+
+// GetFinishedAt returns CheckDataImportCheckDataImport.FinishedAt, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetFinishedAt() *string { return v.DataImportParts.FinishedAt }
+
+func (v *CheckDataImportCheckDataImport) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CheckDataImportCheckDataImport
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CheckDataImportCheckDataImport = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DataImportParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCheckDataImportCheckDataImport struct {
+	Id string `json:"id"`
+
+	Status string `json:"status"`
+
+	ProblemCount int `json:"problemCount"`
+
+	ProblemReportUrl *string `json:"problemReportUrl"`
+
+	Problems []DataImportPartsProblemsImportProblem `json:"problems"`
+
+	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
+
+	Files []DataImportPartsFilesDataImportFile `json:"files"`
+
+	StartedAt *string `json:"startedAt"`
+
+	FinishedAt *string `json:"finishedAt"`
+}
+
+func (v *CheckDataImportCheckDataImport) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CheckDataImportCheckDataImport) __premarshalJSON() (*__premarshalCheckDataImportCheckDataImport, error) {
+	var retval __premarshalCheckDataImportCheckDataImport
+
+	retval.Id = v.DataImportParts.Id
+	retval.Status = v.DataImportParts.Status
+	retval.ProblemCount = v.DataImportParts.ProblemCount
+	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
+	retval.Problems = v.DataImportParts.Problems
+	retval.Counts = v.DataImportParts.Counts
+	retval.Files = v.DataImportParts.Files
+	retval.StartedAt = v.DataImportParts.StartedAt
+	retval.FinishedAt = v.DataImportParts.FinishedAt
+	return &retval, nil
+}
+
+// CheckDataImportResponse is returned by CheckDataImport on success.
+type CheckDataImportResponse struct {
+	CheckDataImport CheckDataImportCheckDataImport `json:"checkDataImport"`
+}
+
+// GetCheckDataImport returns CheckDataImportResponse.CheckDataImport, and is useful for accessing the field via an interface.
+func (v *CheckDataImportResponse) GetCheckDataImport() CheckDataImportCheckDataImport {
+	return v.CheckDataImport
 }
 
 // ConstraintParts includes the GraphQL fields of Constraint requested by the fragment ConstraintParts.
@@ -384,6 +628,128 @@ type CreateConstraintResponse struct {
 // GetCreateConstraint returns CreateConstraintResponse.CreateConstraint, and is useful for accessing the field via an interface.
 func (v *CreateConstraintResponse) GetCreateConstraint() CreateConstraintCreateConstraint {
 	return v.CreateConstraint
+}
+
+// CreateDataImportCreateDataImport includes the requested fields of the GraphQL type DataImport.
+type CreateDataImportCreateDataImport struct {
+	DataImportParts `json:"-"`
+}
+
+// GetId returns CreateDataImportCreateDataImport.Id, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetId() string { return v.DataImportParts.Id }
+
+// GetStatus returns CreateDataImportCreateDataImport.Status, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetStatus() string { return v.DataImportParts.Status }
+
+// GetProblemCount returns CreateDataImportCreateDataImport.ProblemCount, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetProblemCount() int {
+	return v.DataImportParts.ProblemCount
+}
+
+// GetProblemReportUrl returns CreateDataImportCreateDataImport.ProblemReportUrl, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetProblemReportUrl() *string {
+	return v.DataImportParts.ProblemReportUrl
+}
+
+// GetProblems returns CreateDataImportCreateDataImport.Problems, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetProblems() []DataImportPartsProblemsImportProblem {
+	return v.DataImportParts.Problems
+}
+
+// GetCounts returns CreateDataImportCreateDataImport.Counts, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetCounts() []DataImportPartsCountsDataImportCount {
+	return v.DataImportParts.Counts
+}
+
+// GetFiles returns CreateDataImportCreateDataImport.Files, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
+	return v.DataImportParts.Files
+}
+
+// GetStartedAt returns CreateDataImportCreateDataImport.StartedAt, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetStartedAt() *string { return v.DataImportParts.StartedAt }
+
+// GetFinishedAt returns CreateDataImportCreateDataImport.FinishedAt, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetFinishedAt() *string {
+	return v.DataImportParts.FinishedAt
+}
+
+func (v *CreateDataImportCreateDataImport) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateDataImportCreateDataImport
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateDataImportCreateDataImport = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DataImportParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateDataImportCreateDataImport struct {
+	Id string `json:"id"`
+
+	Status string `json:"status"`
+
+	ProblemCount int `json:"problemCount"`
+
+	ProblemReportUrl *string `json:"problemReportUrl"`
+
+	Problems []DataImportPartsProblemsImportProblem `json:"problems"`
+
+	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
+
+	Files []DataImportPartsFilesDataImportFile `json:"files"`
+
+	StartedAt *string `json:"startedAt"`
+
+	FinishedAt *string `json:"finishedAt"`
+}
+
+func (v *CreateDataImportCreateDataImport) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateDataImportCreateDataImport) __premarshalJSON() (*__premarshalCreateDataImportCreateDataImport, error) {
+	var retval __premarshalCreateDataImportCreateDataImport
+
+	retval.Id = v.DataImportParts.Id
+	retval.Status = v.DataImportParts.Status
+	retval.ProblemCount = v.DataImportParts.ProblemCount
+	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
+	retval.Problems = v.DataImportParts.Problems
+	retval.Counts = v.DataImportParts.Counts
+	retval.Files = v.DataImportParts.Files
+	retval.StartedAt = v.DataImportParts.StartedAt
+	retval.FinishedAt = v.DataImportParts.FinishedAt
+	return &retval, nil
+}
+
+// CreateDataImportResponse is returned by CreateDataImport on success.
+type CreateDataImportResponse struct {
+	CreateDataImport CreateDataImportCreateDataImport `json:"createDataImport"`
+}
+
+// GetCreateDataImport returns CreateDataImportResponse.CreateDataImport, and is useful for accessing the field via an interface.
+func (v *CreateDataImportResponse) GetCreateDataImport() CreateDataImportCreateDataImport {
+	return v.CreateDataImport
 }
 
 // CreateEntityCreateEntity includes the requested fields of the GraphQL type Entity.
@@ -869,6 +1235,348 @@ type CreateRecordResponse struct {
 
 // GetCreateRecord returns CreateRecordResponse.CreateRecord, and is useful for accessing the field via an interface.
 func (v *CreateRecordResponse) GetCreateRecord() CreateRecordCreateRecord { return v.CreateRecord }
+
+// DataImportDataImport includes the requested fields of the GraphQL type DataImport.
+type DataImportDataImport struct {
+	DataImportParts `json:"-"`
+}
+
+// GetId returns DataImportDataImport.Id, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetId() string { return v.DataImportParts.Id }
+
+// GetStatus returns DataImportDataImport.Status, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetStatus() string { return v.DataImportParts.Status }
+
+// GetProblemCount returns DataImportDataImport.ProblemCount, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetProblemCount() int { return v.DataImportParts.ProblemCount }
+
+// GetProblemReportUrl returns DataImportDataImport.ProblemReportUrl, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetProblemReportUrl() *string {
+	return v.DataImportParts.ProblemReportUrl
+}
+
+// GetProblems returns DataImportDataImport.Problems, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetProblems() []DataImportPartsProblemsImportProblem {
+	return v.DataImportParts.Problems
+}
+
+// GetCounts returns DataImportDataImport.Counts, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetCounts() []DataImportPartsCountsDataImportCount {
+	return v.DataImportParts.Counts
+}
+
+// GetFiles returns DataImportDataImport.Files, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
+	return v.DataImportParts.Files
+}
+
+// GetStartedAt returns DataImportDataImport.StartedAt, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetStartedAt() *string { return v.DataImportParts.StartedAt }
+
+// GetFinishedAt returns DataImportDataImport.FinishedAt, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetFinishedAt() *string { return v.DataImportParts.FinishedAt }
+
+func (v *DataImportDataImport) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DataImportDataImport
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DataImportDataImport = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DataImportParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDataImportDataImport struct {
+	Id string `json:"id"`
+
+	Status string `json:"status"`
+
+	ProblemCount int `json:"problemCount"`
+
+	ProblemReportUrl *string `json:"problemReportUrl"`
+
+	Problems []DataImportPartsProblemsImportProblem `json:"problems"`
+
+	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
+
+	Files []DataImportPartsFilesDataImportFile `json:"files"`
+
+	StartedAt *string `json:"startedAt"`
+
+	FinishedAt *string `json:"finishedAt"`
+}
+
+func (v *DataImportDataImport) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DataImportDataImport) __premarshalJSON() (*__premarshalDataImportDataImport, error) {
+	var retval __premarshalDataImportDataImport
+
+	retval.Id = v.DataImportParts.Id
+	retval.Status = v.DataImportParts.Status
+	retval.ProblemCount = v.DataImportParts.ProblemCount
+	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
+	retval.Problems = v.DataImportParts.Problems
+	retval.Counts = v.DataImportParts.Counts
+	retval.Files = v.DataImportParts.Files
+	retval.StartedAt = v.DataImportParts.StartedAt
+	retval.FinishedAt = v.DataImportParts.FinishedAt
+	return &retval, nil
+}
+
+type DataImportFileKind string
+
+const (
+	DataImportFileKindMemberships DataImportFileKind = "memberships"
+	DataImportFileKindRecords     DataImportFileKind = "records"
+	DataImportFileKindTenants     DataImportFileKind = "tenants"
+	DataImportFileKindUsers       DataImportFileKind = "users"
+)
+
+var AllDataImportFileKind = []DataImportFileKind{
+	DataImportFileKindMemberships,
+	DataImportFileKindRecords,
+	DataImportFileKindTenants,
+	DataImportFileKindUsers,
+}
+
+// DataImportFileParts includes the GraphQL fields of DataImportFile requested by the fragment DataImportFileParts.
+type DataImportFileParts struct {
+	Id     string                     `json:"id"`
+	Kind   DataImportFileKind         `json:"kind"`
+	Entity *DataImportFilePartsEntity `json:"entity"`
+	File   DataImportFilePartsFile    `json:"file"`
+}
+
+// GetId returns DataImportFileParts.Id, and is useful for accessing the field via an interface.
+func (v *DataImportFileParts) GetId() string { return v.Id }
+
+// GetKind returns DataImportFileParts.Kind, and is useful for accessing the field via an interface.
+func (v *DataImportFileParts) GetKind() DataImportFileKind { return v.Kind }
+
+// GetEntity returns DataImportFileParts.Entity, and is useful for accessing the field via an interface.
+func (v *DataImportFileParts) GetEntity() *DataImportFilePartsEntity { return v.Entity }
+
+// GetFile returns DataImportFileParts.File, and is useful for accessing the field via an interface.
+func (v *DataImportFileParts) GetFile() DataImportFilePartsFile { return v.File }
+
+// DataImportFilePartsEntity includes the requested fields of the GraphQL type Entity.
+type DataImportFilePartsEntity struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns DataImportFilePartsEntity.Id, and is useful for accessing the field via an interface.
+func (v *DataImportFilePartsEntity) GetId() string { return v.Id }
+
+// GetName returns DataImportFilePartsEntity.Name, and is useful for accessing the field via an interface.
+func (v *DataImportFilePartsEntity) GetName() string { return v.Name }
+
+// DataImportFilePartsFile includes the requested fields of the GraphQL type File.
+type DataImportFilePartsFile struct {
+	Id        string `json:"id"`
+	Filename  string `json:"filename"`
+	SizeBytes int    `json:"sizeBytes"`
+	Status    string `json:"status"`
+}
+
+// GetId returns DataImportFilePartsFile.Id, and is useful for accessing the field via an interface.
+func (v *DataImportFilePartsFile) GetId() string { return v.Id }
+
+// GetFilename returns DataImportFilePartsFile.Filename, and is useful for accessing the field via an interface.
+func (v *DataImportFilePartsFile) GetFilename() string { return v.Filename }
+
+// GetSizeBytes returns DataImportFilePartsFile.SizeBytes, and is useful for accessing the field via an interface.
+func (v *DataImportFilePartsFile) GetSizeBytes() int { return v.SizeBytes }
+
+// GetStatus returns DataImportFilePartsFile.Status, and is useful for accessing the field via an interface.
+func (v *DataImportFilePartsFile) GetStatus() string { return v.Status }
+
+// DataImportParts includes the GraphQL fields of DataImport requested by the fragment DataImportParts.
+type DataImportParts struct {
+	Id string `json:"id"`
+	// One of draft, checking, check-failed, checked, importing, import-failed, imported.
+	Status       string `json:"status"`
+	ProblemCount int    `json:"problemCount"`
+	// A 15-minute download link for the full report, when it was too large to keep inline.
+	ProblemReportUrl *string                                `json:"problemReportUrl"`
+	Problems         []DataImportPartsProblemsImportProblem `json:"problems"`
+	Counts           []DataImportPartsCountsDataImportCount `json:"counts"`
+	Files            []DataImportPartsFilesDataImportFile   `json:"files"`
+	StartedAt        *string                                `json:"startedAt"`
+	FinishedAt       *string                                `json:"finishedAt"`
+}
+
+// GetId returns DataImportParts.Id, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetId() string { return v.Id }
+
+// GetStatus returns DataImportParts.Status, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetStatus() string { return v.Status }
+
+// GetProblemCount returns DataImportParts.ProblemCount, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetProblemCount() int { return v.ProblemCount }
+
+// GetProblemReportUrl returns DataImportParts.ProblemReportUrl, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetProblemReportUrl() *string { return v.ProblemReportUrl }
+
+// GetProblems returns DataImportParts.Problems, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetProblems() []DataImportPartsProblemsImportProblem { return v.Problems }
+
+// GetCounts returns DataImportParts.Counts, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetCounts() []DataImportPartsCountsDataImportCount { return v.Counts }
+
+// GetFiles returns DataImportParts.Files, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetFiles() []DataImportPartsFilesDataImportFile { return v.Files }
+
+// GetStartedAt returns DataImportParts.StartedAt, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetStartedAt() *string { return v.StartedAt }
+
+// GetFinishedAt returns DataImportParts.FinishedAt, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetFinishedAt() *string { return v.FinishedAt }
+
+// DataImportPartsCountsDataImportCount includes the requested fields of the GraphQL type DataImportCount.
+type DataImportPartsCountsDataImportCount struct {
+	Key   string `json:"key"`
+	Count int    `json:"count"`
+}
+
+// GetKey returns DataImportPartsCountsDataImportCount.Key, and is useful for accessing the field via an interface.
+func (v *DataImportPartsCountsDataImportCount) GetKey() string { return v.Key }
+
+// GetCount returns DataImportPartsCountsDataImportCount.Count, and is useful for accessing the field via an interface.
+func (v *DataImportPartsCountsDataImportCount) GetCount() int { return v.Count }
+
+// DataImportPartsFilesDataImportFile includes the requested fields of the GraphQL type DataImportFile.
+type DataImportPartsFilesDataImportFile struct {
+	DataImportFileParts `json:"-"`
+}
+
+// GetId returns DataImportPartsFilesDataImportFile.Id, and is useful for accessing the field via an interface.
+func (v *DataImportPartsFilesDataImportFile) GetId() string { return v.DataImportFileParts.Id }
+
+// GetKind returns DataImportPartsFilesDataImportFile.Kind, and is useful for accessing the field via an interface.
+func (v *DataImportPartsFilesDataImportFile) GetKind() DataImportFileKind {
+	return v.DataImportFileParts.Kind
+}
+
+// GetEntity returns DataImportPartsFilesDataImportFile.Entity, and is useful for accessing the field via an interface.
+func (v *DataImportPartsFilesDataImportFile) GetEntity() *DataImportFilePartsEntity {
+	return v.DataImportFileParts.Entity
+}
+
+// GetFile returns DataImportPartsFilesDataImportFile.File, and is useful for accessing the field via an interface.
+func (v *DataImportPartsFilesDataImportFile) GetFile() DataImportFilePartsFile {
+	return v.DataImportFileParts.File
+}
+
+func (v *DataImportPartsFilesDataImportFile) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DataImportPartsFilesDataImportFile
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DataImportPartsFilesDataImportFile = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DataImportFileParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDataImportPartsFilesDataImportFile struct {
+	Id string `json:"id"`
+
+	Kind DataImportFileKind `json:"kind"`
+
+	Entity *DataImportFilePartsEntity `json:"entity"`
+
+	File DataImportFilePartsFile `json:"file"`
+}
+
+func (v *DataImportPartsFilesDataImportFile) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DataImportPartsFilesDataImportFile) __premarshalJSON() (*__premarshalDataImportPartsFilesDataImportFile, error) {
+	var retval __premarshalDataImportPartsFilesDataImportFile
+
+	retval.Id = v.DataImportFileParts.Id
+	retval.Kind = v.DataImportFileParts.Kind
+	retval.Entity = v.DataImportFileParts.Entity
+	retval.File = v.DataImportFileParts.File
+	return &retval, nil
+}
+
+// DataImportPartsProblemsImportProblem includes the requested fields of the GraphQL type ImportProblem.
+type DataImportPartsProblemsImportProblem struct {
+	File     string  `json:"file"`
+	Line     *int    `json:"line"`
+	SourceId *string `json:"sourceId"`
+	Field    *string `json:"field"`
+	Code     string  `json:"code"`
+	Message  string  `json:"message"`
+}
+
+// GetFile returns DataImportPartsProblemsImportProblem.File, and is useful for accessing the field via an interface.
+func (v *DataImportPartsProblemsImportProblem) GetFile() string { return v.File }
+
+// GetLine returns DataImportPartsProblemsImportProblem.Line, and is useful for accessing the field via an interface.
+func (v *DataImportPartsProblemsImportProblem) GetLine() *int { return v.Line }
+
+// GetSourceId returns DataImportPartsProblemsImportProblem.SourceId, and is useful for accessing the field via an interface.
+func (v *DataImportPartsProblemsImportProblem) GetSourceId() *string { return v.SourceId }
+
+// GetField returns DataImportPartsProblemsImportProblem.Field, and is useful for accessing the field via an interface.
+func (v *DataImportPartsProblemsImportProblem) GetField() *string { return v.Field }
+
+// GetCode returns DataImportPartsProblemsImportProblem.Code, and is useful for accessing the field via an interface.
+func (v *DataImportPartsProblemsImportProblem) GetCode() string { return v.Code }
+
+// GetMessage returns DataImportPartsProblemsImportProblem.Message, and is useful for accessing the field via an interface.
+func (v *DataImportPartsProblemsImportProblem) GetMessage() string { return v.Message }
+
+// DataImportResponse is returned by DataImport on success.
+type DataImportResponse struct {
+	DataImport *DataImportDataImport `json:"dataImport"`
+}
+
+// GetDataImport returns DataImportResponse.DataImport, and is useful for accessing the field via an interface.
+func (v *DataImportResponse) GetDataImport() *DataImportDataImport { return v.DataImport }
 
 // EntitiesEntitiesEntityPage includes the requested fields of the GraphQL type EntityPage.
 type EntitiesEntitiesEntityPage struct {
@@ -1848,6 +2556,24 @@ type RecordsResponse struct {
 // GetRecords returns RecordsResponse.Records, and is useful for accessing the field via an interface.
 func (v *RecordsResponse) GetRecords() RecordsRecordsRecordPage { return v.Records }
 
+// RemoveDataImportFileRemoveDataImportFileDataImport includes the requested fields of the GraphQL type DataImport.
+type RemoveDataImportFileRemoveDataImportFileDataImport struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RemoveDataImportFileRemoveDataImportFileDataImport.Id, and is useful for accessing the field via an interface.
+func (v *RemoveDataImportFileRemoveDataImportFileDataImport) GetId() string { return v.Id }
+
+// RemoveDataImportFileResponse is returned by RemoveDataImportFile on success.
+type RemoveDataImportFileResponse struct {
+	RemoveDataImportFile RemoveDataImportFileRemoveDataImportFileDataImport `json:"removeDataImportFile"`
+}
+
+// GetRemoveDataImportFile returns RemoveDataImportFileResponse.RemoveDataImportFile, and is useful for accessing the field via an interface.
+func (v *RemoveDataImportFileResponse) GetRemoveDataImportFile() RemoveDataImportFileRemoveDataImportFileDataImport {
+	return v.RemoveDataImportFile
+}
+
 // RetireConstraintResponse is returned by RetireConstraint on success.
 type RetireConstraintResponse struct {
 	RetireConstraint RetireConstraintRetireConstraint `json:"retireConstraint"`
@@ -2318,6 +3044,122 @@ func (v *RetireRecordRetireRecord) __premarshalJSON() (*__premarshalRetireRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	return &retval, nil
+}
+
+// RunDataImportResponse is returned by RunDataImport on success.
+type RunDataImportResponse struct {
+	RunDataImport RunDataImportRunDataImport `json:"runDataImport"`
+}
+
+// GetRunDataImport returns RunDataImportResponse.RunDataImport, and is useful for accessing the field via an interface.
+func (v *RunDataImportResponse) GetRunDataImport() RunDataImportRunDataImport { return v.RunDataImport }
+
+// RunDataImportRunDataImport includes the requested fields of the GraphQL type DataImport.
+type RunDataImportRunDataImport struct {
+	DataImportParts `json:"-"`
+}
+
+// GetId returns RunDataImportRunDataImport.Id, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetId() string { return v.DataImportParts.Id }
+
+// GetStatus returns RunDataImportRunDataImport.Status, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetStatus() string { return v.DataImportParts.Status }
+
+// GetProblemCount returns RunDataImportRunDataImport.ProblemCount, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetProblemCount() int { return v.DataImportParts.ProblemCount }
+
+// GetProblemReportUrl returns RunDataImportRunDataImport.ProblemReportUrl, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetProblemReportUrl() *string {
+	return v.DataImportParts.ProblemReportUrl
+}
+
+// GetProblems returns RunDataImportRunDataImport.Problems, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetProblems() []DataImportPartsProblemsImportProblem {
+	return v.DataImportParts.Problems
+}
+
+// GetCounts returns RunDataImportRunDataImport.Counts, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetCounts() []DataImportPartsCountsDataImportCount {
+	return v.DataImportParts.Counts
+}
+
+// GetFiles returns RunDataImportRunDataImport.Files, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
+	return v.DataImportParts.Files
+}
+
+// GetStartedAt returns RunDataImportRunDataImport.StartedAt, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetStartedAt() *string { return v.DataImportParts.StartedAt }
+
+// GetFinishedAt returns RunDataImportRunDataImport.FinishedAt, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetFinishedAt() *string { return v.DataImportParts.FinishedAt }
+
+func (v *RunDataImportRunDataImport) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RunDataImportRunDataImport
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RunDataImportRunDataImport = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DataImportParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRunDataImportRunDataImport struct {
+	Id string `json:"id"`
+
+	Status string `json:"status"`
+
+	ProblemCount int `json:"problemCount"`
+
+	ProblemReportUrl *string `json:"problemReportUrl"`
+
+	Problems []DataImportPartsProblemsImportProblem `json:"problems"`
+
+	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
+
+	Files []DataImportPartsFilesDataImportFile `json:"files"`
+
+	StartedAt *string `json:"startedAt"`
+
+	FinishedAt *string `json:"finishedAt"`
+}
+
+func (v *RunDataImportRunDataImport) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RunDataImportRunDataImport) __premarshalJSON() (*__premarshalRunDataImportRunDataImport, error) {
+	var retval __premarshalRunDataImportRunDataImport
+
+	retval.Id = v.DataImportParts.Id
+	retval.Status = v.DataImportParts.Status
+	retval.ProblemCount = v.DataImportParts.ProblemCount
+	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
+	retval.Problems = v.DataImportParts.Problems
+	retval.Counts = v.DataImportParts.Counts
+	retval.Files = v.DataImportParts.Files
+	retval.StartedAt = v.DataImportParts.StartedAt
+	retval.FinishedAt = v.DataImportParts.FinishedAt
 	return &retval, nil
 }
 
@@ -2863,6 +3705,14 @@ func (v *UpdateRecordUpdateRecord) __premarshalJSON() (*__premarshalUpdateRecord
 	return &retval, nil
 }
 
+// __AddDataImportFileInput is used internally by genqlient
+type __AddDataImportFileInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __AddDataImportFileInput.Input, and is useful for accessing the field via an interface.
+func (v *__AddDataImportFileInput) GetInput() map[string]any { return v.Input }
+
 // __ApiSchemaDiffInput is used internally by genqlient
 type __ApiSchemaDiffInput struct {
 	FromRevisionId string `json:"fromRevisionId"`
@@ -2899,6 +3749,14 @@ type __ApplicationsInput struct {
 // GetPage returns __ApplicationsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ApplicationsInput) GetPage() PageInput { return v.Page }
 
+// __CheckDataImportInput is used internally by genqlient
+type __CheckDataImportInput struct {
+	ImportId string `json:"importId"`
+}
+
+// GetImportId returns __CheckDataImportInput.ImportId, and is useful for accessing the field via an interface.
+func (v *__CheckDataImportInput) GetImportId() string { return v.ImportId }
+
 // __ConstraintsInput is used internally by genqlient
 type __ConstraintsInput struct {
 	EntityId string    `json:"entityId"`
@@ -2926,6 +3784,14 @@ type __CreateConstraintInput struct {
 
 // GetInput returns __CreateConstraintInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateConstraintInput) GetInput() map[string]any { return v.Input }
+
+// __CreateDataImportInput is used internally by genqlient
+type __CreateDataImportInput struct {
+	ApplicationId string `json:"applicationId"`
+}
+
+// GetApplicationId returns __CreateDataImportInput.ApplicationId, and is useful for accessing the field via an interface.
+func (v *__CreateDataImportInput) GetApplicationId() string { return v.ApplicationId }
 
 // __CreateEntityInput is used internally by genqlient
 type __CreateEntityInput struct {
@@ -2966,6 +3832,14 @@ type __CreateRecordInput struct {
 
 // GetInput returns __CreateRecordInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateRecordInput) GetInput() CreateRecordInput { return v.Input }
+
+// __DataImportInput is used internally by genqlient
+type __DataImportInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __DataImportInput.Id, and is useful for accessing the field via an interface.
+func (v *__DataImportInput) GetId() string { return v.Id }
 
 // __EntitiesInput is used internally by genqlient
 type __EntitiesInput struct {
@@ -3031,6 +3905,18 @@ func (v *__RecordsInput) GetPage() PageInput { return v.Page }
 // GetReference returns __RecordsInput.Reference, and is useful for accessing the field via an interface.
 func (v *__RecordsInput) GetReference() *RecordReferenceInput { return v.Reference }
 
+// __RemoveDataImportFileInput is used internally by genqlient
+type __RemoveDataImportFileInput struct {
+	ImportId string `json:"importId"`
+	FileId   string `json:"fileId"`
+}
+
+// GetImportId returns __RemoveDataImportFileInput.ImportId, and is useful for accessing the field via an interface.
+func (v *__RemoveDataImportFileInput) GetImportId() string { return v.ImportId }
+
+// GetFileId returns __RemoveDataImportFileInput.FileId, and is useful for accessing the field via an interface.
+func (v *__RemoveDataImportFileInput) GetFileId() string { return v.FileId }
+
 // __RetireConstraintInput is used internally by genqlient
 type __RetireConstraintInput struct {
 	ConstraintId string `json:"constraintId"`
@@ -3070,6 +3956,14 @@ type __RetireRecordInput struct {
 
 // GetInput returns __RetireRecordInput.Input, and is useful for accessing the field via an interface.
 func (v *__RetireRecordInput) GetInput() RetireRecordInput { return v.Input }
+
+// __RunDataImportInput is used internally by genqlient
+type __RunDataImportInput struct {
+	ImportId string `json:"importId"`
+}
+
+// GetImportId returns __RunDataImportInput.ImportId, and is useful for accessing the field via an interface.
+func (v *__RunDataImportInput) GetImportId() string { return v.ImportId }
 
 // __UpdateEntityInput is used internally by genqlient
 type __UpdateEntityInput struct {
@@ -3138,6 +4032,61 @@ func (v *versionDiff) GetDangerous() []schemaChange { return v.Dangerous }
 
 // GetAdded returns versionDiff.Added, and is useful for accessing the field via an interface.
 func (v *versionDiff) GetAdded() []schemaChange { return v.Added }
+
+// The mutation executed by AddDataImportFile.
+const AddDataImportFile_Operation = `
+mutation AddDataImportFile ($input: AddDataImportFileInput!) {
+	addDataImportFile(input: $input) {
+		importFile {
+			... DataImportFileParts
+		}
+		uploadUrl
+		uploadHeaders {
+			name
+			value
+		}
+	}
+}
+fragment DataImportFileParts on DataImportFile {
+	id
+	kind
+	entity {
+		id
+		name
+	}
+	file {
+		id
+		filename
+		sizeBytes
+		status
+	}
+}
+`
+
+func AddDataImportFile(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *AddDataImportFileResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "AddDataImportFile",
+		Query:  AddDataImportFile_Operation,
+		Variables: &__AddDataImportFileInput{
+			Input: input,
+		},
+	}
+
+	data_ = &AddDataImportFileResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
 
 // The query executed by ApiSchema.
 const ApiSchema_Operation = `
@@ -3298,6 +4247,77 @@ func Applications(
 	return data_, err_
 }
 
+// The mutation executed by CheckDataImport.
+const CheckDataImport_Operation = `
+mutation CheckDataImport ($importId: ID!) {
+	checkDataImport(importId: $importId) {
+		... DataImportParts
+	}
+}
+fragment DataImportParts on DataImport {
+	id
+	status
+	problemCount
+	problemReportUrl
+	problems {
+		file
+		line
+		sourceId
+		field
+		code
+		message
+	}
+	counts {
+		key
+		count
+	}
+	files {
+		... DataImportFileParts
+	}
+	startedAt
+	finishedAt
+}
+fragment DataImportFileParts on DataImportFile {
+	id
+	kind
+	entity {
+		id
+		name
+	}
+	file {
+		id
+		filename
+		sizeBytes
+		status
+	}
+}
+`
+
+func CheckDataImport(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	importId string,
+) (data_ *CheckDataImportResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CheckDataImport",
+		Query:  CheckDataImport_Operation,
+		Variables: &__CheckDataImportInput{
+			ImportId: importId,
+		},
+	}
+
+	data_ = &CheckDataImportResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Constraints.
 const Constraints_Operation = `
 query Constraints ($entityId: ID!, $page: PageInput!) {
@@ -3421,6 +4441,77 @@ func CreateConstraint(
 	}
 
 	data_ = &CreateConstraintResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateDataImport.
+const CreateDataImport_Operation = `
+mutation CreateDataImport ($applicationId: ID!) {
+	createDataImport(applicationId: $applicationId) {
+		... DataImportParts
+	}
+}
+fragment DataImportParts on DataImport {
+	id
+	status
+	problemCount
+	problemReportUrl
+	problems {
+		file
+		line
+		sourceId
+		field
+		code
+		message
+	}
+	counts {
+		key
+		count
+	}
+	files {
+		... DataImportFileParts
+	}
+	startedAt
+	finishedAt
+}
+fragment DataImportFileParts on DataImportFile {
+	id
+	kind
+	entity {
+		id
+		name
+	}
+	file {
+		id
+		filename
+		sizeBytes
+		status
+	}
+}
+`
+
+func CreateDataImport(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	applicationId string,
+) (data_ *CreateDataImportResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateDataImport",
+		Query:  CreateDataImport_Operation,
+		Variables: &__CreateDataImportInput{
+			ApplicationId: applicationId,
+		},
+	}
+
+	data_ = &CreateDataImportResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -3642,6 +4733,77 @@ func CreateRecord(
 	}
 
 	data_ = &CreateRecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by DataImport.
+const DataImport_Operation = `
+query DataImport ($id: ID!) {
+	dataImport(id: $id) {
+		... DataImportParts
+	}
+}
+fragment DataImportParts on DataImport {
+	id
+	status
+	problemCount
+	problemReportUrl
+	problems {
+		file
+		line
+		sourceId
+		field
+		code
+		message
+	}
+	counts {
+		key
+		count
+	}
+	files {
+		... DataImportFileParts
+	}
+	startedAt
+	finishedAt
+}
+fragment DataImportFileParts on DataImportFile {
+	id
+	kind
+	entity {
+		id
+		name
+	}
+	file {
+		id
+		filename
+		sizeBytes
+		status
+	}
+}
+`
+
+func DataImport(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *DataImportResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DataImport",
+		Query:  DataImport_Operation,
+		Variables: &__DataImportInput{
+			Id: id,
+		},
+	}
+
+	data_ = &DataImportResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -4077,6 +5239,42 @@ func Records(
 	return data_, err_
 }
 
+// The mutation executed by RemoveDataImportFile.
+const RemoveDataImportFile_Operation = `
+mutation RemoveDataImportFile ($importId: ID!, $fileId: ID!) {
+	removeDataImportFile(importId: $importId, fileId: $fileId) {
+		id
+	}
+}
+`
+
+func RemoveDataImportFile(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	importId string,
+	fileId string,
+) (data_ *RemoveDataImportFileResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RemoveDataImportFile",
+		Query:  RemoveDataImportFile_Operation,
+		Variables: &__RemoveDataImportFileInput{
+			ImportId: importId,
+			FileId:   fileId,
+		},
+	}
+
+	data_ = &RemoveDataImportFileResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by RetireConstraint.
 const RetireConstraint_Operation = `
 mutation RetireConstraint ($constraintId: ID!) {
@@ -4293,6 +5491,77 @@ func RetireRecord(
 	}
 
 	data_ = &RetireRecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RunDataImport.
+const RunDataImport_Operation = `
+mutation RunDataImport ($importId: ID!) {
+	runDataImport(importId: $importId) {
+		... DataImportParts
+	}
+}
+fragment DataImportParts on DataImport {
+	id
+	status
+	problemCount
+	problemReportUrl
+	problems {
+		file
+		line
+		sourceId
+		field
+		code
+		message
+	}
+	counts {
+		key
+		count
+	}
+	files {
+		... DataImportFileParts
+	}
+	startedAt
+	finishedAt
+}
+fragment DataImportFileParts on DataImportFile {
+	id
+	kind
+	entity {
+		id
+		name
+	}
+	file {
+		id
+		filename
+		sizeBytes
+		status
+	}
+}
+`
+
+func RunDataImport(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	importId string,
+) (data_ *RunDataImportResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RunDataImport",
+		Query:  RunDataImport_Operation,
+		Variables: &__RunDataImportInput{
+			ImportId: importId,
+		},
+	}
+
+	data_ = &RunDataImportResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

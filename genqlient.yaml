@@ -19,6 +19,8 @@ bindings:
     type: map[string]any
   CreateConstraintInput:
     type: map[string]any
+  AddDataImportFileInput:
+    type: map[string]any
   JSON:
     type: encoding/json.RawMessage
   DateTime:

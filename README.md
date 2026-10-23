@@ -35,6 +35,11 @@ multipaas schema pull                                    # writes multipaas.grap
 multipaas records create --entity <entity id> --data '{"<field id>": "value"}'
 multipaas records get --entity <entity id> --id <record id>
 multipaas records list --entity <entity id> --parent-field <field id> --parent-record <record id>   # a parent's children
+multipaas import create --app <app id> --dir ./export          # one import, every .jsonl in ./export added
+multipaas import add --import <import id> --kind records --entity <entity id> --file ./export/orders.jsonl
+multipaas import check --import <import id>                    # waits, then prints every problem by file and line
+multipaas import run --import <import id>                      # only after a clean check; all or nothing
+multipaas import status --import <import id>
 multipaas oauth-client create --name "My app" --redirect-uri http://localhost:5173/callback
 multipaas logout
 ```
@@ -42,6 +47,8 @@ multipaas logout
 The model commands are `model show`, `entity create|update|retire`, `enum create|update|retire`, `field add|update|retire` and `constraint add|retire`; `--help` on each lists its flags. Each change prints the changed entity, enum type, field or constraint and `apiVersion`: the API version the model is at after the change.
 
 In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `versions diff` shows what changed between two API versions, breaking, dangerous and added, from the pin to the newest unless `--from` and `--to` say otherwise. `records list|get|create|update|retire` read and write an entity's records in an app-tenant, with `--data` a JSON object keyed by field id. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`. `tenants create` makes an app-tenant to test in, which needs `access.manage.application`.
+
+`import create|add|check|run|status` load an application's existing data from export files; see [Import](#import).
 
 Every command takes `--json`, which prints exactly one JSON document on stdout.
 
@@ -57,6 +64,44 @@ with `INVALID_API_URL`. The CLI finds webapp-api by swapping that host's leading
 | 3 | This CLI is too old for MultiPaaS: upgrade it |
 
 Your sign-in is kept in `~/.config/multipaas/credentials.json` (mode 0600), one entry per API URL, so a token is only ever sent to the API URL it was issued for.
+
+## Import
+
+`import` loads an application's existing data from export files, one [JSON-lines](https://jsonlines.org) file per kind:
+
+| File | Each line |
+|---|---|
+| `tenants.jsonl` | `{"id": "acct-17", "name": "Acme"}` — one app-tenant |
+| `users.jsonl` | `{"id": "u-9", "email": "pat@example.com", "name": "Pat Lee"}` — `name` is optional |
+| `memberships.jsonl` | `{"user": "u-9", "tenant": "acct-17", "role": "Editor"}` — a role your application declares |
+| `<entity>.jsonl` | `{"id": "s-301", "tenant": "acct-17", "createdBy": "u-9", "createdAt": "2025-03-02T10:00:00Z", "updatedAt": "2025-04-01T08:00:00Z", "deletedAt": null, "fields": {"title": "Q1 review", "parent": "s-300"}}` |
+
+- `id`, `user`, `tenant` and `createdBy` are ids from your old database, and a reference field's value is
+  the id of the row it points at. MultiPaaS gives every tenant and record a new id and remaps the
+  references. A user whose email already has an account is linked to that account, which keeps its id and name.
+- An `id` is at most 1,024 bytes in UTF-8 and has no control characters or unpaired surrogates (problems
+  `id-too-long` and `id-invalid-character`).
+- `fields` is keyed by each field's GraphQL name. `createdBy`, the three timestamps and `deletedAt` are
+  optional; a non-null `deletedAt` imports the record as deleted.
+- `create --dir` matches `<entity>.jsonl` to an entity by its name, type name or plural name, ignoring
+  case, and refuses the whole directory if any `.jsonl` file matches none or more than one, or if two files
+  map to the same kind or the same entity. A `tenants`, `users` or `memberships` file that also matches an
+  entity is refused as `IMPORT_FILE_AMBIGUOUS`: add it with `import add`, using `--kind tenants`, `users` or
+  `memberships` for the reserved meaning, or `--kind records --entity ENTITY_ID` for the entity. A file that
+  cannot be read, is empty or is over 512 MiB is refused as `IMPORT_FILE_INVALID`. Nothing is created
+  when any file is refused.
+
+`check` and `run` wait until they finish (`--wait=false` returns at once) and exit 0 whatever the
+result: read `status`. They stop waiting after 20 minutes and exit 1 with `IMPORT_STILL_RUNNING`; run
+`import status` later. A failed check is `check-failed`, with its problems; a data problem names its file, and its line when it is about a row. A run
+writes everything or nothing; it is `imported` with counts, or `import-failed` with problems. Imported users
+are not emailed. They join their tenants at their next sign-in within 7 days of the run; after that
+they must be invited.
+
+With `--json`, `import create`, `check`, `run` and `status` print `{"import": {...}}`, and `import add` prints
+`{"importFile": {...}}`. An import holds `id`, `status`, `problemCount`, `problems` (each with `file`, `line`,
+`sourceId`, `field`, `code` and `message`), `counts` (each a `key` and a `count`), `files`, `startedAt` and
+`finishedAt`. `add --kind records` needs `--entity`, the entity's id from `model show`.
 
 ## Develop
 

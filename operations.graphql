@@ -348,3 +348,93 @@ mutation UpdateOAuthClient($input: UpdateOAuthClientInput!) {
     ...OAuthClientParts
   }
 }
+
+fragment DataImportParts on DataImport {
+  id
+  status
+  problemCount
+  # @genqlient(pointer: true)
+  problemReportUrl
+  problems {
+    file
+    # @genqlient(pointer: true)
+    line
+    # @genqlient(pointer: true)
+    sourceId
+    # @genqlient(pointer: true)
+    field
+    code
+    message
+  }
+  counts {
+    key
+    count
+  }
+  files {
+    ...DataImportFileParts
+  }
+  # @genqlient(pointer: true)
+  startedAt
+  # @genqlient(pointer: true)
+  finishedAt
+}
+
+fragment DataImportFileParts on DataImportFile {
+  id
+  kind
+  # @genqlient(pointer: true)
+  entity {
+    id
+    name
+  }
+  file {
+    id
+    filename
+    sizeBytes
+    status
+  }
+}
+
+mutation CreateDataImport($applicationId: ID!) {
+  createDataImport(applicationId: $applicationId) {
+    ...DataImportParts
+  }
+}
+
+mutation AddDataImportFile($input: AddDataImportFileInput!) {
+  addDataImportFile(input: $input) {
+    importFile {
+      ...DataImportFileParts
+    }
+    uploadUrl
+    uploadHeaders {
+      name
+      value
+    }
+  }
+}
+
+mutation RemoveDataImportFile($importId: ID!, $fileId: ID!) {
+  removeDataImportFile(importId: $importId, fileId: $fileId) {
+    id
+  }
+}
+
+mutation CheckDataImport($importId: ID!) {
+  checkDataImport(importId: $importId) {
+    ...DataImportParts
+  }
+}
+
+mutation RunDataImport($importId: ID!) {
+  runDataImport(importId: $importId) {
+    ...DataImportParts
+  }
+}
+
+query DataImport($id: ID!) {
+  # @genqlient(pointer: true)
+  dataImport(id: $id) {
+    ...DataImportParts
+  }
+}

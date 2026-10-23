@@ -56,6 +56,16 @@ type fakeMultiPaaS struct {
 	oauthClients  []map[string]any            // the application's sign-in clients
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
+
+	imports      map[string]*fakeImport // import id -> its state
+	uploads      map[string]fakeUpload  // File id -> what its PUT received
+	importReads  int                    // DataImport reads answered
+	refuseUpload bool                   // the presigned PUT answers 403
+	refuseImport [2]string              // an import mutation is refused with this code and message
+	failReport   bool                   // GET /report answers HTTP 500
+	reportLines  []map[string]any       // GET /report serves these, one JSON line each
+	statusQueue  map[string][]string    // import id -> the statuses its later DataImport reads answer
+	fileCount    int                    // files registered so far, for part-N and file-N
 }
 
 type pendingCode struct{ redirectURI, challenge string }
@@ -80,12 +90,15 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 		release: make(chan struct{}), accessTokens: map[string]bool{},
 		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
 		records: map[string][]map[string]any{},
+		imports: map[string]*fakeImport{}, uploads: map[string]fakeUpload{}, statusQueue: map[string][]string{},
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /oauth/authorize", fake.authorize)
 	mux.HandleFunc("POST /oauth/token", fake.token)
 	mux.HandleFunc("POST /oauth/revoke", fake.revoke)
 	mux.HandleFunc("POST /graphql", fake.graphql)
+	mux.HandleFunc("PUT /upload/{id}", fake.receiveUpload)
+	mux.HandleFunc("GET /report", fake.serveReport)
 	fake.server = httptest.NewServer(mux)
 	t.Cleanup(fake.server.Close)
 	t.Cleanup(func() { close(fake.release) })
@@ -351,6 +364,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.writeRecord(w, operation, parts, variables)
 	case "OAuthClients", "CreateOAuthClient", "UpdateOAuthClient":
 		f.manageOAuth(w, operation, parts, variables)
+	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DataImport":
+		f.dataImport(w, operation, parts, variables)
 	default:
 		http.Error(w, "unknown operation "+operation, http.StatusBadRequest)
 	}

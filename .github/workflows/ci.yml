@@ -32,7 +32,7 @@ jobs:
           git diff --exit-code
       - uses: goreleaser/goreleaser-action@v7.2.3
         with:
-          version: v2.18.2
+          version: v2.18.3
           args: release --snapshot --clean
 
   # Separate from test, so a webapp-api change fails this job and not every PR.

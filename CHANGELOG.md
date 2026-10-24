@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.7.0...v0.8.0) (2026-10-24)
+
+
+### Features
+
+* [MP-179] multipaas apps create ([#21](https://github.com/MultiPaaS-Apps/cli/issues/21)) ([dd2eaa7](https://github.com/MultiPaaS-Apps/cli/commit/dd2eaa76e6a3b01ef7489d6e642936430004009c))
+
 ## [0.7.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.6.0...v0.7.0) (2026-10-23)
 
 

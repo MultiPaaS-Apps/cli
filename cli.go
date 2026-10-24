@@ -97,7 +97,7 @@ func run(args []string, env environment) int {
 		return list, func(out io.Writer) {
 			table(out, "CLIENT\tNAME\tID", list, func(a app) string { return a.ClientName + "\t" + a.Name + "\t" + a.ID })
 		}, err
-	}))
+	}), appsCreate(command))
 
 	var appID string
 	tenants := &cobra.Command{Use: "tenants", Short: "App-tenants you can reach"}
@@ -118,6 +118,32 @@ func run(args []string, env environment) int {
 	root.SetOut(env.stdout)
 	root.SetErr(env.stderr)
 	return report(env, asJSON, root.Execute())
+}
+
+// appsCreate makes an application in one of the developer's clients. It needs client.applications.create, and the
+// server makes its creator the new application's App manager.
+func appsCreate(command commandFunc) *cobra.Command {
+	var clientID, name string
+	cmd := command("create", "Create an application in one of your clients", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var created app
+		owner, err := s.creatableClient(ctx, clientID)
+		if err == nil {
+			err = s.call(ctx, owner.Id, func(client graphql.Client) error {
+				response, err := CreateApplication(ctx, client, CreateApplicationInput{Name: name})
+				if err == nil {
+					created = app{ClientID: owner.Id, ClientName: owner.Name, ID: response.CreateApplication.Id, Name: response.CreateApplication.Name}
+				}
+				return err
+			})
+		}
+		return map[string]app{"application": created}, func(out io.Writer) {
+			fmt.Fprintf(out, "application %s %q in %s\n", created.ID, created.Name, created.ClientName)
+		}, err
+	})
+	cmd.Flags().StringVar(&clientID, "client", "", "the client to create it in (needed when you can reach more than one)")
+	cmd.Flags().StringVar(&name, "name", "", "the application's name")
+	_ = cmd.MarkFlagRequired("name")
+	return cmd
 }
 
 // tenantsCreate makes an app-tenant to build and test an app in. It needs access.manage.application on the

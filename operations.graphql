@@ -42,6 +42,13 @@ query AppTenants($page: PageInput!) {
   }
 }
 
+mutation CreateApplication($input: CreateApplicationInput!) {
+  createApplication(input: $input) {
+    id
+    name
+  }
+}
+
 mutation CreateAppTenant($input: CreateAppTenantInput!) {
   createAppTenant(input: $input) {
     id

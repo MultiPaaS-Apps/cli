@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -203,6 +204,83 @@ func TestTenantsCreateForAnApplicationYouCannotReachIsNotFoundAndSendsNothing(t 
 	assertFailure(t, fake.run(t, "tenants", "create", "--app", "app-unknown", "--name", "Dev test", "--json"), exitRefused, "NOT_FOUND")
 	if len(fake.mutations) != 0 {
 		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestAppsCreateMakesOneInYourOnlyClientsScopeAndListShowsIt(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "apps", "create", "--name", "Orders", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if compact(got.stdout) != `{"application":{"clientId":"client-a","clientName":"Acme","id":"app-new-102","name":"Orders"}}` {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"name": "Orders"}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a" {
+		t.Fatalf("scope %q", last)
+	}
+	var apps []app
+	decode(t, fake.run(t, "apps", "list", "--json").stdout, &apps)
+	if !slices.Contains(apps, app{ClientID: "client-a", ClientName: "Acme", ID: "app-new-102", Name: "Orders"}) {
+		t.Fatalf("apps list does not show the new application: %d apps", len(apps))
+	}
+}
+
+func TestAppsCreateWithMoreThanOneClientNeedsClientAndThenUsesIt(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entitlements = append(fake.entitlements, entitlement{clientID: "client-c", clientName: "Gamma"})
+	refused := fake.run(t, "apps", "create", "--name", "Orders", "--json")
+	assertFailure(t, refused, exitRefused, "CLIENT_REQUIRED")
+	if !strings.Contains(refused.stdout, "client-a (Acme)") || !strings.Contains(refused.stdout, "client-c (Gamma)") || strings.Contains(refused.stdout, "client-b") {
+		t.Fatalf("the refusal should name exactly the client-level clients: %s", refused.stdout)
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+	got := fake.run(t, "apps", "create", "--client", "client-c", "--name", "Orders")
+	if got.exit != exitOK || got.stdout != "application app-new-1 \"Orders\" in Gamma\n" {
+		t.Fatalf("exit %d, stdout %q, stderr %s", got.exit, got.stdout, got.stderr)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-c" {
+		t.Fatalf("scope %q", last)
+	}
+}
+
+func TestAppsCreateInAClientYouCannotCreateInIsNotFoundAndSendsNothing(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	outcomes := []string{}
+	for _, clientID := range []string{"client-b", "client-unknown"} {
+		got := fake.run(t, "apps", "create", "--client", clientID, "--name", "Orders", "--json")
+		outcomes = append(outcomes, fmt.Sprintf("%s:%d:%s", clientID, got.exit, compact(got.stdout)))
+	}
+	fake.entitlements = fake.entitlements[1:]
+	got := fake.run(t, "apps", "create", "--name", "Orders", "--json")
+	outcomes = append(outcomes, fmt.Sprintf("none:%d:%s", got.exit, compact(got.stdout)))
+	want := []string{
+		`client-b:1:{"error":{"code":"NOT_FOUND","message":"no client client-b you can create applications in"}}`,
+		`client-unknown:1:{"error":{"code":"NOT_FOUND","message":"no client client-unknown you can create applications in"}}`,
+		`none:1:{"error":{"code":"NOT_FOUND","message":"no client you can create applications in"}}`,
+	}
+	if strings.Join(outcomes, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("got\n%s\nwant\n%s", strings.Join(outcomes, "\n"), strings.Join(want, "\n"))
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestAppsCreateWithoutCreatePermissionIsRefusedUnauthorized(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.noCreateApp = true
+	assertFailure(t, fake.run(t, "apps", "create", "--name", "Orders", "--json"), exitRefused, "UNAUTHORIZED")
+	var apps []app
+	decode(t, fake.run(t, "apps", "list", "--json").stdout, &apps)
+	if len(apps) != 102 {
+		t.Fatalf("a refused create changed the list: %d apps", len(apps))
 	}
 }
 

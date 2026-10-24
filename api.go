@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -88,6 +89,34 @@ func (s *session) tenants(ctx context.Context, appID string) ([]appTenant, error
 		return nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no application " + appID + " that you can reach"}
 	}
 	return tenants, nil
+}
+
+// creatableClient is the client a new application goes in: clientID when given, else the developer's only
+// client-level entitlement. An app-tenant-level entitlement reaches a single app-tenant, never its client.
+func (s *session) creatableClient(ctx context.Context, clientID string) (MyTenantsMyTenantsTenantOptionClient, error) {
+	entitlements, err := s.entitlements(ctx)
+	if err != nil {
+		return MyTenantsMyTenantsTenantOptionClient{}, err
+	}
+	clients := []MyTenantsMyTenantsTenantOptionClient{}
+	for _, entitlement := range entitlements {
+		if entitlement.AppTenantId == "" && (clientID == "" || entitlement.Client.Id == clientID) && !slices.Contains(clients, entitlement.Client) {
+			clients = append(clients, entitlement.Client)
+		}
+	}
+	switch {
+	case len(clients) == 1:
+		return clients[0], nil
+	case len(clients) == 0 && clientID != "":
+		return MyTenantsMyTenantsTenantOptionClient{}, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no client " + clientID + " you can create applications in"}
+	case len(clients) == 0:
+		return MyTenantsMyTenantsTenantOptionClient{}, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no client you can create applications in"}
+	}
+	named := []string{}
+	for _, client := range clients {
+		named = append(named, client.Id+" ("+client.Name+")")
+	}
+	return MyTenantsMyTenantsTenantOptionClient{}, &cliError{exit: exitRefused, Code: "CLIENT_REQUIRED", Message: "you can reach more than one client: pass --client with one of " + strings.Join(named, ", ")}
 }
 
 // entitlements is myTenants: where the developer may act, with no scope sent.

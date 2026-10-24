@@ -56,6 +56,7 @@ type fakeMultiPaaS struct {
 	oauthClients  []map[string]any            // the application's sign-in clients
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
+	noCreateApp   bool                        // the signed-in user lacks client.applications.create
 
 	imports      map[string]*fakeImport // import id -> its state
 	uploads      map[string]fakeUpload  // File id -> what its PUT received
@@ -267,6 +268,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			return
 		}
 		writeData(w, map[string]any{"applications": page(f.apps[parts[0]], variables)})
+	case "CreateApplication":
+		f.createApplication(w, parts, variables)
 	case "CreateAppTenant":
 		f.createAppTenant(w, parts, variables)
 	case "AppTenants":
@@ -590,6 +593,21 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 	record["data"] = data
 	f.records[entity][i] = record
 	writeData(w, map[string]any{field: record})
+}
+
+// createApplication shares these steps with the server, in order: a client in scope (requireTenant),
+// then client.applications.create, then the insert.
+func (f *fakeMultiPaaS) createApplication(w http.ResponseWriter, parts []string, variables map[string]any) {
+	f.mutations = append(f.mutations, variables)
+	client := parts[0]
+	if client == "" || f.noCreateApp {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	name, _ := variables["input"].(map[string]any)["name"].(string)
+	created := fakeRow{id: fmt.Sprintf("app-new-%d", len(f.apps[client])+1), name: name}
+	f.apps[client] = append(f.apps[client], created)
+	writeData(w, map[string]any{"createApplication": map[string]any{"id": created.id, "name": created.name}})
 }
 
 // createAppTenant shares these steps with the server, in order: an application in scope, then

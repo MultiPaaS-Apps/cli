@@ -420,15 +420,81 @@ func TestImportRunPrintsTheCounts(t *testing.T) {
 func TestImportRunKeepsTheServersRefusal(t *testing.T) {
 	fake := projectFake(t)
 	fake.seedImport("import-1", "draft")
-	fake.refuseImport = [2]string{"DATA_IMPORT_STATE", "dataImport cannot run from draft"}
+	fake.refuseImport = [2]string{"DATA_IMPORT_STATE", "This import can't do that in its current status."}
 
 	got := fake.run(t, "import", "run", "--app", importApp, "--import", "import-1", "--json")
 	assertFailure(t, got, exitRefused, "DATA_IMPORT_STATE")
 }
 
+func TestImportDeleteMarksTheImportDeleted(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "check-failed")
+
+	got := fake.run(t, "import", "delete", "--app", importApp, "--import", "import-1", "--json")
+	var printed struct{ Import DataImportParts }
+	decode(t, got.stdout, &printed)
+	if got.exit != exitOK || printed.Import.Id != "import-1" || printed.Import.DeletedAt == nil {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if fake.imports["import-1"].deletedAt == nil {
+		t.Fatal("import-1 was not deleted")
+	}
+}
+
+func TestImportDeletePrintsTheImportMarkedDeleted(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "imported")
+
+	got := fake.run(t, "import", "delete", "--app", importApp, "--import", "import-1")
+	if got.exit != exitOK || !strings.HasPrefix(got.stdout, "import import-1 imported deleted 2026-10-26T12:00:00.000Z\n") {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+}
+
+func TestImportDeleteKeepsTheServersRefusal(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "checking")
+	fake.refuseImport = [2]string{"DATA_IMPORT_STATE", "This import can't do that in its current status."}
+
+	assertFailure(t, fake.run(t, "import", "delete", "--app", importApp, "--import", "import-1", "--json"), exitRefused, "DATA_IMPORT_STATE")
+	if fake.imports["import-1"].deletedAt != nil {
+		t.Fatal("import-1 was deleted anyway")
+	}
+}
+
+func TestImportDeleteOfAnUnknownOrDeletedImport(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "draft").deletedAt = "2026-10-25T00:00:00.000Z"
+	for _, id := range []string{"import-1", "import-9"} {
+		assertFailure(t, fake.run(t, "import", "delete", "--app", importApp, "--import", id, "--json"), exitRefused, "NOT_FOUND")
+	}
+}
+
 func TestImportStatusOfAnUnknownImport(t *testing.T) {
 	fake := projectFake(t)
 	assertFailure(t, fake.run(t, "import", "status", "--app", importApp, "--import", "import-9", "--json"), exitRefused, "NOT_FOUND")
+}
+
+func TestImportStatusIncludeDeletedShowsADeletedImportMarkedDeleted(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "check-failed").deletedAt = "2026-10-25T09:30:00.000Z"
+
+	got := fake.run(t, "import", "status", "--app", importApp, "--import", "import-1", "--include-deleted", "--json")
+	var printed struct{ Import DataImportParts }
+	decode(t, got.stdout, &printed)
+	if got.exit != exitOK || printed.Import.DeletedAt == nil || *printed.Import.DeletedAt != "2026-10-25T09:30:00.000Z" {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	text := fake.run(t, "import", "status", "--app", importApp, "--import", "import-1", "--include-deleted")
+	if text.exit != exitOK || !strings.HasPrefix(text.stdout, "import import-1 check-failed deleted 2026-10-25T09:30:00.000Z\n") {
+		t.Fatalf("exit %d: %s%s", text.exit, text.stdout, text.stderr)
+	}
+}
+
+func TestImportStatusWithoutIncludeDeletedDoesNotFindADeletedImport(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "check-failed").deletedAt = "2026-10-25T09:30:00.000Z"
+	assertFailure(t, fake.run(t, "import", "status", "--app", importApp, "--import", "import-1", "--json"), exitRefused, "NOT_FOUND")
 }
 
 func TestImportCommandsUseTheApplicationScope(t *testing.T) {
@@ -441,6 +507,7 @@ func TestImportCommandsUseTheApplicationScope(t *testing.T) {
 		{"import", "check", "--import", "import-9", "--wait=false"},
 		{"import", "run", "--import", "import-9", "--wait=false"},
 		{"import", "status", "--import", "import-9"},
+		{"import", "delete", "--import", "import-9"},
 	}
 	for _, args := range commands {
 		got := fake.run(t, append(append([]string{}, args...), "--app", importApp, "--json")...)

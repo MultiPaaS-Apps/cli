@@ -40,7 +40,8 @@ multipaas import create --app <app id> --dir ./export          # one import, eve
 multipaas import add --import <import id> --kind records --entity <entity id> --file ./export/orders.jsonl
 multipaas import check --import <import id>                    # waits, then prints every problem by file and line
 multipaas import run --import <import id>                      # only after a clean check; all or nothing
-multipaas import status --import <import id>
+multipaas import status --import <import id> [--include-deleted]
+multipaas import delete --import <import id>                   # not while checking or importing; nothing it holds is removed
 multipaas oauth-client create --name "My app" --redirect-uri http://localhost:5173/callback
 multipaas logout
 ```
@@ -49,7 +50,7 @@ The model commands are `model show`, `entity create|update|retire`, `enum create
 
 In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `versions diff` shows what changed between two API versions, breaking, dangerous and added, from the pin to the newest unless `--from` and `--to` say otherwise. `records list|get|create|update|retire` read and write an entity's records in an app-tenant, with `--data` a JSON object keyed by field id. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`. `apps create` makes an application, which needs `client.applications.create`, and makes you its App manager. `tenants create` makes an app-tenant to test in, which needs `access.manage.application`.
 
-`import create|add|check|run|status` load an application's existing data from export files; see [Import](#import).
+`import create|add|check|run|status|delete` load an application's existing data from export files; see [Import](#import).
 
 Every command takes `--json`, which prints exactly one JSON document on stdout.
 
@@ -99,10 +100,14 @@ writes everything or nothing; it is `imported` with counts, or `import-failed` w
 are not emailed. They join their tenants at their next sign-in within 7 days of the run; after that
 they must be invited.
 
-With `--json`, `import create`, `check`, `run` and `status` print `{"import": {...}}`, and `import add` prints
+`import delete` marks an import deleted, and is refused with `DATA_IMPORT_STATE` while the import is checking or
+importing. Nothing is removed: its files stay, and so does any data it imported. A deleted import can't be
+changed, and `import status` finds it only with `--include-deleted`.
+
+With `--json`, `import create`, `check`, `run`, `status` and `delete` print `{"import": {...}}`, and `import add` prints
 `{"importFile": {...}}`. An import holds `id`, `status`, `problemCount`, `problems` (each with `file`, `line`,
-`sourceId`, `field`, `code` and `message`), `counts` (each a `key` and a `count`), `files`, `startedAt` and
-`finishedAt`. `add --kind records` needs `--entity`, the entity's id from `model show`.
+`sourceId`, `field`, `code` and `message`), `counts` (each a `key` and a `count`), `files`, `startedAt`,
+`finishedAt` and `deletedAt` (set once the import is deleted). `add --kind records` needs `--entity`, the entity's id from `model show`.
 
 ## Develop
 

@@ -115,9 +115,10 @@ type ApplicationInvitation {
 	createdAt: DateTime!
 	email: String!
 	expiresAt: DateTime!
+	groups: [AccessGroup!]!
 	id: ID!
 	kind: InvitationKind!
-	role: Role
+	roles: [Role!]!
 	scope: InvitationScope!
 	status: ApplicationInvitationStatus!
 }
@@ -165,6 +166,36 @@ type Client {
 	id: ID!
 	name: String!
 	updatedAt: DateTime!
+}
+
+type ClientApplication {
+	application: Application!
+	client: Client!
+}
+
+type ClientApplicationPage {
+	items: [ClientApplication!]!
+	pageInfo: PageInfo!
+}
+
+type ClientGroup implements AccessGrant{
+	_accessGrant: Boolean!
+	id: ID!
+	name: String!
+}
+
+type ClientGroupMember implements AccessGrant{
+	_accessGrant: Boolean!
+	group: ClientGroup
+	id: ID!
+	user: User
+}
+
+type ClientGroupRoleAssignment implements AccessGrant{
+	_accessGrant: Boolean!
+	group: ClientGroup
+	id: ID!
+	role: ClientRole!
 }
 
 type ClientPage {
@@ -310,6 +341,10 @@ type DataImport {
 	application: Application!
 	counts: [DataImportCount!]
 	createdAt: DateTime!
+"""
+When the import was deleted; null while it is live.
+"""
+	deletedAt: DateTime
 	files: [DataImportFile!]!
 	finishedAt: DateTime
 	id: ID!
@@ -495,7 +530,8 @@ enum InvitationScope {
 
 input InviteMemberInput {
 	email: String!
-	roleId: ID
+	groupIds: [ID!]
+	roleIds: [ID!]
 	scope: InvitationScope!
 }
 
@@ -523,18 +559,34 @@ type Mutation {
 		groupId: ID!
 		userId: ID!
 	): AccessGroupMember!
+	addClientGroupMember(
+		groupId: ID!
+		userId: ID!
+	): ClientGroupMember!
 	addDataImportFile(
 		input: AddDataImportFileInput!
 	): DataImportFileUpload!
 	addMember(
 		input: AddMemberInput!
 	): TenantMember!
+	addPlatformGroupMember(
+		groupId: ID!
+		userId: ID!
+	): PlatformGroupMember!
 	approveOAuthAuthorization(
 		input: ApproveOAuthAuthorizationInput!
 	): OAuthRedirect!
+	assignClientGroupRole(
+		groupId: ID!
+		roleId: ID!
+	): ClientGroupRoleAssignment!
 	assignClientRole(
 		input: AssignClientRoleInput!
 	): ClientRoleAssignment!
+	assignPlatformGroupRole(
+		groupId: ID!
+		roleId: ID!
+	): PlatformGroupRoleAssignment!
 	assignPlatformRole(
 		input: AssignPlatformRoleInput!
 	): PlatformRoleAssignment!
@@ -561,6 +613,9 @@ type Mutation {
 	createClient(
 		input: CreateClientInput!
 	): CreateClientPayload!
+	createClientGroup(
+		name: String!
+	): ClientGroup!
 	createClientRole(
 		input: CreateClientRoleInput!
 	): ClientRole!
@@ -582,6 +637,9 @@ type Mutation {
 	createOAuthClient(
 		input: CreateOAuthClientInput!
 	): OAuthClient!
+	createPlatformGroup(
+		name: String!
+	): PlatformGroup!
 	createPlatformRole(
 		input: CreatePlatformRoleInput!
 	): PlatformRole!
@@ -606,6 +664,12 @@ type Mutation {
 	deactivateUser(
 		input: DeactivateUserInput!
 	): User!
+"""
+Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
+"""
+	deleteDataImport(
+		importId: ID!
+	): DataImport!
 	denyOAuthAuthorization(
 		input: DenyOAuthAuthorizationInput!
 	): OAuthRedirect!
@@ -620,6 +684,9 @@ type Mutation {
 	removeAccessGroupMember(
 		id: ID!
 	): AccessGroupMember!
+	removeClientGroupMember(
+		id: ID!
+	): ClientGroupMember!
 	removeDataImportFile(
 		fileId: ID!
 		importId: ID!
@@ -627,10 +694,21 @@ type Mutation {
 	removeMember(
 		input: RemoveMemberInput!
 	): TenantMember!
+	removePlatformGroupMember(
+		id: ID!
+	): PlatformGroupMember!
 	renameAccessGroup(
 		id: ID!
 		name: String!
 	): AccessGroup!
+	renameClientGroup(
+		id: ID!
+		name: String!
+	): ClientGroup!
+	renamePlatformGroup(
+		id: ID!
+		name: String!
+	): PlatformGroup!
 	requestSignIn(
 		input: RequestSignInInput!
 	): AuthOkResult!
@@ -640,6 +718,9 @@ type Mutation {
 	retireAccessGroup(
 		id: ID!
 	): AccessGroup!
+	retireClientGroup(
+		id: ID!
+	): ClientGroup!
 	retireClientRole(
 		id: ID!
 	): ClientRole!
@@ -658,6 +739,9 @@ type Mutation {
 	retireOAuthClient(
 		id: ID!
 	): OAuthClient!
+	retirePlatformGroup(
+		id: ID!
+	): PlatformGroup!
 	retirePlatformRole(
 		id: ID!
 	): PlatformRole!
@@ -683,12 +767,18 @@ type Mutation {
 	startConversation(
 		input: StartConversationInput!
 	): Conversation!
+	unassignClientGroupRole(
+		id: ID!
+	): ClientGroupRoleAssignment!
 	unassignClientRole(
 		id: ID!
 	): ClientRoleAssignment!
 	unassignGroupRole(
 		id: ID!
 	): GroupRoleAssignment!
+	unassignPlatformGroupRole(
+		id: ID!
+	): PlatformGroupRoleAssignment!
 	unassignPlatformRole(
 		id: ID!
 	): PlatformRoleAssignment!
@@ -719,6 +809,9 @@ type Mutation {
 	updateField(
 		input: UpdateFieldInput!
 	): Field!
+	updateInvitation(
+		input: UpdateInvitationInput!
+	): ApplicationInvitation!
 	updateOAuthClient(
 		input: UpdateOAuthClientInput!
 	): OAuthClient!
@@ -788,6 +881,26 @@ type PermissionInfo {
 	level: String!
 }
 
+type PlatformGroup implements AccessGrant{
+	_accessGrant: Boolean!
+	id: ID!
+	name: String!
+}
+
+type PlatformGroupMember implements AccessGrant{
+	_accessGrant: Boolean!
+	group: PlatformGroup
+	id: ID!
+	user: User
+}
+
+type PlatformGroupRoleAssignment implements AccessGrant{
+	_accessGrant: Boolean!
+	group: PlatformGroup
+	id: ID!
+	role: PlatformRole!
+}
+
 type PlatformRole implements AccessGrant{
 	_accessGrant: Boolean!
 	id: ID!
@@ -813,6 +926,10 @@ type Query {
 	aiTurn(
 		id: ID!
 	): AiTurn
+	allApplications(
+		clientId: ID
+		page: PageInput!
+	): ClientApplicationPage!
 	apiSchema(
 		revisionId: ID!
 	): String!
@@ -838,6 +955,9 @@ type Query {
 	client(
 		id: ID!
 	): Client
+	clientGroupMembers: [ClientGroupMember!]!
+	clientGroupRoleAssignments: [ClientGroupRoleAssignment!]!
+	clientGroups: [ClientGroup!]!
 	clientRoleAssignments(
 		userId: ID
 	): [ClientRoleAssignment!]!
@@ -857,9 +977,11 @@ type Query {
 	): ConversationPage!
 	dataImport(
 		id: ID!
+		includeDeleted: Boolean
 	): DataImport
 	dataImports(
 		applicationId: ID!
+		includeDeleted: Boolean
 		page: PageInput!
 	): DataImportPage!
 	entities(
@@ -903,6 +1025,9 @@ type Query {
 	): OAuthAuthorizationRequest!
 	oauthClients: [OAuthClient!]!
 	permissionCatalog: [PermissionInfo!]!
+	platformGroupMembers: [PlatformGroupMember!]!
+	platformGroupRoleAssignments: [PlatformGroupRoleAssignment!]!
+	platformGroups: [PlatformGroup!]!
 	platformRole(
 		id: ID!
 	): PlatformRole
@@ -941,6 +1066,9 @@ type Query {
 		userId: ID
 	): [RoleAssignment!]!
 	roles: [Role!]!
+	user(
+		id: ID!
+	): User
 	users(
 		page: PageInput!
 	): UserPage!
@@ -1006,6 +1134,7 @@ type RecordAccessSource {
 
 enum RecordAccessSourceKind {
 	group_role
+	platform_group_role
 	platform_role
 	role
 	share_everyone
@@ -1151,6 +1280,7 @@ type TenantOption {
 	appTenantId: ID
 	applicationId: ID
 	client: Client!
+	member: Boolean!
 }
 
 type TurnStep {
@@ -1222,6 +1352,12 @@ input UpdateFieldInput {
 	relatedFieldId: ID
 	required: Boolean
 	type: String
+}
+
+input UpdateInvitationInput {
+	groupIds: [ID!]!
+	id: ID!
+	roleIds: [ID!]!
 }
 
 input UpdateOAuthClientInput {

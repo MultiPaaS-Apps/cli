@@ -19,6 +19,7 @@ type fakeImport struct {
 	problemCount int
 	reportURL    any
 	counts       []map[string]any
+	deletedAt    any // nil while live, else the time it was deleted
 }
 
 // fakeUpload is what a presigned PUT received.
@@ -35,9 +36,10 @@ func (f *fakeMultiPaaS) seedImport(id, status string) *fakeImport {
 	return imp
 }
 
-// dataImport shares these steps with the server, in order: an application in scope, then the import
-// (NOT_FOUND when unknown), then the change. A refused change is answered with refuseImport. Add and
-// remove are not refused by status, which the server does.
+// dataImport shares these steps with the server, in order: an application in scope, then the import, then the
+// change. An unknown import, or a deleted one unless a DataImport read asks for includeDeleted, is NOT_FOUND to a
+// change and null to a read. The fake never refuses a change by status, as the server does: a test that needs
+// that refusal sets refuseImport.
 func (f *fakeMultiPaaS) dataImport(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
 	if operation != "DataImport" {
 		f.mutations = append(f.mutations, variables)
@@ -62,6 +64,9 @@ func (f *fakeMultiPaaS) dataImport(w http.ResponseWriter, operation string, part
 		id, _ = variables["importId"].(string)
 	}
 	imp, known := f.imports[id]
+	if known && imp.deletedAt != nil && (operation != "DataImport" || variables["includeDeleted"] != true) {
+		known = false
+	}
 	if !known {
 		if operation == "DataImport" {
 			writeData(w, map[string]any{"dataImport": nil})
@@ -92,6 +97,9 @@ func (f *fakeMultiPaaS) dataImport(w http.ResponseWriter, operation string, part
 	case "RunDataImport":
 		imp.status = "importing"
 		writeData(w, map[string]any{"runDataImport": f.importView(id)})
+	case "DeleteDataImport":
+		imp.deletedAt = "2026-10-26T12:00:00.000Z"
+		writeData(w, map[string]any{"deleteDataImport": f.importView(id)})
 	case "DataImport":
 		if f.refuseRead[0] != "" {
 			graphQLRefusal(w, f.refuseRead[0], f.refuseRead[1])
@@ -149,6 +157,7 @@ func (f *fakeMultiPaaS) importView(id string) map[string]any {
 	return map[string]any{
 		"id": id, "status": imp.status, "problemCount": imp.problemCount, "problemReportUrl": imp.reportURL,
 		"problems": problems, "counts": counts, "files": files, "startedAt": nil, "finishedAt": nil,
+		"deletedAt": imp.deletedAt,
 	}
 }
 

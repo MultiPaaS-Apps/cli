@@ -384,6 +384,8 @@ fragment DataImportParts on DataImport {
   startedAt
   # @genqlient(pointer: true)
   finishedAt
+  # @genqlient(pointer: true)
+  deletedAt
 }
 
 fragment DataImportFileParts on DataImportFile {
@@ -439,9 +441,15 @@ mutation RunDataImport($importId: ID!) {
   }
 }
 
-query DataImport($id: ID!) {
+mutation DeleteDataImport($importId: ID!) {
+  deleteDataImport(importId: $importId) {
+    ...DataImportParts
+  }
+}
+
+query DataImport($id: ID!, $includeDeleted: Boolean!) {
   # @genqlient(pointer: true)
-  dataImport(id: $id) {
+  dataImport(id: $id, includeDeleted: $includeDeleted) {
     ...DataImportParts
   }
 }

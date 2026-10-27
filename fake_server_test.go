@@ -368,7 +368,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.writeRecord(w, operation, parts, variables)
 	case "OAuthClients", "CreateOAuthClient", "UpdateOAuthClient":
 		f.manageOAuth(w, operation, parts, variables)
-	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DataImport":
+	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
 	default:
 		http.Error(w, "unknown operation "+operation, http.StatusBadRequest)

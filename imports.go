@@ -48,7 +48,7 @@ type plannedFile struct {
 
 func importCommands(command commandFunc) *cobra.Command {
 	return group("import", "Load an application's data from export files",
-		importCreate(command), importAdd(command), importCheck(command), importRun(command), importStatus(command))
+		importCreate(command), importAdd(command), importCheck(command), importRun(command), importStatus(command), importDelete(command))
 }
 
 func importCreate(command commandFunc) *cobra.Command {
@@ -84,7 +84,7 @@ func importCreate(command commandFunc) *cobra.Command {
 		}
 		if len(planned) > 0 {
 			importID := created.Id
-			if created, err = readImport(ctx, s, scope, importID); err != nil {
+			if created, err = readImport(ctx, s, scope, importID, false); err != nil {
 				return nil, nil, partiallyCreated(err, importID, added)
 			}
 		}
@@ -148,12 +148,13 @@ func importRun(command commandFunc) *cobra.Command {
 
 func importStatus(command commandFunc) *cobra.Command {
 	var appID, importID string
+	var includeDeleted bool
 	cmd := command("status", "Show an import: its files, counts and every problem", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		scope, err := s.appScope(ctx, appID, "")
 		if err != nil {
 			return nil, nil, err
 		}
-		current, err := readImport(ctx, s, scope, importID)
+		current, err := readImport(ctx, s, scope, importID, includeDeleted)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -161,6 +162,33 @@ func importStatus(command commandFunc) *cobra.Command {
 			return nil, nil, err
 		}
 		return shownImport(current)
+	})
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
+	cmd.Flags().BoolVar(&includeDeleted, "include-deleted", false, "find the import even if it was deleted")
+	_ = cmd.MarkFlagRequired("import")
+	return cmd
+}
+
+func importDelete(command commandFunc) *cobra.Command {
+	var appID, importID string
+	cmd := command("delete", "Delete an import that is not checking or importing; its files and imported data stay", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		scope, err := s.appScope(ctx, appID, "")
+		if err != nil {
+			return nil, nil, err
+		}
+		var deleted DataImportParts
+		err = s.call(ctx, scope, func(client graphql.Client) error {
+			response, err := DeleteDataImport(ctx, client, importID)
+			if err == nil {
+				deleted = response.DeleteDataImport.DataImportParts
+			}
+			return err
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		return shownImport(deleted)
 	})
 	appFlag(cmd, &appID)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
@@ -306,7 +334,7 @@ func wait(ctx context.Context, s *session, scope string, current DataImportParts
 		case <-time.After(importPollInterval):
 		}
 		var err error
-		if current, err = readImport(ctx, s, scope, current.Id); err != nil {
+		if current, err = readImport(ctx, s, scope, current.Id, false); err != nil {
 			return current, err
 		}
 	}
@@ -480,11 +508,11 @@ func entitiesNamed(entities []EntityParts, stem string) []EntityParts {
 	})
 }
 
-// readImport is the import with id, or NOT_FOUND.
-func readImport(ctx context.Context, s *session, scope, id string) (DataImportParts, error) {
+// readImport is the import with id, or NOT_FOUND. A deleted import is found only with includeDeleted.
+func readImport(ctx context.Context, s *session, scope, id string, includeDeleted bool) (DataImportParts, error) {
 	var found *DataImportResponse
 	err := s.call(ctx, scope, func(client graphql.Client) (err error) {
-		found, err = DataImport(ctx, client, id)
+		found, err = DataImport(ctx, client, id, includeDeleted)
 		return err
 	})
 	if err != nil {
@@ -512,7 +540,11 @@ func shownImport(current DataImportParts) (any, func(io.Writer), error) {
 }
 
 func printImport(out io.Writer, current DataImportParts) {
-	fmt.Fprintf(out, "import %s %s\n", current.Id, current.Status)
+	deleted := ""
+	if current.DeletedAt != nil {
+		deleted = " deleted " + *current.DeletedAt
+	}
+	fmt.Fprintf(out, "import %s %s%s\n", current.Id, current.Status, deleted)
 	files := []DataImportFileParts{}
 	for _, file := range current.Files {
 		files = append(files, file.DataImportFileParts)

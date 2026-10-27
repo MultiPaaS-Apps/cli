@@ -281,6 +281,9 @@ func (v *CheckDataImportCheckDataImport) GetStartedAt() *string { return v.DataI
 // GetFinishedAt returns CheckDataImportCheckDataImport.FinishedAt, and is useful for accessing the field via an interface.
 func (v *CheckDataImportCheckDataImport) GetFinishedAt() *string { return v.DataImportParts.FinishedAt }
 
+// GetDeletedAt returns CheckDataImportCheckDataImport.DeletedAt, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetDeletedAt() *string { return v.DataImportParts.DeletedAt }
+
 func (v *CheckDataImportCheckDataImport) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -324,6 +327,8 @@ type __premarshalCheckDataImportCheckDataImport struct {
 	StartedAt *string `json:"startedAt"`
 
 	FinishedAt *string `json:"finishedAt"`
+
+	DeletedAt *string `json:"deletedAt"`
 }
 
 func (v *CheckDataImportCheckDataImport) MarshalJSON() ([]byte, error) {
@@ -346,6 +351,7 @@ func (v *CheckDataImportCheckDataImport) __premarshalJSON() (*__premarshalCheckD
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
+	retval.DeletedAt = v.DataImportParts.DeletedAt
 	return &retval, nil
 }
 
@@ -703,6 +709,9 @@ func (v *CreateDataImportCreateDataImport) GetFinishedAt() *string {
 	return v.DataImportParts.FinishedAt
 }
 
+// GetDeletedAt returns CreateDataImportCreateDataImport.DeletedAt, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetDeletedAt() *string { return v.DataImportParts.DeletedAt }
+
 func (v *CreateDataImportCreateDataImport) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -746,6 +755,8 @@ type __premarshalCreateDataImportCreateDataImport struct {
 	StartedAt *string `json:"startedAt"`
 
 	FinishedAt *string `json:"finishedAt"`
+
+	DeletedAt *string `json:"deletedAt"`
 }
 
 func (v *CreateDataImportCreateDataImport) MarshalJSON() ([]byte, error) {
@@ -768,6 +779,7 @@ func (v *CreateDataImportCreateDataImport) __premarshalJSON() (*__premarshalCrea
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
+	retval.DeletedAt = v.DataImportParts.DeletedAt
 	return &retval, nil
 }
 
@@ -1305,6 +1317,9 @@ func (v *DataImportDataImport) GetStartedAt() *string { return v.DataImportParts
 // GetFinishedAt returns DataImportDataImport.FinishedAt, and is useful for accessing the field via an interface.
 func (v *DataImportDataImport) GetFinishedAt() *string { return v.DataImportParts.FinishedAt }
 
+// GetDeletedAt returns DataImportDataImport.DeletedAt, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetDeletedAt() *string { return v.DataImportParts.DeletedAt }
+
 func (v *DataImportDataImport) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -1348,6 +1363,8 @@ type __premarshalDataImportDataImport struct {
 	StartedAt *string `json:"startedAt"`
 
 	FinishedAt *string `json:"finishedAt"`
+
+	DeletedAt *string `json:"deletedAt"`
 }
 
 func (v *DataImportDataImport) MarshalJSON() ([]byte, error) {
@@ -1370,6 +1387,7 @@ func (v *DataImportDataImport) __premarshalJSON() (*__premarshalDataImportDataIm
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
+	retval.DeletedAt = v.DataImportParts.DeletedAt
 	return &retval, nil
 }
 
@@ -1454,6 +1472,8 @@ type DataImportParts struct {
 	Files            []DataImportPartsFilesDataImportFile   `json:"files"`
 	StartedAt        *string                                `json:"startedAt"`
 	FinishedAt       *string                                `json:"finishedAt"`
+	// When the import was deleted; null while it is live.
+	DeletedAt *string `json:"deletedAt"`
 }
 
 // GetId returns DataImportParts.Id, and is useful for accessing the field via an interface.
@@ -1482,6 +1502,9 @@ func (v *DataImportParts) GetStartedAt() *string { return v.StartedAt }
 
 // GetFinishedAt returns DataImportParts.FinishedAt, and is useful for accessing the field via an interface.
 func (v *DataImportParts) GetFinishedAt() *string { return v.FinishedAt }
+
+// GetDeletedAt returns DataImportParts.DeletedAt, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetDeletedAt() *string { return v.DeletedAt }
 
 // DataImportPartsCountsDataImportCount includes the requested fields of the GraphQL type DataImportCount.
 type DataImportPartsCountsDataImportCount struct {
@@ -1606,6 +1629,135 @@ type DataImportResponse struct {
 
 // GetDataImport returns DataImportResponse.DataImport, and is useful for accessing the field via an interface.
 func (v *DataImportResponse) GetDataImport() *DataImportDataImport { return v.DataImport }
+
+// DeleteDataImportDeleteDataImport includes the requested fields of the GraphQL type DataImport.
+type DeleteDataImportDeleteDataImport struct {
+	DataImportParts `json:"-"`
+}
+
+// GetId returns DeleteDataImportDeleteDataImport.Id, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetId() string { return v.DataImportParts.Id }
+
+// GetStatus returns DeleteDataImportDeleteDataImport.Status, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetStatus() string { return v.DataImportParts.Status }
+
+// GetProblemCount returns DeleteDataImportDeleteDataImport.ProblemCount, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetProblemCount() int {
+	return v.DataImportParts.ProblemCount
+}
+
+// GetProblemReportUrl returns DeleteDataImportDeleteDataImport.ProblemReportUrl, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetProblemReportUrl() *string {
+	return v.DataImportParts.ProblemReportUrl
+}
+
+// GetProblems returns DeleteDataImportDeleteDataImport.Problems, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetProblems() []DataImportPartsProblemsImportProblem {
+	return v.DataImportParts.Problems
+}
+
+// GetCounts returns DeleteDataImportDeleteDataImport.Counts, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetCounts() []DataImportPartsCountsDataImportCount {
+	return v.DataImportParts.Counts
+}
+
+// GetFiles returns DeleteDataImportDeleteDataImport.Files, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
+	return v.DataImportParts.Files
+}
+
+// GetStartedAt returns DeleteDataImportDeleteDataImport.StartedAt, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetStartedAt() *string { return v.DataImportParts.StartedAt }
+
+// GetFinishedAt returns DeleteDataImportDeleteDataImport.FinishedAt, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetFinishedAt() *string {
+	return v.DataImportParts.FinishedAt
+}
+
+// GetDeletedAt returns DeleteDataImportDeleteDataImport.DeletedAt, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetDeletedAt() *string { return v.DataImportParts.DeletedAt }
+
+func (v *DeleteDataImportDeleteDataImport) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteDataImportDeleteDataImport
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteDataImportDeleteDataImport = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DataImportParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteDataImportDeleteDataImport struct {
+	Id string `json:"id"`
+
+	Status string `json:"status"`
+
+	ProblemCount int `json:"problemCount"`
+
+	ProblemReportUrl *string `json:"problemReportUrl"`
+
+	Problems []DataImportPartsProblemsImportProblem `json:"problems"`
+
+	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
+
+	Files []DataImportPartsFilesDataImportFile `json:"files"`
+
+	StartedAt *string `json:"startedAt"`
+
+	FinishedAt *string `json:"finishedAt"`
+
+	DeletedAt *string `json:"deletedAt"`
+}
+
+func (v *DeleteDataImportDeleteDataImport) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteDataImportDeleteDataImport) __premarshalJSON() (*__premarshalDeleteDataImportDeleteDataImport, error) {
+	var retval __premarshalDeleteDataImportDeleteDataImport
+
+	retval.Id = v.DataImportParts.Id
+	retval.Status = v.DataImportParts.Status
+	retval.ProblemCount = v.DataImportParts.ProblemCount
+	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
+	retval.Problems = v.DataImportParts.Problems
+	retval.Counts = v.DataImportParts.Counts
+	retval.Files = v.DataImportParts.Files
+	retval.StartedAt = v.DataImportParts.StartedAt
+	retval.FinishedAt = v.DataImportParts.FinishedAt
+	retval.DeletedAt = v.DataImportParts.DeletedAt
+	return &retval, nil
+}
+
+// DeleteDataImportResponse is returned by DeleteDataImport on success.
+type DeleteDataImportResponse struct {
+	// Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
+	DeleteDataImport DeleteDataImportDeleteDataImport `json:"deleteDataImport"`
+}
+
+// GetDeleteDataImport returns DeleteDataImportResponse.DeleteDataImport, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportResponse) GetDeleteDataImport() DeleteDataImportDeleteDataImport {
+	return v.DeleteDataImport
+}
 
 // EntitiesEntitiesEntityPage includes the requested fields of the GraphQL type EntityPage.
 type EntitiesEntitiesEntityPage struct {
@@ -3124,6 +3276,9 @@ func (v *RunDataImportRunDataImport) GetStartedAt() *string { return v.DataImpor
 // GetFinishedAt returns RunDataImportRunDataImport.FinishedAt, and is useful for accessing the field via an interface.
 func (v *RunDataImportRunDataImport) GetFinishedAt() *string { return v.DataImportParts.FinishedAt }
 
+// GetDeletedAt returns RunDataImportRunDataImport.DeletedAt, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetDeletedAt() *string { return v.DataImportParts.DeletedAt }
+
 func (v *RunDataImportRunDataImport) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -3167,6 +3322,8 @@ type __premarshalRunDataImportRunDataImport struct {
 	StartedAt *string `json:"startedAt"`
 
 	FinishedAt *string `json:"finishedAt"`
+
+	DeletedAt *string `json:"deletedAt"`
 }
 
 func (v *RunDataImportRunDataImport) MarshalJSON() ([]byte, error) {
@@ -3189,6 +3346,7 @@ func (v *RunDataImportRunDataImport) __premarshalJSON() (*__premarshalRunDataImp
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
+	retval.DeletedAt = v.DataImportParts.DeletedAt
 	return &retval, nil
 }
 
@@ -3872,11 +4030,23 @@ func (v *__CreateRecordInput) GetInput() CreateRecordInput { return v.Input }
 
 // __DataImportInput is used internally by genqlient
 type __DataImportInput struct {
-	Id string `json:"id"`
+	Id             string `json:"id"`
+	IncludeDeleted bool   `json:"includeDeleted"`
 }
 
 // GetId returns __DataImportInput.Id, and is useful for accessing the field via an interface.
 func (v *__DataImportInput) GetId() string { return v.Id }
+
+// GetIncludeDeleted returns __DataImportInput.IncludeDeleted, and is useful for accessing the field via an interface.
+func (v *__DataImportInput) GetIncludeDeleted() bool { return v.IncludeDeleted }
+
+// __DeleteDataImportInput is used internally by genqlient
+type __DeleteDataImportInput struct {
+	ImportId string `json:"importId"`
+}
+
+// GetImportId returns __DeleteDataImportInput.ImportId, and is useful for accessing the field via an interface.
+func (v *__DeleteDataImportInput) GetImportId() string { return v.ImportId }
 
 // __EntitiesInput is used internally by genqlient
 type __EntitiesInput struct {
@@ -4313,6 +4483,7 @@ fragment DataImportParts on DataImport {
 	}
 	startedAt
 	finishedAt
+	deletedAt
 }
 fragment DataImportFileParts on DataImportFile {
 	id
@@ -4553,6 +4724,7 @@ fragment DataImportParts on DataImport {
 	}
 	startedAt
 	finishedAt
+	deletedAt
 }
 fragment DataImportFileParts on DataImportFile {
 	id
@@ -4818,8 +4990,8 @@ func CreateRecord(
 
 // The query executed by DataImport.
 const DataImport_Operation = `
-query DataImport ($id: ID!) {
-	dataImport(id: $id) {
+query DataImport ($id: ID!, $includeDeleted: Boolean!) {
+	dataImport(id: $id, includeDeleted: $includeDeleted) {
 		... DataImportParts
 	}
 }
@@ -4845,6 +5017,7 @@ fragment DataImportParts on DataImport {
 	}
 	startedAt
 	finishedAt
+	deletedAt
 }
 fragment DataImportFileParts on DataImportFile {
 	id
@@ -4866,16 +5039,90 @@ func DataImport(
 	ctx_ context.Context,
 	client_ graphql.Client,
 	id string,
+	includeDeleted bool,
 ) (data_ *DataImportResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "DataImport",
 		Query:  DataImport_Operation,
 		Variables: &__DataImportInput{
-			Id: id,
+			Id:             id,
+			IncludeDeleted: includeDeleted,
 		},
 	}
 
 	data_ = &DataImportResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteDataImport.
+const DeleteDataImport_Operation = `
+mutation DeleteDataImport ($importId: ID!) {
+	deleteDataImport(importId: $importId) {
+		... DataImportParts
+	}
+}
+fragment DataImportParts on DataImport {
+	id
+	status
+	problemCount
+	problemReportUrl
+	problems {
+		file
+		line
+		sourceId
+		field
+		code
+		message
+	}
+	counts {
+		key
+		count
+	}
+	files {
+		... DataImportFileParts
+	}
+	startedAt
+	finishedAt
+	deletedAt
+}
+fragment DataImportFileParts on DataImportFile {
+	id
+	kind
+	entity {
+		id
+		name
+	}
+	file {
+		id
+		filename
+		sizeBytes
+		status
+	}
+}
+`
+
+func DeleteDataImport(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	importId string,
+) (data_ *DeleteDataImportResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteDataImport",
+		Query:  DeleteDataImport_Operation,
+		Variables: &__DeleteDataImportInput{
+			ImportId: importId,
+		},
+	}
+
+	data_ = &DeleteDataImportResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -5603,6 +5850,7 @@ fragment DataImportParts on DataImport {
 	}
 	startedAt
 	finishedAt
+	deletedAt
 }
 fragment DataImportFileParts on DataImportFile {
 	id

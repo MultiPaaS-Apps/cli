@@ -531,7 +531,7 @@ func partiallyCreated(err error, importID string, added []string) error {
 	if len(added) > 0 {
 		held = strings.Join(added, ", ")
 	}
-	return &cliError{exit: failure.exit, Code: failure.Code, Message: fmt.Sprintf(
+	return &cliError{exit: failure.exit, Code: failure.Code, FieldErrors: failure.FieldErrors, Message: fmt.Sprintf(
 		"%s Import %s was created and holds %s.", failure.Message, importID, held)}
 }
 

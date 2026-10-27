@@ -10,6 +10,7 @@ func main() {
 	os.Exit(run(os.Args[1:], environment{
 		stdout:      os.Stdout,
 		stderr:      os.Stderr,
+		stdin:       os.Stdin,
 		version:     version,
 		apiURL:      os.Getenv("MULTIPAAS_API_URL"),
 		origins:     originsFor,

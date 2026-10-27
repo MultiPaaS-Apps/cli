@@ -506,3 +506,74 @@ query DataImport($id: ID!, $includeDeleted: Boolean!) {
     ...DataImportParts
   }
 }
+
+fragment FeedbackParts on Feedback {
+  id
+  kind
+  status
+  # @genqlient(pointer: true)
+  summary
+  details
+  source
+  # @genqlient(pointer: true)
+  cliVersion
+  # @genqlient(pointer: true)
+  apiVersion
+  # @genqlient(pointer: true)
+  platformVersion
+  # @genqlient(pointer: true)
+  application {
+    id
+    name
+  }
+  # @genqlient(pointer: true)
+  client {
+    id
+    name
+  }
+  sentFromRemovedScope
+  createdAt
+  updatedAt
+}
+
+mutation SubmitFeedback($input: SubmitFeedbackInput!) {
+  submitFeedback(input: $input) {
+    ...FeedbackParts
+  }
+}
+
+query MyFeedback($page: PageInput!) {
+  myFeedback(page: $page) {
+    items {
+      ...FeedbackParts
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query FeedbackSetting {
+  feedbackSetting {
+    autoSend
+  }
+}
+
+mutation SetFeedbackSetting($autoSend: Boolean!) {
+  setFeedbackSetting(autoSend: $autoSend) {
+    autoSend
+  }
+}
+
+query MyFeedbackReport($id: ID!) {
+  # @genqlient(pointer: true)
+  myFeedbackReport(id: $id) {
+    ...FeedbackParts
+    history {
+      status
+      # @genqlient(pointer: true)
+      note
+      changedAt
+    }
+  }
+}

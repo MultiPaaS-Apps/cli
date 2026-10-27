@@ -294,6 +294,22 @@ func TestImportCreateDirNamesTheImportWhenTheLastReadFails(t *testing.T) {
 	}
 }
 
+func TestImportCreateDirKeepsTheFieldErrorsWhenTheLastReadFails(t *testing.T) {
+	fake := projectFake(t)
+	fake.refuseRead = [2]string{"VALIDATION", "the import is invalid"}
+	fake.refuseReadFields = []map[string]any{{"field": "id", "rule": "format", "message": "id is malformed"}}
+	dir := t.TempDir()
+	writeExport(t, dir, "tenants.jsonl", "{\"id\":\"acct-17\",\"name\":\"Acme\"}\n")
+
+	got := fake.run(t, "import", "create", "--app", importApp, "--dir", dir, "--json")
+	assertFailure(t, got, exitRefused, "VALIDATION")
+	var failure struct{ Error cliError }
+	decode(t, got.stdout, &failure)
+	if want := []fieldError{{Field: "id", Rule: "format", Message: "id is malformed"}}; !reflect.DeepEqual(failure.Error.FieldErrors, want) {
+		t.Fatalf("fieldErrors %v, want %v", failure.Error.FieldErrors, want)
+	}
+}
+
 func TestImportCheckWaitsUntilTheCheckFinishes(t *testing.T) {
 	fake := projectFake(t)
 	fastPolling(t)

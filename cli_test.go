@@ -494,20 +494,25 @@ func (f *fakeMultiPaaS) run(t *testing.T, args ...string) result {
 }
 
 func (f *fakeMultiPaaS) runAs(t *testing.T, version string, args ...string) result {
-	return f.drive(t, version, browse, args)
+	return f.drive(t, version, browse, "", args)
+}
+
+// runWithStdin is run with stdin as the command's standard input.
+func (f *fakeMultiPaaS) runWithStdin(t *testing.T, stdin string, args ...string) result {
+	return f.drive(t, "0.1.0", browse, stdin, args)
 }
 
 // runWith uses open as the browser; when it fails the test opens the URL login printed, as a person would.
 func (f *fakeMultiPaaS) runWith(t *testing.T, open func(string) error, args ...string) result {
-	return f.drive(t, "0.1.0", open, args)
+	return f.drive(t, "0.1.0", open, "", args)
 }
 
-func (f *fakeMultiPaaS) drive(t *testing.T, version string, open func(string) error, args []string) result {
+func (f *fakeMultiPaaS) drive(t *testing.T, version string, open func(string) error, stdin string, args []string) result {
 	t.Helper()
 	var stdout bytes.Buffer
 	stderr := &urlWatcher{}
 	exit := run(args, environment{
-		stdout: &stdout, stderr: stderr, version: version, origins: f.origins,
+		stdout: &stdout, stderr: stderr, stdin: strings.NewReader(stdin), version: version, origins: f.origins,
 		openBrowser: func(url string) error {
 			if err := open(url); err != nil {
 				return browse(stderr.printedURL())

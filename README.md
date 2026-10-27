@@ -43,6 +43,10 @@ multipaas import run --import <import id>                      # only after a cl
 multipaas import status --import <import id> [--include-deleted]
 multipaas import delete --import <import id>                   # not while checking or importing; nothing it holds is removed
 multipaas oauth-client create --name "My app" --redirect-uri http://localhost:5173/callback
+multipaas feedback send --kind bug|feature [--summary S] (--details D | --details-file F) [--app APP_ID | --general]
+multipaas feedback list
+multipaas feedback show --id ID
+multipaas feedback settings [--auto-send on|off]
 multipaas logout
 ```
 
@@ -51,6 +55,8 @@ The model commands are `model show`, `entity create|update|retire`, `enum create
 In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `versions diff` shows what changed between two API versions, breaking, dangerous and added, from the pin to the newest unless `--from` and `--to` say otherwise. `records list|get|create|update|retire` read and write an entity's records in an app-tenant, with `--data` a JSON object keyed by field id. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`. `app-identity list|create|secret add|secret revoke|secret list|retire` manage your app's own identities, which needs `application.manage_oauth`: an app identity's client ID and secret let your own code call the API for a tenant via OAuth client credentials. `apps create` makes an application, which needs `client.applications.create`, and makes you its App manager. `tenants create` makes an app-tenant to test in, which needs `access.manage.application`.
 
 `import create|add|check|run|status|delete` load an application's existing data from export files; see [Import](#import).
+
+`feedback send|list|show|settings` report a bug or feature request to MultiPaaS and follow the status of your reports; see [Feedback](#feedback).
 
 Every command takes `--json`, which prints exactly one JSON document on stdout.
 
@@ -61,7 +67,7 @@ with `INVALID_API_URL`. The CLI finds webapp-api by swapping that host's leading
 | Exit | Meaning |
 |---|---|
 | 0 | Done |
-| 1 | Refused or failed. With `--json`, stdout is `{"error": {"code", "message"}}` |
+| 1 | Refused or failed. With `--json`, stdout is `{"error": {"code", "message"}}`, plus `fieldErrors` (each with `field`, `rule` and `message`) on a `VALIDATION` refusal |
 | 2 | Not signed in |
 | 3 | This CLI is too old for MultiPaaS: upgrade it |
 
@@ -108,6 +114,25 @@ With `--json`, `import create`, `check`, `run`, `status` and `delete` print `{"i
 `{"importFile": {...}}`. An import holds `id`, `status`, `problemCount`, `problems` (each with `file`, `line`,
 `sourceId`, `field`, `code` and `message`), `counts` (each a `key` and a `count`), `files`, `startedAt`,
 `finishedAt` and `deletedAt` (set once the import is deleted). `add --kind records` needs `--entity`, the entity's id from `model show`.
+
+## Feedback
+
+`feedback send` files a bug report or feature request with MultiPaaS. `--kind` is `bug` or `feature` (the default),
+and the details come from `--details`, or from a file with `--details-file F`, or from standard input with
+`--details-file -`. `--summary` is a one-line title; without one, `feedback list` and `feedback show` title
+the report by the first line of its details.
+
+Every report records the CLI version. Inside a project (a directory with `multipaas.json`) it also records the
+application and the API version the project is pinned to. `--app APP_ID` makes the report about another
+application, without the pinned version, and `--general` makes it about MultiPaaS in general, recording
+neither the application nor your client. `--general` sends no scope, so it works even when the project's
+application is no longer yours to reach.
+
+`feedback list` prints your reports, newest first, with their status. `feedback show --id ID` prints one with
+its status history. With `--json` they print `[{...}]` and `{"feedback": {...}}`; an id that isn't yours is `NOT_FOUND`.
+
+`feedback settings` prints whether Claude may send your feedback without asking first, and `feedback settings --auto-send on`
+(or `off`) changes it. It starts off.
 
 ## Develop
 

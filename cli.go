@@ -31,6 +31,7 @@ func refuseRedirects(*http.Request, []*http.Request) error { return http.ErrUseL
 // environment is what the CLI touches outside itself. main passes the real one; tests pass a fake server's origins.
 type environment struct {
 	stdout, stderr io.Writer
+	stdin          io.Reader
 	version        string
 	apiURL         string // MULTIPAAS_API_URL, empty when unset
 	origins        func(apiURL string) (origins, error)
@@ -112,7 +113,7 @@ func run(args []string, env environment) int {
 	root.AddCommand(apps, tenants)
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
-	root.AddCommand(recordCommands(command), oauthClientCommands(command), appIdentityCommands(command), importCommands(command))
+	root.AddCommand(recordCommands(command), oauthClientCommands(command), appIdentityCommands(command), importCommands(command), feedbackCommands(command))
 
 	root.SetArgs(args)
 	root.SetOut(env.stdout)
@@ -169,10 +170,18 @@ func tenantsCreate(command commandFunc) *cobra.Command {
 	return cmd
 }
 
-// cliError is a failure carrying its exit code and the code and message --json reports.
+// cliError is a failure carrying its exit code and the code, message and field errors --json reports.
 type cliError struct {
-	exit    int
-	Code    string `json:"code"`
+	exit        int
+	Code        string       `json:"code"`
+	Message     string       `json:"message"`
+	FieldErrors []fieldError `json:"fieldErrors,omitempty"`
+}
+
+// fieldError is one field a VALIDATION refusal names, as the server sends it.
+type fieldError struct {
+	Field   string `json:"field"`
+	Rule    string `json:"rule"`
 	Message string `json:"message"`
 }
 

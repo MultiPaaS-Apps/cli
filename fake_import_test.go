@@ -102,6 +102,10 @@ func (f *fakeMultiPaaS) dataImport(w http.ResponseWriter, operation string, part
 		writeData(w, map[string]any{"deleteDataImport": f.importView(id)})
 	case "DataImport":
 		if f.refuseRead[0] != "" {
+			if f.refuseReadFields != nil {
+				graphQLValidation(w, f.refuseRead[1], f.refuseReadFields)
+				return
+			}
 			graphQLRefusal(w, f.refuseRead[0], f.refuseRead[1])
 			return
 		}

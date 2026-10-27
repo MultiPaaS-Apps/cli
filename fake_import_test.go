@@ -64,7 +64,7 @@ func (f *fakeMultiPaaS) dataImport(w http.ResponseWriter, operation string, part
 		id, _ = variables["importId"].(string)
 	}
 	imp, known := f.imports[id]
-	if known && imp.deletedAt != nil && !(operation == "DataImport" && variables["includeDeleted"] == true) {
+	if known && imp.deletedAt != nil && (operation != "DataImport" || variables["includeDeleted"] != true) {
 		known = false
 	}
 	if !known {

@@ -356,6 +356,59 @@ mutation UpdateOAuthClient($input: UpdateOAuthClientInput!) {
   }
 }
 
+fragment AppIdentityParts on AppIdentity {
+  id
+  name
+  # @genqlient(pointer: true)
+  user {
+    id
+  }
+  createdAt
+  secrets {
+    id
+    lastFour
+    createdAt
+    # @genqlient(pointer: true)
+    lastUsedAt
+  }
+}
+
+query AppIdentities {
+  appIdentities {
+    ...AppIdentityParts
+  }
+}
+
+mutation CreateAppIdentity($input: CreateAppIdentityInput!) {
+  createAppIdentity(input: $input) {
+    appIdentity {
+      ...AppIdentityParts
+    }
+    secret
+  }
+}
+
+mutation CreateAppIdentitySecret($id: ID!) {
+  createAppIdentitySecret(id: $id) {
+    appIdentity {
+      ...AppIdentityParts
+    }
+    secret
+  }
+}
+
+mutation RevokeAppIdentitySecret($id: ID!) {
+  revokeAppIdentitySecret(id: $id) {
+    ...AppIdentityParts
+  }
+}
+
+mutation RetireAppIdentity($id: ID!) {
+  retireAppIdentity(id: $id) {
+    ...AppIdentityParts
+  }
+}
+
 fragment DataImportParts on DataImport {
   id
   status

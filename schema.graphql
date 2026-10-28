@@ -91,6 +91,35 @@ type ApiToken implements Receipt{
 	expiresAt: DateTime!
 }
 
+"""
+An application's own identity for background jobs: its id is the OAuth client_id.
+"""
+type AppIdentity {
+	createdAt: DateTime!
+	id: ID!
+	name: String!
+	secrets: [AppIdentitySecret!]!
+"""
+The service user this identity acts as.
+"""
+	user: User
+}
+
+type AppIdentitySecret {
+	createdAt: DateTime!
+	id: ID!
+	lastFour: String!
+	lastUsedAt: DateTime
+}
+
+"""
+The identity plus a new secret, returned only here and never again.
+"""
+type AppIdentityWithSecret {
+	appIdentity: AppIdentity!
+	secret: String!
+}
+
 type AppTenant {
 	createdAt: DateTime!
 	id: ID!
@@ -248,6 +277,10 @@ type Conversation {
 type ConversationPage {
 	items: [Conversation!]!
 	pageInfo: PageInfo!
+}
+
+input CreateAppIdentityInput {
+	name: String!
 }
 
 input CreateAppTenantInput {
@@ -458,6 +491,54 @@ input EnumValueInput {
 	value: String!
 }
 
+type Feedback {
+	apiVersion: String
+	application: Application
+	cliVersion: String
+	client: Client
+	createdAt: DateTime!
+	details: String!
+	history: [FeedbackStatusChange!]!
+	id: ID!
+	kind: FeedbackKind!
+	platformVersion: String
+	sentFromRemovedScope: Boolean!
+	source: FeedbackSource!
+	status: FeedbackStatus!
+	summary: String
+	updatedAt: DateTime!
+}
+
+enum FeedbackKind {
+	bug
+	feature
+}
+
+type FeedbackPage {
+	items: [Feedback!]!
+	pageInfo: PageInfo!
+}
+
+enum FeedbackSource {
+	cli
+	plugin
+	web
+}
+
+enum FeedbackStatus {
+	declined
+	fixed
+	planned
+	received
+	under_review
+}
+
+type FeedbackStatusChange {
+	changedAt: DateTime!
+	note: String
+	status: FeedbackStatus!
+}
+
 type Field {
 	createdAt: DateTime!
 	defaultValue: JSON
@@ -604,6 +685,12 @@ type Mutation {
 	createAccessGroup(
 		name: String!
 	): AccessGroup!
+	createAppIdentity(
+		input: CreateAppIdentityInput!
+	): AppIdentityWithSecret!
+	createAppIdentitySecret(
+		id: ID!
+	): AppIdentityWithSecret!
 	createAppTenant(
 		input: CreateAppTenantInput!
 	): AppTenant!
@@ -718,6 +805,9 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	retireAccessGroup(
 		id: ID!
 	): AccessGroup!
+	retireAppIdentity(
+		id: ID!
+	): AppIdentity!
 	retireClientGroup(
 		id: ID!
 	): ClientGroup!
@@ -751,6 +841,9 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	retireRole(
 		id: ID!
 	): Role!
+	revokeAppIdentitySecret(
+		id: ID!
+	): AppIdentity!
 	runDataImport(
 		importId: ID!
 	): DataImport!
@@ -767,6 +860,9 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	startConversation(
 		input: StartConversationInput!
 	): Conversation!
+	submitFeedback(
+		input: SubmitFeedbackInput!
+	): Feedback!
 	unassignClientGroupRole(
 		id: ID!
 	): ClientGroupRoleAssignment!
@@ -937,6 +1033,7 @@ type Query {
 		fromRevisionId: ID!
 		toRevisionId: ID!
 	): ApiSchemaDiff!
+	appIdentities: [AppIdentity!]!
 	appTenant(
 		id: ID!
 	): AppTenant
@@ -1015,6 +1112,12 @@ type Query {
 	modelRevisions(
 		page: PageInput!
 	): ModelRevisionPage!
+	myFeedback(
+		page: PageInput!
+	): FeedbackPage!
+	myFeedbackReport(
+		id: ID!
+	): Feedback
 	myPermissions(
 		applicationWide: Boolean
 	): [HeldPermission!]!
@@ -1262,6 +1365,15 @@ input StartConversationInput {
 	title: String
 }
 
+input SubmitFeedbackInput {
+	aboutApplication: Boolean
+	apiVersion: String
+	details: String!
+	kind: FeedbackKind!
+	summary: String
+	viaPlugin: Boolean
+}
+
 type TenantMember implements AccessGrant{
 	_accessGrant: Boolean!
 	appTenant: AppTenant
@@ -1396,10 +1508,16 @@ type User {
 	application: Application
 	client: Client
 	createdAt: DateTime!
-	email: String!
+	email: String
 	id: ID!
+	kind: UserKind!
 	name: String
 	updatedAt: DateTime!
+}
+
+enum UserKind {
+	APP
+	PERSON
 }
 
 type UserPage {

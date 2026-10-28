@@ -54,6 +54,7 @@ type fakeMultiPaaS struct {
 	failVersion   bool                        // LatestModelRevision answers HTTP 500
 	records       map[string][]map[string]any // entity id -> its live records, newest first
 	oauthClients  []map[string]any            // the application's sign-in clients
+	appIdentities []map[string]any            // the application's app identities
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
 	noCreateApp   bool                        // the signed-in user lacks client.applications.create
@@ -368,6 +369,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.writeRecord(w, operation, parts, variables)
 	case "OAuthClients", "CreateOAuthClient", "UpdateOAuthClient":
 		f.manageOAuth(w, operation, parts, variables)
+	case "AppIdentities", "CreateAppIdentity", "CreateAppIdentitySecret", "RevokeAppIdentitySecret", "RetireAppIdentity":
+		f.manageAppIdentity(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
 	default:
@@ -654,5 +657,72 @@ func (f *fakeMultiPaaS) manageOAuth(w http.ResponseWriter, operation string, par
 		updated["name"], updated["redirectUris"] = input["name"], input["redirectUris"]
 		f.oauthClients[i] = updated
 		writeData(w, map[string]any{"updateOAuthClient": updated})
+	}
+}
+
+// manageAppIdentity takes the same steps as manageOAuth: an application in scope, then
+// application.manage_oauth, then the change. A secret's plaintext is in the create answers only.
+func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	if operation != "AppIdentities" {
+		f.mutations = append(f.mutations, variables)
+	}
+	if appOf(parts) == "" || f.noManageOAuth {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	secretsOf := func(identity map[string]any) []map[string]any { return identity["secrets"].([]map[string]any) }
+	addSecret := func(i int) string {
+		count := 0
+		for _, identity := range f.appIdentities {
+			count += len(secretsOf(identity))
+		}
+		n := count + 1
+		identity := maps.Clone(f.appIdentities[i])
+		identity["secrets"] = append(slices.Clone(secretsOf(identity)), map[string]any{
+			"id": fmt.Sprintf("secret-%d", n), "lastFour": fmt.Sprintf("%04d", n), "createdAt": "2026-10-27T00:00:00.000Z", "lastUsedAt": nil})
+		f.appIdentities[i] = identity
+		return fmt.Sprintf("mps_plaintext_%d", n)
+	}
+	byID := func(id any) int {
+		return slices.IndexFunc(f.appIdentities, func(a map[string]any) bool { return a["id"] == id })
+	}
+	switch operation {
+	case "AppIdentities":
+		writeData(w, map[string]any{"appIdentities": append([]map[string]any{}, f.appIdentities...)})
+	case "CreateAppIdentity":
+		input, _ := variables["input"].(map[string]any)
+		n := len(f.appIdentities) + 1
+		f.appIdentities = append(f.appIdentities, map[string]any{"id": fmt.Sprintf("app-identity-%d", n), "name": input["name"],
+			"user": map[string]any{"id": fmt.Sprintf("service-user-%d", n)}, "createdAt": "2026-10-27T00:00:00.000Z", "secrets": []map[string]any{}})
+		secret := addSecret(n - 1)
+		writeData(w, map[string]any{"createAppIdentity": map[string]any{"appIdentity": f.appIdentities[n-1], "secret": secret}})
+	case "CreateAppIdentitySecret":
+		i := byID(variables["id"])
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "appIdentity not found")
+			return
+		}
+		secret := addSecret(i)
+		writeData(w, map[string]any{"createAppIdentitySecret": map[string]any{"appIdentity": f.appIdentities[i], "secret": secret}})
+	case "RevokeAppIdentitySecret":
+		for i, identity := range f.appIdentities {
+			if j := slices.IndexFunc(secretsOf(identity), func(s map[string]any) bool { return s["id"] == variables["id"] }); j >= 0 {
+				revoked := maps.Clone(identity)
+				revoked["secrets"] = slices.Delete(slices.Clone(secretsOf(identity)), j, j+1)
+				f.appIdentities[i] = revoked
+				writeData(w, map[string]any{"revokeAppIdentitySecret": revoked})
+				return
+			}
+		}
+		graphQLRefusal(w, "NOT_FOUND", "secret not found")
+	case "RetireAppIdentity":
+		i := byID(variables["id"])
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "appIdentity not found")
+			return
+		}
+		retired := f.appIdentities[i]
+		f.appIdentities = slices.Delete(f.appIdentities, i, i+1)
+		writeData(w, map[string]any{"retireAppIdentity": retired})
 	}
 }

@@ -151,6 +151,157 @@ type ApiSchemaResponse struct {
 // GetApiSchema returns ApiSchemaResponse.ApiSchema, and is useful for accessing the field via an interface.
 func (v *ApiSchemaResponse) GetApiSchema() string { return v.ApiSchema }
 
+// AppIdentitiesAppIdentitiesAppIdentity includes the requested fields of the GraphQL type AppIdentity.
+// The GraphQL type's documentation follows.
+//
+// An application's own identity for background jobs: its id is the OAuth client_id.
+type AppIdentitiesAppIdentitiesAppIdentity struct {
+	AppIdentityParts `json:"-"`
+}
+
+// GetId returns AppIdentitiesAppIdentitiesAppIdentity.Id, and is useful for accessing the field via an interface.
+func (v *AppIdentitiesAppIdentitiesAppIdentity) GetId() string { return v.AppIdentityParts.Id }
+
+// GetName returns AppIdentitiesAppIdentitiesAppIdentity.Name, and is useful for accessing the field via an interface.
+func (v *AppIdentitiesAppIdentitiesAppIdentity) GetName() string { return v.AppIdentityParts.Name }
+
+// GetUser returns AppIdentitiesAppIdentitiesAppIdentity.User, and is useful for accessing the field via an interface.
+func (v *AppIdentitiesAppIdentitiesAppIdentity) GetUser() *AppIdentityPartsUser {
+	return v.AppIdentityParts.User
+}
+
+// GetCreatedAt returns AppIdentitiesAppIdentitiesAppIdentity.CreatedAt, and is useful for accessing the field via an interface.
+func (v *AppIdentitiesAppIdentitiesAppIdentity) GetCreatedAt() string {
+	return v.AppIdentityParts.CreatedAt
+}
+
+// GetSecrets returns AppIdentitiesAppIdentitiesAppIdentity.Secrets, and is useful for accessing the field via an interface.
+func (v *AppIdentitiesAppIdentitiesAppIdentity) GetSecrets() []AppIdentityPartsSecretsAppIdentitySecret {
+	return v.AppIdentityParts.Secrets
+}
+
+func (v *AppIdentitiesAppIdentitiesAppIdentity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*AppIdentitiesAppIdentitiesAppIdentity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.AppIdentitiesAppIdentitiesAppIdentity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.AppIdentityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalAppIdentitiesAppIdentitiesAppIdentity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	User *AppIdentityPartsUser `json:"user"`
+
+	CreatedAt string `json:"createdAt"`
+
+	Secrets []AppIdentityPartsSecretsAppIdentitySecret `json:"secrets"`
+}
+
+func (v *AppIdentitiesAppIdentitiesAppIdentity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *AppIdentitiesAppIdentitiesAppIdentity) __premarshalJSON() (*__premarshalAppIdentitiesAppIdentitiesAppIdentity, error) {
+	var retval __premarshalAppIdentitiesAppIdentitiesAppIdentity
+
+	retval.Id = v.AppIdentityParts.Id
+	retval.Name = v.AppIdentityParts.Name
+	retval.User = v.AppIdentityParts.User
+	retval.CreatedAt = v.AppIdentityParts.CreatedAt
+	retval.Secrets = v.AppIdentityParts.Secrets
+	return &retval, nil
+}
+
+// AppIdentitiesResponse is returned by AppIdentities on success.
+type AppIdentitiesResponse struct {
+	AppIdentities []AppIdentitiesAppIdentitiesAppIdentity `json:"appIdentities"`
+}
+
+// GetAppIdentities returns AppIdentitiesResponse.AppIdentities, and is useful for accessing the field via an interface.
+func (v *AppIdentitiesResponse) GetAppIdentities() []AppIdentitiesAppIdentitiesAppIdentity {
+	return v.AppIdentities
+}
+
+// AppIdentityParts includes the GraphQL fields of AppIdentity requested by the fragment AppIdentityParts.
+// The GraphQL type's documentation follows.
+//
+// An application's own identity for background jobs: its id is the OAuth client_id.
+type AppIdentityParts struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	// The service user this identity acts as.
+	User      *AppIdentityPartsUser                      `json:"user"`
+	CreatedAt string                                     `json:"createdAt"`
+	Secrets   []AppIdentityPartsSecretsAppIdentitySecret `json:"secrets"`
+}
+
+// GetId returns AppIdentityParts.Id, and is useful for accessing the field via an interface.
+func (v *AppIdentityParts) GetId() string { return v.Id }
+
+// GetName returns AppIdentityParts.Name, and is useful for accessing the field via an interface.
+func (v *AppIdentityParts) GetName() string { return v.Name }
+
+// GetUser returns AppIdentityParts.User, and is useful for accessing the field via an interface.
+func (v *AppIdentityParts) GetUser() *AppIdentityPartsUser { return v.User }
+
+// GetCreatedAt returns AppIdentityParts.CreatedAt, and is useful for accessing the field via an interface.
+func (v *AppIdentityParts) GetCreatedAt() string { return v.CreatedAt }
+
+// GetSecrets returns AppIdentityParts.Secrets, and is useful for accessing the field via an interface.
+func (v *AppIdentityParts) GetSecrets() []AppIdentityPartsSecretsAppIdentitySecret { return v.Secrets }
+
+// AppIdentityPartsSecretsAppIdentitySecret includes the requested fields of the GraphQL type AppIdentitySecret.
+type AppIdentityPartsSecretsAppIdentitySecret struct {
+	Id         string  `json:"id"`
+	LastFour   string  `json:"lastFour"`
+	CreatedAt  string  `json:"createdAt"`
+	LastUsedAt *string `json:"lastUsedAt"`
+}
+
+// GetId returns AppIdentityPartsSecretsAppIdentitySecret.Id, and is useful for accessing the field via an interface.
+func (v *AppIdentityPartsSecretsAppIdentitySecret) GetId() string { return v.Id }
+
+// GetLastFour returns AppIdentityPartsSecretsAppIdentitySecret.LastFour, and is useful for accessing the field via an interface.
+func (v *AppIdentityPartsSecretsAppIdentitySecret) GetLastFour() string { return v.LastFour }
+
+// GetCreatedAt returns AppIdentityPartsSecretsAppIdentitySecret.CreatedAt, and is useful for accessing the field via an interface.
+func (v *AppIdentityPartsSecretsAppIdentitySecret) GetCreatedAt() string { return v.CreatedAt }
+
+// GetLastUsedAt returns AppIdentityPartsSecretsAppIdentitySecret.LastUsedAt, and is useful for accessing the field via an interface.
+func (v *AppIdentityPartsSecretsAppIdentitySecret) GetLastUsedAt() *string { return v.LastUsedAt }
+
+// AppIdentityPartsUser includes the requested fields of the GraphQL type User.
+type AppIdentityPartsUser struct {
+	Id string `json:"id"`
+}
+
+// GetId returns AppIdentityPartsUser.Id, and is useful for accessing the field via an interface.
+func (v *AppIdentityPartsUser) GetId() string { return v.Id }
+
 // AppTenantsAppTenantsAppTenantPage includes the requested fields of the GraphQL type AppTenantPage.
 type AppTenantsAppTenantsAppTenantPage struct {
 	Items    []AppTenantsAppTenantsAppTenantPageItemsAppTenant `json:"items"`
@@ -521,6 +672,247 @@ type ConstraintsResponse struct {
 // GetConstraints returns ConstraintsResponse.Constraints, and is useful for accessing the field via an interface.
 func (v *ConstraintsResponse) GetConstraints() ConstraintsConstraintsConstraintPage {
 	return v.Constraints
+}
+
+// CreateAppIdentityCreateAppIdentityAppIdentityWithSecret includes the requested fields of the GraphQL type AppIdentityWithSecret.
+// The GraphQL type's documentation follows.
+//
+// The identity plus a new secret, returned only here and never again.
+type CreateAppIdentityCreateAppIdentityAppIdentityWithSecret struct {
+	AppIdentity CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity `json:"appIdentity"`
+	Secret      string                                                             `json:"secret"`
+}
+
+// GetAppIdentity returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecret.AppIdentity, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecret) GetAppIdentity() CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity {
+	return v.AppIdentity
+}
+
+// GetSecret returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecret.Secret, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecret) GetSecret() string { return v.Secret }
+
+// CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity includes the requested fields of the GraphQL type AppIdentity.
+// The GraphQL type's documentation follows.
+//
+// An application's own identity for background jobs: its id is the OAuth client_id.
+type CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity struct {
+	AppIdentityParts `json:"-"`
+}
+
+// GetId returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity.Id, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) GetId() string {
+	return v.AppIdentityParts.Id
+}
+
+// GetName returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity.Name, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) GetName() string {
+	return v.AppIdentityParts.Name
+}
+
+// GetUser returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity.User, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) GetUser() *AppIdentityPartsUser {
+	return v.AppIdentityParts.User
+}
+
+// GetCreatedAt returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) GetCreatedAt() string {
+	return v.AppIdentityParts.CreatedAt
+}
+
+// GetSecrets returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity.Secrets, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) GetSecrets() []AppIdentityPartsSecretsAppIdentitySecret {
+	return v.AppIdentityParts.Secrets
+}
+
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.AppIdentityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	User *AppIdentityPartsUser `json:"user"`
+
+	CreatedAt string `json:"createdAt"`
+
+	Secrets []AppIdentityPartsSecretsAppIdentitySecret `json:"secrets"`
+}
+
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) __premarshalJSON() (*__premarshalCreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity, error) {
+	var retval __premarshalCreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity
+
+	retval.Id = v.AppIdentityParts.Id
+	retval.Name = v.AppIdentityParts.Name
+	retval.User = v.AppIdentityParts.User
+	retval.CreatedAt = v.AppIdentityParts.CreatedAt
+	retval.Secrets = v.AppIdentityParts.Secrets
+	return &retval, nil
+}
+
+type CreateAppIdentityInput struct {
+	Name string `json:"name"`
+}
+
+// GetName returns CreateAppIdentityInput.Name, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityInput) GetName() string { return v.Name }
+
+// CreateAppIdentityResponse is returned by CreateAppIdentity on success.
+type CreateAppIdentityResponse struct {
+	CreateAppIdentity CreateAppIdentityCreateAppIdentityAppIdentityWithSecret `json:"createAppIdentity"`
+}
+
+// GetCreateAppIdentity returns CreateAppIdentityResponse.CreateAppIdentity, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityResponse) GetCreateAppIdentity() CreateAppIdentityCreateAppIdentityAppIdentityWithSecret {
+	return v.CreateAppIdentity
+}
+
+// CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret includes the requested fields of the GraphQL type AppIdentityWithSecret.
+// The GraphQL type's documentation follows.
+//
+// The identity plus a new secret, returned only here and never again.
+type CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret struct {
+	AppIdentity CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity `json:"appIdentity"`
+	Secret      string                                                                         `json:"secret"`
+}
+
+// GetAppIdentity returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret.AppIdentity, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret) GetAppIdentity() CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity {
+	return v.AppIdentity
+}
+
+// GetSecret returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret.Secret, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret) GetSecret() string {
+	return v.Secret
+}
+
+// CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity includes the requested fields of the GraphQL type AppIdentity.
+// The GraphQL type's documentation follows.
+//
+// An application's own identity for background jobs: its id is the OAuth client_id.
+type CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity struct {
+	AppIdentityParts `json:"-"`
+}
+
+// GetId returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity.Id, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) GetId() string {
+	return v.AppIdentityParts.Id
+}
+
+// GetName returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity.Name, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) GetName() string {
+	return v.AppIdentityParts.Name
+}
+
+// GetUser returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity.User, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) GetUser() *AppIdentityPartsUser {
+	return v.AppIdentityParts.User
+}
+
+// GetCreatedAt returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) GetCreatedAt() string {
+	return v.AppIdentityParts.CreatedAt
+}
+
+// GetSecrets returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity.Secrets, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) GetSecrets() []AppIdentityPartsSecretsAppIdentitySecret {
+	return v.AppIdentityParts.Secrets
+}
+
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.AppIdentityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	User *AppIdentityPartsUser `json:"user"`
+
+	CreatedAt string `json:"createdAt"`
+
+	Secrets []AppIdentityPartsSecretsAppIdentitySecret `json:"secrets"`
+}
+
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) __premarshalJSON() (*__premarshalCreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity, error) {
+	var retval __premarshalCreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity
+
+	retval.Id = v.AppIdentityParts.Id
+	retval.Name = v.AppIdentityParts.Name
+	retval.User = v.AppIdentityParts.User
+	retval.CreatedAt = v.AppIdentityParts.CreatedAt
+	retval.Secrets = v.AppIdentityParts.Secrets
+	return &retval, nil
+}
+
+// CreateAppIdentitySecretResponse is returned by CreateAppIdentitySecret on success.
+type CreateAppIdentitySecretResponse struct {
+	CreateAppIdentitySecret CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret `json:"createAppIdentitySecret"`
+}
+
+// GetCreateAppIdentitySecret returns CreateAppIdentitySecretResponse.CreateAppIdentitySecret, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretResponse) GetCreateAppIdentitySecret() CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecret {
+	return v.CreateAppIdentitySecret
 }
 
 // CreateAppTenantCreateAppTenant includes the requested fields of the GraphQL type AppTenant.
@@ -2755,6 +3147,101 @@ func (v *RemoveDataImportFileResponse) GetRemoveDataImportFile() RemoveDataImpor
 	return v.RemoveDataImportFile
 }
 
+// RetireAppIdentityResponse is returned by RetireAppIdentity on success.
+type RetireAppIdentityResponse struct {
+	RetireAppIdentity RetireAppIdentityRetireAppIdentity `json:"retireAppIdentity"`
+}
+
+// GetRetireAppIdentity returns RetireAppIdentityResponse.RetireAppIdentity, and is useful for accessing the field via an interface.
+func (v *RetireAppIdentityResponse) GetRetireAppIdentity() RetireAppIdentityRetireAppIdentity {
+	return v.RetireAppIdentity
+}
+
+// RetireAppIdentityRetireAppIdentity includes the requested fields of the GraphQL type AppIdentity.
+// The GraphQL type's documentation follows.
+//
+// An application's own identity for background jobs: its id is the OAuth client_id.
+type RetireAppIdentityRetireAppIdentity struct {
+	AppIdentityParts `json:"-"`
+}
+
+// GetId returns RetireAppIdentityRetireAppIdentity.Id, and is useful for accessing the field via an interface.
+func (v *RetireAppIdentityRetireAppIdentity) GetId() string { return v.AppIdentityParts.Id }
+
+// GetName returns RetireAppIdentityRetireAppIdentity.Name, and is useful for accessing the field via an interface.
+func (v *RetireAppIdentityRetireAppIdentity) GetName() string { return v.AppIdentityParts.Name }
+
+// GetUser returns RetireAppIdentityRetireAppIdentity.User, and is useful for accessing the field via an interface.
+func (v *RetireAppIdentityRetireAppIdentity) GetUser() *AppIdentityPartsUser {
+	return v.AppIdentityParts.User
+}
+
+// GetCreatedAt returns RetireAppIdentityRetireAppIdentity.CreatedAt, and is useful for accessing the field via an interface.
+func (v *RetireAppIdentityRetireAppIdentity) GetCreatedAt() string {
+	return v.AppIdentityParts.CreatedAt
+}
+
+// GetSecrets returns RetireAppIdentityRetireAppIdentity.Secrets, and is useful for accessing the field via an interface.
+func (v *RetireAppIdentityRetireAppIdentity) GetSecrets() []AppIdentityPartsSecretsAppIdentitySecret {
+	return v.AppIdentityParts.Secrets
+}
+
+func (v *RetireAppIdentityRetireAppIdentity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RetireAppIdentityRetireAppIdentity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RetireAppIdentityRetireAppIdentity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.AppIdentityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRetireAppIdentityRetireAppIdentity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	User *AppIdentityPartsUser `json:"user"`
+
+	CreatedAt string `json:"createdAt"`
+
+	Secrets []AppIdentityPartsSecretsAppIdentitySecret `json:"secrets"`
+}
+
+func (v *RetireAppIdentityRetireAppIdentity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RetireAppIdentityRetireAppIdentity) __premarshalJSON() (*__premarshalRetireAppIdentityRetireAppIdentity, error) {
+	var retval __premarshalRetireAppIdentityRetireAppIdentity
+
+	retval.Id = v.AppIdentityParts.Id
+	retval.Name = v.AppIdentityParts.Name
+	retval.User = v.AppIdentityParts.User
+	retval.CreatedAt = v.AppIdentityParts.CreatedAt
+	retval.Secrets = v.AppIdentityParts.Secrets
+	return &retval, nil
+}
+
 // RetireConstraintResponse is returned by RetireConstraint on success.
 type RetireConstraintResponse struct {
 	RetireConstraint RetireConstraintRetireConstraint `json:"retireConstraint"`
@@ -3225,6 +3712,105 @@ func (v *RetireRecordRetireRecord) __premarshalJSON() (*__premarshalRetireRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	return &retval, nil
+}
+
+// RevokeAppIdentitySecretResponse is returned by RevokeAppIdentitySecret on success.
+type RevokeAppIdentitySecretResponse struct {
+	RevokeAppIdentitySecret RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity `json:"revokeAppIdentitySecret"`
+}
+
+// GetRevokeAppIdentitySecret returns RevokeAppIdentitySecretResponse.RevokeAppIdentitySecret, and is useful for accessing the field via an interface.
+func (v *RevokeAppIdentitySecretResponse) GetRevokeAppIdentitySecret() RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity {
+	return v.RevokeAppIdentitySecret
+}
+
+// RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity includes the requested fields of the GraphQL type AppIdentity.
+// The GraphQL type's documentation follows.
+//
+// An application's own identity for background jobs: its id is the OAuth client_id.
+type RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity struct {
+	AppIdentityParts `json:"-"`
+}
+
+// GetId returns RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity.Id, and is useful for accessing the field via an interface.
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetId() string {
+	return v.AppIdentityParts.Id
+}
+
+// GetName returns RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity.Name, and is useful for accessing the field via an interface.
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetName() string {
+	return v.AppIdentityParts.Name
+}
+
+// GetUser returns RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity.User, and is useful for accessing the field via an interface.
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetUser() *AppIdentityPartsUser {
+	return v.AppIdentityParts.User
+}
+
+// GetCreatedAt returns RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity.CreatedAt, and is useful for accessing the field via an interface.
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetCreatedAt() string {
+	return v.AppIdentityParts.CreatedAt
+}
+
+// GetSecrets returns RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity.Secrets, and is useful for accessing the field via an interface.
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetSecrets() []AppIdentityPartsSecretsAppIdentitySecret {
+	return v.AppIdentityParts.Secrets
+}
+
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.AppIdentityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	User *AppIdentityPartsUser `json:"user"`
+
+	CreatedAt string `json:"createdAt"`
+
+	Secrets []AppIdentityPartsSecretsAppIdentitySecret `json:"secrets"`
+}
+
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) __premarshalJSON() (*__premarshalRevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity, error) {
+	var retval __premarshalRevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity
+
+	retval.Id = v.AppIdentityParts.Id
+	retval.Name = v.AppIdentityParts.Name
+	retval.User = v.AppIdentityParts.User
+	retval.CreatedAt = v.AppIdentityParts.CreatedAt
+	retval.Secrets = v.AppIdentityParts.Secrets
 	return &retval, nil
 }
 
@@ -3956,6 +4542,22 @@ func (v *__ConstraintsInput) GetEntityId() string { return v.EntityId }
 // GetPage returns __ConstraintsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ConstraintsInput) GetPage() PageInput { return v.Page }
 
+// __CreateAppIdentityInput is used internally by genqlient
+type __CreateAppIdentityInput struct {
+	Input CreateAppIdentityInput `json:"input"`
+}
+
+// GetInput returns __CreateAppIdentityInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateAppIdentityInput) GetInput() CreateAppIdentityInput { return v.Input }
+
+// __CreateAppIdentitySecretInput is used internally by genqlient
+type __CreateAppIdentitySecretInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __CreateAppIdentitySecretInput.Id, and is useful for accessing the field via an interface.
+func (v *__CreateAppIdentitySecretInput) GetId() string { return v.Id }
+
 // __CreateAppTenantInput is used internally by genqlient
 type __CreateAppTenantInput struct {
 	Input CreateAppTenantInput `json:"input"`
@@ -4124,6 +4726,14 @@ func (v *__RemoveDataImportFileInput) GetImportId() string { return v.ImportId }
 // GetFileId returns __RemoveDataImportFileInput.FileId, and is useful for accessing the field via an interface.
 func (v *__RemoveDataImportFileInput) GetFileId() string { return v.FileId }
 
+// __RetireAppIdentityInput is used internally by genqlient
+type __RetireAppIdentityInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __RetireAppIdentityInput.Id, and is useful for accessing the field via an interface.
+func (v *__RetireAppIdentityInput) GetId() string { return v.Id }
+
 // __RetireConstraintInput is used internally by genqlient
 type __RetireConstraintInput struct {
 	ConstraintId string `json:"constraintId"`
@@ -4163,6 +4773,14 @@ type __RetireRecordInput struct {
 
 // GetInput returns __RetireRecordInput.Input, and is useful for accessing the field via an interface.
 func (v *__RetireRecordInput) GetInput() RetireRecordInput { return v.Input }
+
+// __RevokeAppIdentitySecretInput is used internally by genqlient
+type __RevokeAppIdentitySecretInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __RevokeAppIdentitySecretInput.Id, and is useful for accessing the field via an interface.
+func (v *__RevokeAppIdentitySecretInput) GetId() string { return v.Id }
 
 // __RunDataImportInput is used internally by genqlient
 type __RunDataImportInput struct {
@@ -4374,6 +4992,50 @@ func ApiSchemaDiff(
 	return data_, err_
 }
 
+// The query executed by AppIdentities.
+const AppIdentities_Operation = `
+query AppIdentities {
+	appIdentities {
+		... AppIdentityParts
+	}
+}
+fragment AppIdentityParts on AppIdentity {
+	id
+	name
+	user {
+		id
+	}
+	createdAt
+	secrets {
+		id
+		lastFour
+		createdAt
+		lastUsedAt
+	}
+}
+`
+
+func AppIdentities(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *AppIdentitiesResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "AppIdentities",
+		Query:  AppIdentities_Operation,
+	}
+
+	data_ = &AppIdentitiesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by AppTenants.
 const AppTenants_Operation = `
 query AppTenants ($page: PageInput!) {
@@ -4568,6 +5230,108 @@ func Constraints(
 	}
 
 	data_ = &ConstraintsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateAppIdentity.
+const CreateAppIdentity_Operation = `
+mutation CreateAppIdentity ($input: CreateAppIdentityInput!) {
+	createAppIdentity(input: $input) {
+		appIdentity {
+			... AppIdentityParts
+		}
+		secret
+	}
+}
+fragment AppIdentityParts on AppIdentity {
+	id
+	name
+	user {
+		id
+	}
+	createdAt
+	secrets {
+		id
+		lastFour
+		createdAt
+		lastUsedAt
+	}
+}
+`
+
+func CreateAppIdentity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateAppIdentityInput,
+) (data_ *CreateAppIdentityResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateAppIdentity",
+		Query:  CreateAppIdentity_Operation,
+		Variables: &__CreateAppIdentityInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateAppIdentityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by CreateAppIdentitySecret.
+const CreateAppIdentitySecret_Operation = `
+mutation CreateAppIdentitySecret ($id: ID!) {
+	createAppIdentitySecret(id: $id) {
+		appIdentity {
+			... AppIdentityParts
+		}
+		secret
+	}
+}
+fragment AppIdentityParts on AppIdentity {
+	id
+	name
+	user {
+		id
+	}
+	createdAt
+	secrets {
+		id
+		lastFour
+		createdAt
+		lastUsedAt
+	}
+}
+`
+
+func CreateAppIdentitySecret(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *CreateAppIdentitySecretResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateAppIdentitySecret",
+		Query:  CreateAppIdentitySecret_Operation,
+		Variables: &__CreateAppIdentitySecretInput{
+			Id: id,
+		},
+	}
+
+	data_ = &CreateAppIdentitySecretResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -5594,6 +6358,54 @@ func RemoveDataImportFile(
 	return data_, err_
 }
 
+// The mutation executed by RetireAppIdentity.
+const RetireAppIdentity_Operation = `
+mutation RetireAppIdentity ($id: ID!) {
+	retireAppIdentity(id: $id) {
+		... AppIdentityParts
+	}
+}
+fragment AppIdentityParts on AppIdentity {
+	id
+	name
+	user {
+		id
+	}
+	createdAt
+	secrets {
+		id
+		lastFour
+		createdAt
+		lastUsedAt
+	}
+}
+`
+
+func RetireAppIdentity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *RetireAppIdentityResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RetireAppIdentity",
+		Query:  RetireAppIdentity_Operation,
+		Variables: &__RetireAppIdentityInput{
+			Id: id,
+		},
+	}
+
+	data_ = &RetireAppIdentityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by RetireConstraint.
 const RetireConstraint_Operation = `
 mutation RetireConstraint ($constraintId: ID!) {
@@ -5810,6 +6622,54 @@ func RetireRecord(
 	}
 
 	data_ = &RetireRecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RevokeAppIdentitySecret.
+const RevokeAppIdentitySecret_Operation = `
+mutation RevokeAppIdentitySecret ($id: ID!) {
+	revokeAppIdentitySecret(id: $id) {
+		... AppIdentityParts
+	}
+}
+fragment AppIdentityParts on AppIdentity {
+	id
+	name
+	user {
+		id
+	}
+	createdAt
+	secrets {
+		id
+		lastFour
+		createdAt
+		lastUsedAt
+	}
+}
+`
+
+func RevokeAppIdentitySecret(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *RevokeAppIdentitySecretResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RevokeAppIdentitySecret",
+		Query:  RevokeAppIdentitySecret_Operation,
+		Variables: &__RevokeAppIdentitySecretInput{
+			Id: id,
+		},
+	}
+
+	data_ = &RevokeAppIdentitySecretResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

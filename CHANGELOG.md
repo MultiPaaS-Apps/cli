@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.8.0...v0.9.0) (2026-10-28)
+
+
+### Features
+
+* [MP-180] multipaas import delete, and import status --include-deleted ([#24](https://github.com/MultiPaaS-Apps/cli/issues/24)) ([6a299e4](https://github.com/MultiPaaS-Apps/cli/commit/6a299e43685cd1d873496cc5a39f07bf1e156018))
+* [MP-189] multipaas feedback send, list, show and settings ([#26](https://github.com/MultiPaaS-Apps/cli/issues/26)) ([10050b7](https://github.com/MultiPaaS-Apps/cli/commit/10050b7ca155de3a42ded017f08ff703a49bd321))
+* [MP-196] app-identity commands ([#27](https://github.com/MultiPaaS-Apps/cli/issues/27)) ([665d4b8](https://github.com/MultiPaaS-Apps/cli/commit/665d4b8492568ab6faabc28e3ec6c31746a77e33))
+
 ## [0.8.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.7.0...v0.8.0) (2026-10-24)
 
 

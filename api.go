@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"slices"
@@ -247,6 +248,7 @@ func (d withHeader) Do(request *http.Request) (*http.Response, error) {
 }
 
 // fromGraphQL gives a webapp-api refusal its exit code: UNSUPPORTED_CLI_VERSION is 3, any other code is 1.
+// A VALIDATION refusal also carries the fields it names.
 func fromGraphQL(err error) error {
 	var refusals gqlerror.List
 	if !errors.As(err, &refusals) || len(refusals) == 0 {
@@ -260,7 +262,22 @@ func fromGraphQL(err error) error {
 	if code == "UNSUPPORTED_CLI_VERSION" {
 		exit = exitUpgrade
 	}
-	return &cliError{exit: exit, Code: code, Message: refusals[0].Message}
+	failure := &cliError{exit: exit, Code: code, Message: refusals[0].Message}
+	failure.FieldErrors = fieldErrorsOf(refusals[0].Extensions["fieldErrors"])
+	return failure
+}
+
+// fieldErrorsOf reads a refusal's fieldErrors extension, which arrives as untyped JSON; one that does not decode is dropped.
+func fieldErrorsOf(extension any) []fieldError {
+	data, err := json.Marshal(extension)
+	if err != nil {
+		return nil
+	}
+	var fields []fieldError
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return nil
+	}
+	return fields
 }
 
 // pages collects every page of a paginated query.

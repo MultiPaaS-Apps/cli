@@ -2425,6 +2425,152 @@ type EnumTypesResponse struct {
 // GetEnumTypes returns EnumTypesResponse.EnumTypes, and is useful for accessing the field via an interface.
 func (v *EnumTypesResponse) GetEnumTypes() EnumTypesEnumTypesEnumTypePage { return v.EnumTypes }
 
+type FeedbackKind string
+
+const (
+	FeedbackKindBug     FeedbackKind = "bug"
+	FeedbackKindFeature FeedbackKind = "feature"
+)
+
+var AllFeedbackKind = []FeedbackKind{
+	FeedbackKindBug,
+	FeedbackKindFeature,
+}
+
+// FeedbackParts includes the GraphQL fields of Feedback requested by the fragment FeedbackParts.
+type FeedbackParts struct {
+	Id                   string                    `json:"id"`
+	Kind                 FeedbackKind              `json:"kind"`
+	Status               FeedbackStatus            `json:"status"`
+	Summary              *string                   `json:"summary"`
+	Details              string                    `json:"details"`
+	Source               FeedbackSource            `json:"source"`
+	CliVersion           *string                   `json:"cliVersion"`
+	ApiVersion           *string                   `json:"apiVersion"`
+	PlatformVersion      *string                   `json:"platformVersion"`
+	Application          *FeedbackPartsApplication `json:"application"`
+	Client               *FeedbackPartsClient      `json:"client"`
+	SentFromRemovedScope bool                      `json:"sentFromRemovedScope"`
+	CreatedAt            string                    `json:"createdAt"`
+	UpdatedAt            string                    `json:"updatedAt"`
+}
+
+// GetId returns FeedbackParts.Id, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetId() string { return v.Id }
+
+// GetKind returns FeedbackParts.Kind, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetKind() FeedbackKind { return v.Kind }
+
+// GetStatus returns FeedbackParts.Status, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetStatus() FeedbackStatus { return v.Status }
+
+// GetSummary returns FeedbackParts.Summary, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetSummary() *string { return v.Summary }
+
+// GetDetails returns FeedbackParts.Details, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetDetails() string { return v.Details }
+
+// GetSource returns FeedbackParts.Source, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetSource() FeedbackSource { return v.Source }
+
+// GetCliVersion returns FeedbackParts.CliVersion, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetCliVersion() *string { return v.CliVersion }
+
+// GetApiVersion returns FeedbackParts.ApiVersion, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetApiVersion() *string { return v.ApiVersion }
+
+// GetPlatformVersion returns FeedbackParts.PlatformVersion, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetPlatformVersion() *string { return v.PlatformVersion }
+
+// GetApplication returns FeedbackParts.Application, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetApplication() *FeedbackPartsApplication { return v.Application }
+
+// GetClient returns FeedbackParts.Client, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetClient() *FeedbackPartsClient { return v.Client }
+
+// GetSentFromRemovedScope returns FeedbackParts.SentFromRemovedScope, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetSentFromRemovedScope() bool { return v.SentFromRemovedScope }
+
+// GetCreatedAt returns FeedbackParts.CreatedAt, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetCreatedAt() string { return v.CreatedAt }
+
+// GetUpdatedAt returns FeedbackParts.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *FeedbackParts) GetUpdatedAt() string { return v.UpdatedAt }
+
+// FeedbackPartsApplication includes the requested fields of the GraphQL type Application.
+type FeedbackPartsApplication struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns FeedbackPartsApplication.Id, and is useful for accessing the field via an interface.
+func (v *FeedbackPartsApplication) GetId() string { return v.Id }
+
+// GetName returns FeedbackPartsApplication.Name, and is useful for accessing the field via an interface.
+func (v *FeedbackPartsApplication) GetName() string { return v.Name }
+
+// FeedbackPartsClient includes the requested fields of the GraphQL type Client.
+type FeedbackPartsClient struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns FeedbackPartsClient.Id, and is useful for accessing the field via an interface.
+func (v *FeedbackPartsClient) GetId() string { return v.Id }
+
+// GetName returns FeedbackPartsClient.Name, and is useful for accessing the field via an interface.
+func (v *FeedbackPartsClient) GetName() string { return v.Name }
+
+// FeedbackSettingFeedbackSetting includes the requested fields of the GraphQL type FeedbackSetting.
+type FeedbackSettingFeedbackSetting struct {
+	AutoSend bool `json:"autoSend"`
+}
+
+// GetAutoSend returns FeedbackSettingFeedbackSetting.AutoSend, and is useful for accessing the field via an interface.
+func (v *FeedbackSettingFeedbackSetting) GetAutoSend() bool { return v.AutoSend }
+
+// FeedbackSettingResponse is returned by FeedbackSetting on success.
+type FeedbackSettingResponse struct {
+	FeedbackSetting FeedbackSettingFeedbackSetting `json:"feedbackSetting"`
+}
+
+// GetFeedbackSetting returns FeedbackSettingResponse.FeedbackSetting, and is useful for accessing the field via an interface.
+func (v *FeedbackSettingResponse) GetFeedbackSetting() FeedbackSettingFeedbackSetting {
+	return v.FeedbackSetting
+}
+
+type FeedbackSource string
+
+const (
+	FeedbackSourceCli    FeedbackSource = "cli"
+	FeedbackSourcePlugin FeedbackSource = "plugin"
+	FeedbackSourceWeb    FeedbackSource = "web"
+)
+
+var AllFeedbackSource = []FeedbackSource{
+	FeedbackSourceCli,
+	FeedbackSourcePlugin,
+	FeedbackSourceWeb,
+}
+
+type FeedbackStatus string
+
+const (
+	FeedbackStatusDeclined    FeedbackStatus = "declined"
+	FeedbackStatusFixed       FeedbackStatus = "fixed"
+	FeedbackStatusPlanned     FeedbackStatus = "planned"
+	FeedbackStatusReceived    FeedbackStatus = "received"
+	FeedbackStatusUnderReview FeedbackStatus = "under_review"
+)
+
+var AllFeedbackStatus = []FeedbackStatus{
+	FeedbackStatusDeclined,
+	FeedbackStatusFixed,
+	FeedbackStatusPlanned,
+	FeedbackStatusReceived,
+	FeedbackStatusUnderReview,
+}
+
 // FieldParts includes the GraphQL fields of Field requested by the fragment FieldParts.
 type FieldParts struct {
 	Id               string                      `json:"id"`
@@ -2768,6 +2914,391 @@ type ModelRevisionsResponse struct {
 func (v *ModelRevisionsResponse) GetModelRevisions() ModelRevisionsModelRevisionsModelRevisionPage {
 	return v.ModelRevisions
 }
+
+// MyFeedbackMyFeedbackFeedbackPage includes the requested fields of the GraphQL type FeedbackPage.
+type MyFeedbackMyFeedbackFeedbackPage struct {
+	Items    []MyFeedbackMyFeedbackFeedbackPageItemsFeedback `json:"items"`
+	PageInfo MyFeedbackMyFeedbackFeedbackPagePageInfo        `json:"pageInfo"`
+}
+
+// GetItems returns MyFeedbackMyFeedbackFeedbackPage.Items, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPage) GetItems() []MyFeedbackMyFeedbackFeedbackPageItemsFeedback {
+	return v.Items
+}
+
+// GetPageInfo returns MyFeedbackMyFeedbackFeedbackPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPage) GetPageInfo() MyFeedbackMyFeedbackFeedbackPagePageInfo {
+	return v.PageInfo
+}
+
+// MyFeedbackMyFeedbackFeedbackPageItemsFeedback includes the requested fields of the GraphQL type Feedback.
+type MyFeedbackMyFeedbackFeedbackPageItemsFeedback struct {
+	FeedbackParts `json:"-"`
+}
+
+// GetId returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Id, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetId() string { return v.FeedbackParts.Id }
+
+// GetKind returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Kind, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetKind() FeedbackKind {
+	return v.FeedbackParts.Kind
+}
+
+// GetStatus returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Status, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetStatus() FeedbackStatus {
+	return v.FeedbackParts.Status
+}
+
+// GetSummary returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Summary, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetSummary() *string {
+	return v.FeedbackParts.Summary
+}
+
+// GetDetails returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Details, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetDetails() string {
+	return v.FeedbackParts.Details
+}
+
+// GetSource returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Source, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetSource() FeedbackSource {
+	return v.FeedbackParts.Source
+}
+
+// GetCliVersion returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.CliVersion, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetCliVersion() *string {
+	return v.FeedbackParts.CliVersion
+}
+
+// GetApiVersion returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.ApiVersion, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetApiVersion() *string {
+	return v.FeedbackParts.ApiVersion
+}
+
+// GetPlatformVersion returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.PlatformVersion, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetPlatformVersion() *string {
+	return v.FeedbackParts.PlatformVersion
+}
+
+// GetApplication returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Application, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetApplication() *FeedbackPartsApplication {
+	return v.FeedbackParts.Application
+}
+
+// GetClient returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.Client, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetClient() *FeedbackPartsClient {
+	return v.FeedbackParts.Client
+}
+
+// GetSentFromRemovedScope returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.SentFromRemovedScope, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetSentFromRemovedScope() bool {
+	return v.FeedbackParts.SentFromRemovedScope
+}
+
+// GetCreatedAt returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.CreatedAt, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetCreatedAt() string {
+	return v.FeedbackParts.CreatedAt
+}
+
+// GetUpdatedAt returns MyFeedbackMyFeedbackFeedbackPageItemsFeedback.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) GetUpdatedAt() string {
+	return v.FeedbackParts.UpdatedAt
+}
+
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*MyFeedbackMyFeedbackFeedbackPageItemsFeedback
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.MyFeedbackMyFeedbackFeedbackPageItemsFeedback = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FeedbackParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalMyFeedbackMyFeedbackFeedbackPageItemsFeedback struct {
+	Id string `json:"id"`
+
+	Kind FeedbackKind `json:"kind"`
+
+	Status FeedbackStatus `json:"status"`
+
+	Summary *string `json:"summary"`
+
+	Details string `json:"details"`
+
+	Source FeedbackSource `json:"source"`
+
+	CliVersion *string `json:"cliVersion"`
+
+	ApiVersion *string `json:"apiVersion"`
+
+	PlatformVersion *string `json:"platformVersion"`
+
+	Application *FeedbackPartsApplication `json:"application"`
+
+	Client *FeedbackPartsClient `json:"client"`
+
+	SentFromRemovedScope bool `json:"sentFromRemovedScope"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *MyFeedbackMyFeedbackFeedbackPageItemsFeedback) __premarshalJSON() (*__premarshalMyFeedbackMyFeedbackFeedbackPageItemsFeedback, error) {
+	var retval __premarshalMyFeedbackMyFeedbackFeedbackPageItemsFeedback
+
+	retval.Id = v.FeedbackParts.Id
+	retval.Kind = v.FeedbackParts.Kind
+	retval.Status = v.FeedbackParts.Status
+	retval.Summary = v.FeedbackParts.Summary
+	retval.Details = v.FeedbackParts.Details
+	retval.Source = v.FeedbackParts.Source
+	retval.CliVersion = v.FeedbackParts.CliVersion
+	retval.ApiVersion = v.FeedbackParts.ApiVersion
+	retval.PlatformVersion = v.FeedbackParts.PlatformVersion
+	retval.Application = v.FeedbackParts.Application
+	retval.Client = v.FeedbackParts.Client
+	retval.SentFromRemovedScope = v.FeedbackParts.SentFromRemovedScope
+	retval.CreatedAt = v.FeedbackParts.CreatedAt
+	retval.UpdatedAt = v.FeedbackParts.UpdatedAt
+	return &retval, nil
+}
+
+// MyFeedbackMyFeedbackFeedbackPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type MyFeedbackMyFeedbackFeedbackPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns MyFeedbackMyFeedbackFeedbackPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *MyFeedbackMyFeedbackFeedbackPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// MyFeedbackReportMyFeedbackReportFeedback includes the requested fields of the GraphQL type Feedback.
+type MyFeedbackReportMyFeedbackReportFeedback struct {
+	FeedbackParts `json:"-"`
+	History       []MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange `json:"history"`
+}
+
+// GetHistory returns MyFeedbackReportMyFeedbackReportFeedback.History, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetHistory() []MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange {
+	return v.History
+}
+
+// GetId returns MyFeedbackReportMyFeedbackReportFeedback.Id, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetId() string { return v.FeedbackParts.Id }
+
+// GetKind returns MyFeedbackReportMyFeedbackReportFeedback.Kind, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetKind() FeedbackKind {
+	return v.FeedbackParts.Kind
+}
+
+// GetStatus returns MyFeedbackReportMyFeedbackReportFeedback.Status, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetStatus() FeedbackStatus {
+	return v.FeedbackParts.Status
+}
+
+// GetSummary returns MyFeedbackReportMyFeedbackReportFeedback.Summary, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetSummary() *string {
+	return v.FeedbackParts.Summary
+}
+
+// GetDetails returns MyFeedbackReportMyFeedbackReportFeedback.Details, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetDetails() string {
+	return v.FeedbackParts.Details
+}
+
+// GetSource returns MyFeedbackReportMyFeedbackReportFeedback.Source, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetSource() FeedbackSource {
+	return v.FeedbackParts.Source
+}
+
+// GetCliVersion returns MyFeedbackReportMyFeedbackReportFeedback.CliVersion, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetCliVersion() *string {
+	return v.FeedbackParts.CliVersion
+}
+
+// GetApiVersion returns MyFeedbackReportMyFeedbackReportFeedback.ApiVersion, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetApiVersion() *string {
+	return v.FeedbackParts.ApiVersion
+}
+
+// GetPlatformVersion returns MyFeedbackReportMyFeedbackReportFeedback.PlatformVersion, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetPlatformVersion() *string {
+	return v.FeedbackParts.PlatformVersion
+}
+
+// GetApplication returns MyFeedbackReportMyFeedbackReportFeedback.Application, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetApplication() *FeedbackPartsApplication {
+	return v.FeedbackParts.Application
+}
+
+// GetClient returns MyFeedbackReportMyFeedbackReportFeedback.Client, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetClient() *FeedbackPartsClient {
+	return v.FeedbackParts.Client
+}
+
+// GetSentFromRemovedScope returns MyFeedbackReportMyFeedbackReportFeedback.SentFromRemovedScope, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetSentFromRemovedScope() bool {
+	return v.FeedbackParts.SentFromRemovedScope
+}
+
+// GetCreatedAt returns MyFeedbackReportMyFeedbackReportFeedback.CreatedAt, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetCreatedAt() string {
+	return v.FeedbackParts.CreatedAt
+}
+
+// GetUpdatedAt returns MyFeedbackReportMyFeedbackReportFeedback.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedback) GetUpdatedAt() string {
+	return v.FeedbackParts.UpdatedAt
+}
+
+func (v *MyFeedbackReportMyFeedbackReportFeedback) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*MyFeedbackReportMyFeedbackReportFeedback
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.MyFeedbackReportMyFeedbackReportFeedback = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FeedbackParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalMyFeedbackReportMyFeedbackReportFeedback struct {
+	History []MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange `json:"history"`
+
+	Id string `json:"id"`
+
+	Kind FeedbackKind `json:"kind"`
+
+	Status FeedbackStatus `json:"status"`
+
+	Summary *string `json:"summary"`
+
+	Details string `json:"details"`
+
+	Source FeedbackSource `json:"source"`
+
+	CliVersion *string `json:"cliVersion"`
+
+	ApiVersion *string `json:"apiVersion"`
+
+	PlatformVersion *string `json:"platformVersion"`
+
+	Application *FeedbackPartsApplication `json:"application"`
+
+	Client *FeedbackPartsClient `json:"client"`
+
+	SentFromRemovedScope bool `json:"sentFromRemovedScope"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *MyFeedbackReportMyFeedbackReportFeedback) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *MyFeedbackReportMyFeedbackReportFeedback) __premarshalJSON() (*__premarshalMyFeedbackReportMyFeedbackReportFeedback, error) {
+	var retval __premarshalMyFeedbackReportMyFeedbackReportFeedback
+
+	retval.History = v.History
+	retval.Id = v.FeedbackParts.Id
+	retval.Kind = v.FeedbackParts.Kind
+	retval.Status = v.FeedbackParts.Status
+	retval.Summary = v.FeedbackParts.Summary
+	retval.Details = v.FeedbackParts.Details
+	retval.Source = v.FeedbackParts.Source
+	retval.CliVersion = v.FeedbackParts.CliVersion
+	retval.ApiVersion = v.FeedbackParts.ApiVersion
+	retval.PlatformVersion = v.FeedbackParts.PlatformVersion
+	retval.Application = v.FeedbackParts.Application
+	retval.Client = v.FeedbackParts.Client
+	retval.SentFromRemovedScope = v.FeedbackParts.SentFromRemovedScope
+	retval.CreatedAt = v.FeedbackParts.CreatedAt
+	retval.UpdatedAt = v.FeedbackParts.UpdatedAt
+	return &retval, nil
+}
+
+// MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange includes the requested fields of the GraphQL type FeedbackStatusChange.
+type MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange struct {
+	Status    FeedbackStatus `json:"status"`
+	Note      *string        `json:"note"`
+	ChangedAt string         `json:"changedAt"`
+}
+
+// GetStatus returns MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange.Status, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange) GetStatus() FeedbackStatus {
+	return v.Status
+}
+
+// GetNote returns MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange.Note, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange) GetNote() *string {
+	return v.Note
+}
+
+// GetChangedAt returns MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange.ChangedAt, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportMyFeedbackReportFeedbackHistoryFeedbackStatusChange) GetChangedAt() string {
+	return v.ChangedAt
+}
+
+// MyFeedbackReportResponse is returned by MyFeedbackReport on success.
+type MyFeedbackReportResponse struct {
+	MyFeedbackReport *MyFeedbackReportMyFeedbackReportFeedback `json:"myFeedbackReport"`
+}
+
+// GetMyFeedbackReport returns MyFeedbackReportResponse.MyFeedbackReport, and is useful for accessing the field via an interface.
+func (v *MyFeedbackReportResponse) GetMyFeedbackReport() *MyFeedbackReportMyFeedbackReportFeedback {
+	return v.MyFeedbackReport
+}
+
+// MyFeedbackResponse is returned by MyFeedback on success.
+type MyFeedbackResponse struct {
+	MyFeedback MyFeedbackMyFeedbackFeedbackPage `json:"myFeedback"`
+}
+
+// GetMyFeedback returns MyFeedbackResponse.MyFeedback, and is useful for accessing the field via an interface.
+func (v *MyFeedbackResponse) GetMyFeedback() MyFeedbackMyFeedbackFeedbackPage { return v.MyFeedback }
 
 // MyTenantsMyTenantsTenantOption includes the requested fields of the GraphQL type TenantOption.
 type MyTenantsMyTenantsTenantOption struct {
@@ -3982,6 +4513,172 @@ type ScopedAppTenantResponse struct {
 // GetMe returns ScopedAppTenantResponse.Me, and is useful for accessing the field via an interface.
 func (v *ScopedAppTenantResponse) GetMe() ScopedAppTenantMeUser { return v.Me }
 
+// SetFeedbackSettingResponse is returned by SetFeedbackSetting on success.
+type SetFeedbackSettingResponse struct {
+	SetFeedbackSetting SetFeedbackSettingSetFeedbackSetting `json:"setFeedbackSetting"`
+}
+
+// GetSetFeedbackSetting returns SetFeedbackSettingResponse.SetFeedbackSetting, and is useful for accessing the field via an interface.
+func (v *SetFeedbackSettingResponse) GetSetFeedbackSetting() SetFeedbackSettingSetFeedbackSetting {
+	return v.SetFeedbackSetting
+}
+
+// SetFeedbackSettingSetFeedbackSetting includes the requested fields of the GraphQL type FeedbackSetting.
+type SetFeedbackSettingSetFeedbackSetting struct {
+	AutoSend bool `json:"autoSend"`
+}
+
+// GetAutoSend returns SetFeedbackSettingSetFeedbackSetting.AutoSend, and is useful for accessing the field via an interface.
+func (v *SetFeedbackSettingSetFeedbackSetting) GetAutoSend() bool { return v.AutoSend }
+
+// SubmitFeedbackResponse is returned by SubmitFeedback on success.
+type SubmitFeedbackResponse struct {
+	SubmitFeedback SubmitFeedbackSubmitFeedback `json:"submitFeedback"`
+}
+
+// GetSubmitFeedback returns SubmitFeedbackResponse.SubmitFeedback, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackResponse) GetSubmitFeedback() SubmitFeedbackSubmitFeedback {
+	return v.SubmitFeedback
+}
+
+// SubmitFeedbackSubmitFeedback includes the requested fields of the GraphQL type Feedback.
+type SubmitFeedbackSubmitFeedback struct {
+	FeedbackParts `json:"-"`
+}
+
+// GetId returns SubmitFeedbackSubmitFeedback.Id, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetId() string { return v.FeedbackParts.Id }
+
+// GetKind returns SubmitFeedbackSubmitFeedback.Kind, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetKind() FeedbackKind { return v.FeedbackParts.Kind }
+
+// GetStatus returns SubmitFeedbackSubmitFeedback.Status, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetStatus() FeedbackStatus { return v.FeedbackParts.Status }
+
+// GetSummary returns SubmitFeedbackSubmitFeedback.Summary, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetSummary() *string { return v.FeedbackParts.Summary }
+
+// GetDetails returns SubmitFeedbackSubmitFeedback.Details, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetDetails() string { return v.FeedbackParts.Details }
+
+// GetSource returns SubmitFeedbackSubmitFeedback.Source, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetSource() FeedbackSource { return v.FeedbackParts.Source }
+
+// GetCliVersion returns SubmitFeedbackSubmitFeedback.CliVersion, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetCliVersion() *string { return v.FeedbackParts.CliVersion }
+
+// GetApiVersion returns SubmitFeedbackSubmitFeedback.ApiVersion, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetApiVersion() *string { return v.FeedbackParts.ApiVersion }
+
+// GetPlatformVersion returns SubmitFeedbackSubmitFeedback.PlatformVersion, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetPlatformVersion() *string {
+	return v.FeedbackParts.PlatformVersion
+}
+
+// GetApplication returns SubmitFeedbackSubmitFeedback.Application, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetApplication() *FeedbackPartsApplication {
+	return v.FeedbackParts.Application
+}
+
+// GetClient returns SubmitFeedbackSubmitFeedback.Client, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetClient() *FeedbackPartsClient {
+	return v.FeedbackParts.Client
+}
+
+// GetSentFromRemovedScope returns SubmitFeedbackSubmitFeedback.SentFromRemovedScope, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetSentFromRemovedScope() bool {
+	return v.FeedbackParts.SentFromRemovedScope
+}
+
+// GetCreatedAt returns SubmitFeedbackSubmitFeedback.CreatedAt, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetCreatedAt() string { return v.FeedbackParts.CreatedAt }
+
+// GetUpdatedAt returns SubmitFeedbackSubmitFeedback.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *SubmitFeedbackSubmitFeedback) GetUpdatedAt() string { return v.FeedbackParts.UpdatedAt }
+
+func (v *SubmitFeedbackSubmitFeedback) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*SubmitFeedbackSubmitFeedback
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.SubmitFeedbackSubmitFeedback = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FeedbackParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalSubmitFeedbackSubmitFeedback struct {
+	Id string `json:"id"`
+
+	Kind FeedbackKind `json:"kind"`
+
+	Status FeedbackStatus `json:"status"`
+
+	Summary *string `json:"summary"`
+
+	Details string `json:"details"`
+
+	Source FeedbackSource `json:"source"`
+
+	CliVersion *string `json:"cliVersion"`
+
+	ApiVersion *string `json:"apiVersion"`
+
+	PlatformVersion *string `json:"platformVersion"`
+
+	Application *FeedbackPartsApplication `json:"application"`
+
+	Client *FeedbackPartsClient `json:"client"`
+
+	SentFromRemovedScope bool `json:"sentFromRemovedScope"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *SubmitFeedbackSubmitFeedback) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *SubmitFeedbackSubmitFeedback) __premarshalJSON() (*__premarshalSubmitFeedbackSubmitFeedback, error) {
+	var retval __premarshalSubmitFeedbackSubmitFeedback
+
+	retval.Id = v.FeedbackParts.Id
+	retval.Kind = v.FeedbackParts.Kind
+	retval.Status = v.FeedbackParts.Status
+	retval.Summary = v.FeedbackParts.Summary
+	retval.Details = v.FeedbackParts.Details
+	retval.Source = v.FeedbackParts.Source
+	retval.CliVersion = v.FeedbackParts.CliVersion
+	retval.ApiVersion = v.FeedbackParts.ApiVersion
+	retval.PlatformVersion = v.FeedbackParts.PlatformVersion
+	retval.Application = v.FeedbackParts.Application
+	retval.Client = v.FeedbackParts.Client
+	retval.SentFromRemovedScope = v.FeedbackParts.SentFromRemovedScope
+	retval.CreatedAt = v.FeedbackParts.CreatedAt
+	retval.UpdatedAt = v.FeedbackParts.UpdatedAt
+	return &retval, nil
+}
+
 // UpdateEntityResponse is returned by UpdateEntity on success.
 type UpdateEntityResponse struct {
 	UpdateEntity UpdateEntityUpdateEntity `json:"updateEntity"`
@@ -4686,6 +5383,22 @@ type __ModelRevisionsInput struct {
 // GetPage returns __ModelRevisionsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ModelRevisionsInput) GetPage() PageInput { return v.Page }
 
+// __MyFeedbackInput is used internally by genqlient
+type __MyFeedbackInput struct {
+	Page PageInput `json:"page"`
+}
+
+// GetPage returns __MyFeedbackInput.Page, and is useful for accessing the field via an interface.
+func (v *__MyFeedbackInput) GetPage() PageInput { return v.Page }
+
+// __MyFeedbackReportInput is used internally by genqlient
+type __MyFeedbackReportInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __MyFeedbackReportInput.Id, and is useful for accessing the field via an interface.
+func (v *__MyFeedbackReportInput) GetId() string { return v.Id }
+
 // __RecordInput is used internally by genqlient
 type __RecordInput struct {
 	EntityId string `json:"entityId"`
@@ -4789,6 +5502,22 @@ type __RunDataImportInput struct {
 
 // GetImportId returns __RunDataImportInput.ImportId, and is useful for accessing the field via an interface.
 func (v *__RunDataImportInput) GetImportId() string { return v.ImportId }
+
+// __SetFeedbackSettingInput is used internally by genqlient
+type __SetFeedbackSettingInput struct {
+	AutoSend bool `json:"autoSend"`
+}
+
+// GetAutoSend returns __SetFeedbackSettingInput.AutoSend, and is useful for accessing the field via an interface.
+func (v *__SetFeedbackSettingInput) GetAutoSend() bool { return v.AutoSend }
+
+// __SubmitFeedbackInput is used internally by genqlient
+type __SubmitFeedbackInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __SubmitFeedbackInput.Input, and is useful for accessing the field via an interface.
+func (v *__SubmitFeedbackInput) GetInput() map[string]any { return v.Input }
 
 // __UpdateEntityInput is used internally by genqlient
 type __UpdateEntityInput struct {
@@ -5992,6 +6721,36 @@ func EnumTypes(
 	return data_, err_
 }
 
+// The query executed by FeedbackSetting.
+const FeedbackSetting_Operation = `
+query FeedbackSetting {
+	feedbackSetting {
+		autoSend
+	}
+}
+`
+
+func FeedbackSetting(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *FeedbackSettingResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "FeedbackSetting",
+		Query:  FeedbackSetting_Operation,
+	}
+
+	data_ = &FeedbackSettingResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Fields.
 const Fields_Operation = `
 query Fields ($entityId: ID!, $page: PageInput!) {
@@ -6149,6 +6908,128 @@ func ModelRevisions(
 	}
 
 	data_ = &ModelRevisionsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by MyFeedback.
+const MyFeedback_Operation = `
+query MyFeedback ($page: PageInput!) {
+	myFeedback(page: $page) {
+		items {
+			... FeedbackParts
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+fragment FeedbackParts on Feedback {
+	id
+	kind
+	status
+	summary
+	details
+	source
+	cliVersion
+	apiVersion
+	platformVersion
+	application {
+		id
+		name
+	}
+	client {
+		id
+		name
+	}
+	sentFromRemovedScope
+	createdAt
+	updatedAt
+}
+`
+
+func MyFeedback(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	page PageInput,
+) (data_ *MyFeedbackResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "MyFeedback",
+		Query:  MyFeedback_Operation,
+		Variables: &__MyFeedbackInput{
+			Page: page,
+		},
+	}
+
+	data_ = &MyFeedbackResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by MyFeedbackReport.
+const MyFeedbackReport_Operation = `
+query MyFeedbackReport ($id: ID!) {
+	myFeedbackReport(id: $id) {
+		... FeedbackParts
+		history {
+			status
+			note
+			changedAt
+		}
+	}
+}
+fragment FeedbackParts on Feedback {
+	id
+	kind
+	status
+	summary
+	details
+	source
+	cliVersion
+	apiVersion
+	platformVersion
+	application {
+		id
+		name
+	}
+	client {
+		id
+		name
+	}
+	sentFromRemovedScope
+	createdAt
+	updatedAt
+}
+`
+
+func MyFeedbackReport(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *MyFeedbackReportResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "MyFeedbackReport",
+		Query:  MyFeedbackReport_Operation,
+		Variables: &__MyFeedbackReportInput{
+			Id: id,
+		},
+	}
+
+	data_ = &MyFeedbackReportResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -6779,6 +7660,96 @@ func ScopedAppTenant(
 	}
 
 	data_ = &ScopedAppTenantResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by SetFeedbackSetting.
+const SetFeedbackSetting_Operation = `
+mutation SetFeedbackSetting ($autoSend: Boolean!) {
+	setFeedbackSetting(autoSend: $autoSend) {
+		autoSend
+	}
+}
+`
+
+func SetFeedbackSetting(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	autoSend bool,
+) (data_ *SetFeedbackSettingResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "SetFeedbackSetting",
+		Query:  SetFeedbackSetting_Operation,
+		Variables: &__SetFeedbackSettingInput{
+			AutoSend: autoSend,
+		},
+	}
+
+	data_ = &SetFeedbackSettingResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by SubmitFeedback.
+const SubmitFeedback_Operation = `
+mutation SubmitFeedback ($input: SubmitFeedbackInput!) {
+	submitFeedback(input: $input) {
+		... FeedbackParts
+	}
+}
+fragment FeedbackParts on Feedback {
+	id
+	kind
+	status
+	summary
+	details
+	source
+	cliVersion
+	apiVersion
+	platformVersion
+	application {
+		id
+		name
+	}
+	client {
+		id
+		name
+	}
+	sentFromRemovedScope
+	createdAt
+	updatedAt
+}
+`
+
+func SubmitFeedback(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *SubmitFeedbackResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "SubmitFeedback",
+		Query:  SubmitFeedback_Operation,
+		Variables: &__SubmitFeedbackInput{
+			Input: input,
+		},
+	}
+
+	data_ = &SubmitFeedbackResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

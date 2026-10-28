@@ -61,16 +61,21 @@ type fakeMultiPaaS struct {
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
 	noCreateApp   bool                        // the signed-in user lacks client.applications.create
 
-	imports      map[string]*fakeImport // import id -> its state
-	uploads      map[string]fakeUpload  // File id -> what its PUT received
-	importReads  int                    // DataImport reads answered
-	refuseUpload bool                   // the presigned PUT answers 403
-	refuseImport [2]string              // an import mutation is refused with this code and message
-	refuseRead   [2]string              // a DataImport read is refused with this code and message
-	failReport   bool                   // GET /report answers HTTP 500
-	reportLines  []map[string]any       // GET /report serves these, one JSON line each
-	statusQueue  map[string][]string    // import id -> the statuses its later DataImport reads answer
-	fileCount    int                    // files registered so far, for part-N and file-N
+	imports          map[string]*fakeImport // import id -> its state
+	uploads          map[string]fakeUpload  // File id -> what its PUT received
+	importReads      int                    // DataImport reads answered
+	refuseUpload     bool                   // the presigned PUT answers 403
+	refuseImport     [2]string              // an import mutation is refused with this code and message
+	refuseRead       [2]string              // a DataImport read is refused with this code and message
+	refuseReadFields []map[string]any       // when set, a refused DataImport read is a VALIDATION refusal naming these fields
+	failReport       bool                   // GET /report answers HTTP 500
+	reportLines      []map[string]any       // GET /report serves these, one JSON line each
+	statusQueue      map[string][]string    // import id -> the statuses its later DataImport reads answer
+	fileCount        int                    // files registered so far, for part-N and file-N
+
+	feedback   []map[string]any // the reports submitted, newest last
+	cliVersion string           // X-MultiPaaS-Cli-Version of the latest GraphQL request
+	autoSend   bool             // the signed-in user's feedback auto-send setting
 }
 
 type pendingCode struct{ redirectURI, challenge string }
@@ -229,6 +234,7 @@ func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 	defer f.mu.Unlock()
 	scope := r.Header.Get("X-MultiPaaS-Scope")
 	f.scopes = append(f.scopes, scope)
+	f.cliVersion = r.Header.Get("X-MultiPaaS-Cli-Version")
 	token, _ := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
 	current, known := f.chains[token]
 	switch {
@@ -375,6 +381,27 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageAppIdentity(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
+	case "SubmitFeedback":
+		f.submitFeedback(w, parts, variables)
+	case "FeedbackSetting":
+		writeData(w, map[string]any{"feedbackSetting": map[string]any{"autoSend": f.autoSend}})
+	case "SetFeedbackSetting":
+		f.mutations = append(f.mutations, variables)
+		f.autoSend, _ = variables["autoSend"].(bool)
+		writeData(w, map[string]any{"setFeedbackSetting": map[string]any{"autoSend": f.autoSend}})
+	case "MyFeedback":
+		newestFirst := slices.Clone(f.feedback)
+		slices.Reverse(newestFirst)
+		writeData(w, map[string]any{"myFeedback": pageOf(newestFirst, variables)})
+	case "MyFeedbackReport":
+		i := slices.IndexFunc(f.feedback, func(r map[string]any) bool { return r["id"] == variables["id"] })
+		if i < 0 {
+			writeData(w, map[string]any{"myFeedbackReport": nil})
+			return
+		}
+		report := maps.Clone(f.feedback[i])
+		report["history"] = []map[string]any{{"status": "received", "note": nil, "changedAt": "2026-10-11T00:00:00.000Z"}}
+		writeData(w, map[string]any{"myFeedbackReport": report})
 	default:
 		http.Error(w, "unknown operation "+operation, http.StatusBadRequest)
 	}
@@ -471,6 +498,14 @@ func graphQLRefusal(w http.ResponseWriter, code, message string) {
 	writeJSONResponse(w, http.StatusOK, map[string]any{
 		"data":   nil,
 		"errors": []map[string]any{{"message": message, "extensions": map[string]any{"code": code}}},
+	})
+}
+
+// graphQLValidation is a VALIDATION refusal naming the fields that failed, as the server's extensions carry them.
+func graphQLValidation(w http.ResponseWriter, message string, fieldErrors []map[string]any) {
+	writeJSONResponse(w, http.StatusOK, map[string]any{
+		"data":   nil,
+		"errors": []map[string]any{{"message": message, "extensions": map[string]any{"code": "VALIDATION", "fieldErrors": fieldErrors}}},
 	})
 }
 
@@ -726,4 +761,69 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		f.appIdentities = slices.Delete(f.appIdentities, i, i+1)
 		writeData(w, map[string]any{"retireAppIdentity": retired})
 	}
+}
+
+// submitFeedback files a report as the server does: details "too-long" is refused as VALIDATION and "throttle"
+// as RATE_LIMITED; anything else is stored. The summary is the trimmed one sent, else null. The application and
+// client are named only when the scope has an application and the input does not say aboutApplication is false.
+func (f *fakeMultiPaaS) submitFeedback(w http.ResponseWriter, parts []string, variables map[string]any) {
+	f.mutations = append(f.mutations, variables)
+	input, _ := variables["input"].(map[string]any)
+	details, _ := input["details"].(string)
+	switch details {
+	case "too-long":
+		graphQLValidation(w, "details is invalid", []map[string]any{{"field": "details", "rule": "maxLength", "message": "Details must be at most 10000 characters"}})
+		return
+	case "throttle":
+		graphQLRefusal(w, "RATE_LIMITED", "You've sent a lot of feedback in the last hour. Try again later.")
+		return
+	}
+	var summary any
+	if sent, _ := input["summary"].(string); strings.TrimSpace(sent) != "" {
+		summary = strings.TrimSpace(sent)
+	}
+	source := "cli"
+	if input["viaPlugin"] == true {
+		source = "plugin"
+	}
+	var application, client any
+	if input["aboutApplication"] != false && appOf(parts) != "" {
+		application = map[string]any{"id": appOf(parts), "name": f.appName(appOf(parts))}
+		client = map[string]any{"id": parts[0], "name": f.clientName(parts[0])}
+	}
+	report := map[string]any{
+		"id": fmt.Sprintf("feedback-%d", len(f.feedback)+1), "kind": input["kind"], "status": "received",
+		"summary": summary, "details": details, "source": source, "cliVersion": f.cliVersion, "apiVersion": input["apiVersion"],
+		"platformVersion": "1.0.0", "application": application, "client": client, "sentFromRemovedScope": false,
+		"createdAt": "2026-10-11T00:00:00.000Z", "updatedAt": "2026-10-11T00:00:00.000Z",
+	}
+	f.feedback = append(f.feedback, report)
+	writeData(w, map[string]any{"submitFeedback": report})
+}
+
+// clientName is the name of client id, as apps list shows it.
+func (f *fakeMultiPaaS) clientName(id string) string {
+	for _, e := range f.entitlements {
+		if e.clientID == id {
+			return e.clientName
+		}
+	}
+	return ""
+}
+
+// appName is the name of application id, as apps list shows it.
+func (f *fakeMultiPaaS) appName(id string) string {
+	for _, rows := range f.apps {
+		for _, row := range rows {
+			if row.id == id {
+				return row.name
+			}
+		}
+	}
+	for _, row := range f.scopedApps {
+		if row.id == id {
+			return row.name
+		}
+	}
+	return ""
 }

@@ -519,6 +519,11 @@ type FeedbackPage {
 	pageInfo: PageInfo!
 }
 
+type FeedbackSetting {
+	autoSend: Boolean!
+	id: ID!
+}
+
 enum FeedbackSource {
 	cli
 	plugin
@@ -850,6 +855,9 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	sendPrompt(
 		input: SendPromptInput!
 	): AiTurn!
+	setFeedbackSetting(
+		autoSend: Boolean!
+	): FeedbackSetting!
 	shareRecord(
 		input: ShareRecordInput!
 	): RecordShare!
@@ -1093,6 +1101,7 @@ type Query {
 	enumTypes(
 		page: PageInput!
 	): EnumTypePage!
+	feedbackSetting: FeedbackSetting!
 	field(
 		id: ID!
 	): Field

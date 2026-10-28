@@ -79,6 +79,36 @@ func TestAppIdentitySecretAddRevokeAndListAndRetire(t *testing.T) {
 	}
 }
 
+func TestAppIdentitySecretIDsAreNeverReusedAfterARevoke(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")
+	fake.run(t, "app-identity", "secret", "add", "app-identity-1", "--app", "app-a-000", "--json")
+	fake.run(t, "app-identity", "secret", "revoke", "secret-1", "--app", "app-a-000", "--json")
+	fake.run(t, "app-identity", "secret", "add", "app-identity-1", "--app", "app-a-000", "--json")
+
+	got := fake.run(t, "app-identity", "secret", "list", "app-identity-1", "--app", "app-a-000", "--json")
+	var listed struct{ Secrets []struct{ Id string } }
+	decode(t, got.stdout, &listed)
+	if len(listed.Secrets) != 2 || listed.Secrets[0].Id != "secret-2" || listed.Secrets[1].Id != "secret-3" {
+		t.Fatalf("secrets %s, want secret-2 and secret-3", got.stdout)
+	}
+
+	fake.run(t, "app-identity", "secret", "revoke", "secret-3", "--app", "app-a-000", "--json")
+	got = fake.run(t, "app-identity", "secret", "list", "app-identity-1", "--app", "app-a-000", "--json")
+	decode(t, got.stdout, &listed)
+	if len(listed.Secrets) != 1 || listed.Secrets[0].Id != "secret-2" {
+		t.Fatalf("after revoking secret-3 the secrets are %s, want only secret-2", got.stdout)
+	}
+
+	fake.run(t, "app-identity", "retire", "app-identity-1", "--app", "app-a-000", "--json")
+	next := fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "reporting", "--json")
+	var created struct{ AppIdentity struct{ Id string } }
+	decode(t, next.stdout, &created)
+	if created.AppIdentity.Id != "app-identity-2" {
+		t.Fatalf("an identity created after a retire got id %q, want app-identity-2", created.AppIdentity.Id)
+	}
+}
+
 func TestAppIdentityListShowsNameClientIDSecretCountAndCreated(t *testing.T) {
 	fake := projectFake(t)
 	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")

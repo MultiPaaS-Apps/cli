@@ -55,6 +55,8 @@ type fakeMultiPaaS struct {
 	records       map[string][]map[string]any // entity id -> its live records, newest first
 	oauthClients  []map[string]any            // the application's sign-in clients
 	appIdentities []map[string]any            // the application's app identities
+	identitySeq   int                         // app identities created so far; ids are never reused
+	secretSeq     int                         // app identity secrets created so far; ids are never reused
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
 	noCreateApp   bool                        // the signed-in user lacks client.applications.create
@@ -672,11 +674,8 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 	}
 	secretsOf := func(identity map[string]any) []map[string]any { return identity["secrets"].([]map[string]any) }
 	addSecret := func(i int) string {
-		count := 0
-		for _, identity := range f.appIdentities {
-			count += len(secretsOf(identity))
-		}
-		n := count + 1
+		f.secretSeq++
+		n := f.secretSeq
 		identity := maps.Clone(f.appIdentities[i])
 		identity["secrets"] = append(slices.Clone(secretsOf(identity)), map[string]any{
 			"id": fmt.Sprintf("secret-%d", n), "lastFour": fmt.Sprintf("%04d", n), "createdAt": "2026-10-27T00:00:00.000Z", "lastUsedAt": nil})
@@ -691,11 +690,13 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		writeData(w, map[string]any{"appIdentities": append([]map[string]any{}, f.appIdentities...)})
 	case "CreateAppIdentity":
 		input, _ := variables["input"].(map[string]any)
-		n := len(f.appIdentities) + 1
+		f.identitySeq++
+		n := f.identitySeq
 		f.appIdentities = append(f.appIdentities, map[string]any{"id": fmt.Sprintf("app-identity-%d", n), "name": input["name"],
 			"user": map[string]any{"id": fmt.Sprintf("service-user-%d", n)}, "createdAt": "2026-10-27T00:00:00.000Z", "secrets": []map[string]any{}})
-		secret := addSecret(n - 1)
-		writeData(w, map[string]any{"createAppIdentity": map[string]any{"appIdentity": f.appIdentities[n-1], "secret": secret}})
+		last := len(f.appIdentities) - 1
+		secret := addSecret(last)
+		writeData(w, map[string]any{"createAppIdentity": map[string]any{"appIdentity": f.appIdentities[last], "secret": secret}})
 	case "CreateAppIdentitySecret":
 		i := byID(variables["id"])
 		if i < 0 {

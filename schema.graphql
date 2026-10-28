@@ -521,6 +521,7 @@ type FeedbackPage {
 
 type FeedbackSetting {
 	autoSend: Boolean!
+	id: ID!
 }
 
 enum FeedbackSource {

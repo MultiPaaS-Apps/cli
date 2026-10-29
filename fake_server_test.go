@@ -365,7 +365,9 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		}
 		writeData(w, map[string]any{"records": pageOf(rows, variables)})
 	case "Record":
-		i := slices.IndexFunc(f.records[variables["entityId"].(string)], func(r map[string]any) bool { return r["id"] == variables["id"] })
+		i := slices.IndexFunc(f.records[variables["entityId"].(string)], func(r map[string]any) bool {
+			return r["id"] == variables["id"] && recordInScope(r, parts, false)
+		})
 		if i < 0 {
 			writeData(w, map[string]any{"record": nil})
 			return
@@ -607,7 +609,9 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 		writeData(w, map[string]any{field: created})
 		return
 	}
-	i := slices.IndexFunc(f.records[entity], func(r map[string]any) bool { return r["id"] == input["recordId"] })
+	i := slices.IndexFunc(f.records[entity], func(r map[string]any) bool {
+		return r["id"] == input["recordId"] && recordInScope(r, parts, true)
+	})
 	if i < 0 {
 		graphQLRefusal(w, "NOT_FOUND", "record not found")
 		return
@@ -627,6 +631,15 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 	record["data"] = data
 	f.records[entity][i] = record
 	writeData(w, map[string]any{field: record})
+}
+
+// recordInScope is the server's record policy: an app-wide request reaches only app-wide records, and a tenant
+// request reads its tenant's records and the app-wide ones but writes only its tenant's.
+func recordInScope(record map[string]any, parts []string, write bool) bool {
+	if len(parts) < 3 {
+		return record["appWide"] == true
+	}
+	return !write || record["appWide"] != true
 }
 
 // createApplication shares these steps with the server, in order: a client in scope (requireTenant),

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"testing"
@@ -197,6 +198,51 @@ func TestRecordsGetSaysWhenThereIsNoSuchRecord(t *testing.T) {
 	assertFailure(t, missing, exitRefused, "NOT_FOUND")
 	if !strings.Contains(missing.stdout, "record-9") {
 		t.Fatalf("printed %s", missing.stdout)
+	}
+}
+
+func TestRecordsScopeRefusesWhatTheServerRefuses(t *testing.T) {
+	tenantRecord := map[string]any{"id": "mine", "appWide": false, "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "x"}
+	appWideRecord := map[string]any{"id": "shared", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}
+	tenant := []string{"--tenant", "tenant-a"}
+	appWide := []string{"--app-wide"}
+	cases := []struct {
+		name   string
+		verb   string
+		scope  []string
+		target string
+	}{
+		{"app-wide get of a tenant record", "get", appWide, "mine"},
+		{"app-wide update of a tenant record", "update", appWide, "mine"},
+		{"app-wide retire of a tenant record", "retire", appWide, "mine"},
+		{"tenant update of an app-wide record", "update", tenant, "shared"},
+		{"tenant retire of an app-wide record", "retire", tenant, "shared"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			fake := projectFake(t)
+			fake.records["entity-1"] = []map[string]any{maps.Clone(tenantRecord), maps.Clone(appWideRecord)}
+			before := fmt.Sprint(fake.records["entity-1"])
+			args := append([]string{"records", c.verb, "--app", "app-a-000"}, c.scope...)
+			args = append(args, "--entity", "entity-1", "--id", c.target)
+			if c.verb == "update" {
+				args = append(args, "--data", `{"field-1":"changed"}`)
+			}
+			got := fake.run(t, append(args, "--json")...)
+			assertFailure(t, got, exitRefused, "NOT_FOUND")
+			if after := fmt.Sprint(fake.records["entity-1"]); after != before {
+				t.Fatalf("records changed from %s to %s", before, after)
+			}
+		})
+	}
+}
+
+func TestRecordsScopeLetsATenantReadAnAppWideRecord(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "shared", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}}
+	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "shared", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"record":{"id":"shared","appWide":true,"data":{"field-1":"b"},"createdAt":"x","updatedAt":"x"}}` {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
 }
 

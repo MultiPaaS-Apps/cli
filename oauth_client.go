@@ -102,7 +102,7 @@ func oauthClientUpdate(command commandFunc) *cobra.Command {
 	})
 	appFlag(cmd, &appID)
 	cmd.Flags().StringVar(&id, "id", "", "the client's id (from oauth-client list; default: multipaas.json's oauthClientId for the same application)")
-	defaultFrom(cmd, &id, "id", func(config projectConfig) string {
+	defaultFrom(cmd, &id, "id", nil, func(config projectConfig) string {
 		if config.ApplicationID != appID {
 			return ""
 		}

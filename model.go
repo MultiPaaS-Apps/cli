@@ -491,5 +491,5 @@ func group(use, short string, children ...*cobra.Command) *cobra.Command {
 // appFlag is --app, which defaults to multipaas.json's applicationId.
 func appFlag(cmd *cobra.Command, appID *string) {
 	cmd.Flags().StringVar(appID, "app", "", "the application's id (from apps list; default: multipaas.json's applicationId)")
-	defaultFrom(cmd, appID, "app", func(config projectConfig) string { return config.ApplicationID })
+	defaultFrom(cmd, appID, "app", nil, func(config projectConfig) string { return config.ApplicationID })
 }

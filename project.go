@@ -79,7 +79,7 @@ func initProject(command commandFunc) *cobra.Command {
 		}, err
 	})
 	appFlag(cmd, &appID)
-	tenantFlag(cmd, &appID, &tenantID)
+	tenantFlag(cmd, &appID, &tenantID, nil)
 	cmd.Flags().StringVar(&wanted, "api-version", "", "the API version to pin (default: the newest)")
 	return cmd
 }
@@ -284,9 +284,10 @@ func (s *session) endpoints(appID string) endpoints {
 }
 
 // tenantFlag is --tenant, which defaults to multipaas.json's testAppTenantId when that file is for appID.
-func tenantFlag(cmd *cobra.Command, appID, tenantID *string) {
+// A non-nil skip that is true leaves --tenant unset without a default or a refusal.
+func tenantFlag(cmd *cobra.Command, appID, tenantID *string, skip *bool) {
 	cmd.Flags().StringVar(tenantID, "tenant", "", "the app-tenant's id (from tenants list; default: multipaas.json's testAppTenantId for the same application)")
-	defaultFrom(cmd, tenantID, "tenant", func(config projectConfig) string {
+	defaultFrom(cmd, tenantID, "tenant", skip, func(config projectConfig) string {
 		if config.ApplicationID != *appID {
 			return ""
 		}
@@ -295,8 +296,8 @@ func tenantFlag(cmd *cobra.Command, appID, tenantID *string) {
 }
 
 // defaultFrom fills an unset flag from multipaas.json before the command runs, and refuses when
-// neither gives it a value.
-func defaultFrom(cmd *cobra.Command, value *string, flag string, pick func(projectConfig) string) {
+// neither gives it a value. A non-nil skip that is true does neither.
+func defaultFrom(cmd *cobra.Command, value *string, flag string, skip *bool, pick func(projectConfig) string) {
 	previous := cmd.PreRunE
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		if previous != nil {
@@ -304,7 +305,7 @@ func defaultFrom(cmd *cobra.Command, value *string, flag string, pick func(proje
 				return err
 			}
 		}
-		if *value != "" {
+		if *value != "" || (skip != nil && *skip) {
 			return nil
 		}
 		config, err := readProject()

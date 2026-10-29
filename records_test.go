@@ -204,19 +204,20 @@ func TestRecordsGetSaysWhenThereIsNoSuchRecord(t *testing.T) {
 func TestRecordsScopeRefusesWhatTheServerRefuses(t *testing.T) {
 	tenantRecord := map[string]any{"id": "mine", "appWide": false, "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "x"}
 	appWideRecord := map[string]any{"id": "shared", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}
-	tenant := []string{"--tenant", "tenant-a"}
-	appWide := []string{"--app-wide"}
+	tenant, tenantHeader := []string{"--tenant", "tenant-a"}, "client-a/app-a-000/tenant-a"
+	appWide, appWideHeader := []string{"--app-wide"}, "client-a/app-a-000"
 	cases := []struct {
 		name   string
 		verb   string
 		scope  []string
+		header string
 		target string
 	}{
-		{"app-wide get of a tenant record", "get", appWide, "mine"},
-		{"app-wide update of a tenant record", "update", appWide, "mine"},
-		{"app-wide retire of a tenant record", "retire", appWide, "mine"},
-		{"tenant update of an app-wide record", "update", tenant, "shared"},
-		{"tenant retire of an app-wide record", "retire", tenant, "shared"},
+		{"app-wide get of a tenant record", "get", appWide, appWideHeader, "mine"},
+		{"app-wide update of a tenant record", "update", appWide, appWideHeader, "mine"},
+		{"app-wide retire of a tenant record", "retire", appWide, appWideHeader, "mine"},
+		{"tenant update of an app-wide record", "update", tenant, tenantHeader, "shared"},
+		{"tenant retire of an app-wide record", "retire", tenant, tenantHeader, "shared"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -230,6 +231,9 @@ func TestRecordsScopeRefusesWhatTheServerRefuses(t *testing.T) {
 			}
 			got := fake.run(t, append(args, "--json")...)
 			assertFailure(t, got, exitRefused, "NOT_FOUND")
+			if last := fake.scopes[len(fake.scopes)-1]; last != c.header {
+				t.Fatalf("scope %q, want %q", last, c.header)
+			}
 			if after := fmt.Sprint(fake.records["entity-1"]); after != before {
 				t.Fatalf("records changed from %s to %s", before, after)
 			}
@@ -243,6 +247,9 @@ func TestRecordsScopeLetsATenantReadAnAppWideRecord(t *testing.T) {
 	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "shared", "--json")
 	if got.exit != exitOK || compact(got.stdout) != `{"record":{"id":"shared","appWide":true,"data":{"field-1":"b"},"createdAt":"x","updatedAt":"x"}}` {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
+		t.Fatalf("scope %q", last)
 	}
 }
 

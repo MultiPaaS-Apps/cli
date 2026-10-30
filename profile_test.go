@@ -82,7 +82,7 @@ func TestAProfileNameThatIsNotAllowedIsRefused(t *testing.T) {
 	for _, name := range []string{"Acme", "-acme", "ac#me", "a/b", strings.Repeat("a", 33)} {
 		got := fake.run(t, "login", "--profile", name, "--json")
 		assertFailure(t, got, exitRefused, "INVALID_PROFILE")
-		if !strings.Contains(got.stdout, `must be lowercase letters, digits`) {
+		if !strings.Contains(got.stdout, `must start with a lowercase letter or digit, then lowercase letters, digits, `) {
 			t.Fatalf("--profile %q: %s", name, got.stdout)
 		}
 	}

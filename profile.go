@@ -17,7 +17,7 @@ func chooseProfile(flag, fromEnv string) (string, error) {
 		profile = fromEnv
 	}
 	if profile != "" && !profileName.MatchString(profile) {
-		return "", &cliError{exit: exitRefused, Code: "INVALID_PROFILE", Message: fmt.Sprintf(`profile %q must be lowercase letters, digits, "-" or "_", up to 32 characters`, profile)}
+		return "", &cliError{exit: exitRefused, Code: "INVALID_PROFILE", Message: fmt.Sprintf(`profile %q must start with a lowercase letter or digit, then lowercase letters, digits, "-" or "_", up to 32 characters`, profile)}
 	}
 	return profile, nil
 }

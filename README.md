@@ -76,7 +76,7 @@ Your sign-in is kept in `~/.config/multipaas/credentials.json` (mode 0600), one 
 
 ### Profiles
 
-To be signed in as more than one developer on the same MultiPaaS, say one per client you work for, give each sign-in a profile name: lowercase letters, digits, `-` or `_`, up to 32 characters. Every command uses the profile `--profile` names, else the one `MULTIPAAS_PROFILE` names, else your unnamed sign-in, which is the one you had before profiles. Any other name is refused with `INVALID_PROFILE`.
+To be signed in as more than one developer on the same MultiPaaS, say one per client you work for, give each sign-in a profile name: it starts with a lowercase letter or digit, then lowercase letters, digits, `-` or `_`, up to 32 characters in all. Every command uses the profile `--profile` names, else the one `MULTIPAAS_PROFILE` names, else your unnamed sign-in, which is the one you had before profiles. Any other name is refused with `INVALID_PROFILE`.
 
 ```bash
 export MULTIPAAS_PROFILE=acme   # in this shell, or in a gitignored .env.local you source
@@ -85,7 +85,7 @@ multipaas whoami                # Signed in as you@acme.example (profile acme)
 multipaas apps list --profile globex   # one command as another profile
 ```
 
-Each shell, and any agent started from it, uses its own profile, so two shells can work as two clients' developers at once. `login`, `whoami` and `logout` act on the chosen profile only and name it, with `"profile"` in their `--json` output (`null` for the unnamed sign-in). A profile you haven't signed in to exits 2 with the `login --profile` command to run. When an application, tenant or record can't be found, the error says which profile the command ran as, or, if none was chosen while others exist, that none was.
+Each shell, and any agent started from it, uses its own profile, so two shells can work as two clients' developers at once. `login`, `whoami` and `logout` act on the chosen profile only and name it, with `"profile"` in their `--json` output (`null` for the unnamed sign-in). A command that needs a sign-in, such as `whoami`, exits 2 when you haven't signed in to the profile, with the `login --profile` command to run. When an application, tenant or record can't be found, the error says which profile the command ran as, or, if none was chosen while others exist, that none was.
 
 ## Import
 

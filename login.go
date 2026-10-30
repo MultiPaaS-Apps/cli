@@ -50,7 +50,7 @@ func (s *session) login(ctx context.Context) error {
 	fmt.Fprintf(s.env.stderr, "Sign in to MultiPaaS (%s) in your browser. If it did not open, visit:\n%s\n", s.origins.api, authorize)
 	_ = s.env.openBrowser(authorize)
 
-	code, err := awaitCallback(ctx, listener, state)
+	code, err := awaitCallback(ctx, listener, state, s.loginCommand())
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (s *session) refresh(ctx context.Context, refreshToken string) (credential,
 }
 
 // awaitCallback serves the loopback redirect until one carries this sign-in's state, and returns its code.
-func awaitCallback(ctx context.Context, listener net.Listener, state string) (string, error) {
+func awaitCallback(ctx context.Context, listener net.Listener, state, loginCommand string) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, signInTimeout)
 	defer cancel()
 	type callback struct {
@@ -132,7 +132,7 @@ func awaitCallback(ctx context.Context, listener net.Listener, state string) (st
 	case got := <-callbacks:
 		return got.code, got.err
 	case <-ctx.Done():
-		return "", &cliError{exit: exitSignedOut, Code: "SIGN_IN_TIMEOUT", Message: "sign-in timed out; run multipaas login again"}
+		return "", &cliError{exit: exitSignedOut, Code: "SIGN_IN_TIMEOUT", Message: "sign-in timed out; run " + loginCommand + " again"}
 	}
 }
 

@@ -31,11 +31,19 @@ func (s *session) credentialKey() string {
 	return s.origins.api + "#" + s.profile
 }
 
+// loginCommand is the command that signs in as the profile the session runs as.
+func (s *session) loginCommand() string {
+	if s.profile == "" {
+		return "multipaas login"
+	}
+	return "multipaas login --profile " + s.profile
+}
+
 // notSignedIn tells the developer how to sign in as the profile the command ran as.
 func (s *session) notSignedIn() error {
-	message := "not signed in; run: multipaas login"
+	message := "not signed in; run: " + s.loginCommand()
 	if s.profile != "" {
-		message = fmt.Sprintf("not signed in with profile %q; run: multipaas login --profile %s", s.profile, s.profile)
+		message = fmt.Sprintf("not signed in with profile %q; run: %s", s.profile, s.loginCommand())
 	}
 	return &cliError{exit: exitSignedOut, Code: "NOT_SIGNED_IN", Message: message}
 }

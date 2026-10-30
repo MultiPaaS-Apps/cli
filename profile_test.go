@@ -154,6 +154,8 @@ func TestTwoProfilesRefreshAtTheSameMomentWithoutDisturbingEachOther(t *testing.
 	acme := readCredentials(t)[fake.server.URL+"#acme"]
 	acme.ExpiresAt = time.Now().Add(-time.Second)
 	writeCredentialsForTest(t, fake.server.URL+"#acme", acme)
+	unnamedChain := fake.chains[readCredentials(t)[fake.server.URL].RefreshToken]
+	acmeChain := fake.chains[acme.RefreshToken]
 	fake.refreshes = 0
 	results := make([]result, 4)
 	var wg sync.WaitGroup
@@ -173,6 +175,10 @@ func TestTwoProfilesRefreshAtTheSameMomentWithoutDisturbingEachOther(t *testing.
 	creds := readCredentials(t)
 	if fake.refreshes != 2 || len(creds) != 2 || time.Until(creds[fake.server.URL].ExpiresAt) < time.Minute || time.Until(creds[fake.server.URL+"#acme"].ExpiresAt) < time.Minute {
 		t.Fatalf("%d refresh grants for two expired sign-ins; credentials %+v", fake.refreshes, creds)
+	}
+	if unnamedChain == nil || acmeChain == nil || unnamedChain == acmeChain ||
+		fake.chains[creds[fake.server.URL].RefreshToken] != unnamedChain || fake.chains[creds[fake.server.URL+"#acme"].RefreshToken] != acmeChain {
+		t.Fatalf("a refreshed pair was saved on the other sign-in's token chain; credentials %+v", creds)
 	}
 }
 
@@ -237,5 +243,22 @@ func TestOnlyNotFoundCarriesTheProfileHint(t *testing.T) {
 	assertFailure(t, got, exitSignedOut, "NOT_SIGNED_IN")
 	if strings.Contains(got.stdout, "(signed in with profile") {
 		t.Fatalf("a NOT_SIGNED_IN carried the NOT_FOUND hint: %s", got.stdout)
+	}
+}
+
+func TestSignInTimeoutNamesTheLoginCommandForTheProfile(t *testing.T) {
+	defer func(was time.Duration) { signInTimeout = was }(signInTimeout)
+	signInTimeout = 100 * time.Millisecond
+	idle := func(string) error { return nil }
+	fake := signedOutFake(t)
+	named := fake.runWith(t, idle, "login", "--profile", "acme", "--json")
+	assertFailure(t, named, exitSignedOut, "SIGN_IN_TIMEOUT")
+	if !strings.Contains(named.stdout, `sign-in timed out; run multipaas login --profile acme again`) {
+		t.Fatalf("a timed-out login to profile acme: %s", named.stdout)
+	}
+	unnamed := fake.runWith(t, idle, "login", "--json")
+	assertFailure(t, unnamed, exitSignedOut, "SIGN_IN_TIMEOUT")
+	if !strings.Contains(unnamed.stdout, `sign-in timed out; run multipaas login again`) {
+		t.Fatalf("a timed-out login with no profile: %s", unnamed.stdout)
 	}
 }

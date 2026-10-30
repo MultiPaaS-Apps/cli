@@ -85,7 +85,7 @@ multipaas whoami                # Signed in as you@acme.example (profile acme)
 multipaas apps list --profile globex   # one command as another profile
 ```
 
-Each shell, and any agent started from it, uses its own profile, so two shells can work as two clients' developers at once. `login`, `whoami` and `logout` act on the chosen profile only and name it, with `"profile"` in their `--json` output (`null` for the unnamed sign-in). A command that needs a sign-in, such as `whoami`, exits 2 when you haven't signed in to the profile, with the `login --profile` command to run. When an application, tenant or record can't be found, the error says which profile the command ran as, or, if none was chosen while others exist, that none was.
+Each shell, and any agent started from it, uses its own profile, so two shells can work as two clients' developers at once. `login`, `whoami` and `logout` act on the chosen profile only and name it, with `"profile"` in their `--json` output (`null` for the unnamed sign-in). A command that needs a sign-in, such as `whoami`, exits 2 when you haven't signed in to the profile, and the error names the login command to run: `multipaas login`, or `multipaas login --profile NAME` for a named profile. When an application, tenant or record can't be found, the error says which profile the command ran as, or, if none was chosen while others exist, that none was.
 
 ## Import
 

@@ -18,6 +18,7 @@ While this repository is private, installing needs your GitHub access. See
 ```bash
 multipaas login                        # opens your browser
 multipaas whoami
+multipaas login --profile acme         # a second sign-in, kept beside the first
 multipaas apps list
 multipaas apps create --name "Orders"                    # --client <client id> when you can reach more than one
 multipaas tenants list --app <app id>
@@ -58,7 +59,7 @@ In a directory with `multipaas.json`, `--app` and `--tenant` default to its `app
 
 `feedback send|list|show|settings` report a bug or feature request to MultiPaaS and follow the status of your reports; see [Feedback](#feedback).
 
-Every command takes `--json`, which prints exactly one JSON document on stdout.
+Every command takes `--json`, which prints exactly one JSON document on stdout, and `--profile` (see [Profiles](#profiles)).
 
 The CLI talks to `https://api.multipaas.com`. To use another MultiPaaS, set `MULTIPAAS_API_URL` to its
 OAuth server's origin: `https://api.<host>`, with no port, path, query or fragment. Anything else is refused
@@ -71,7 +72,20 @@ with `INVALID_API_URL`. The CLI finds webapp-api by swapping that host's leading
 | 2 | Not signed in |
 | 3 | This CLI is too old for MultiPaaS: upgrade it |
 
-Your sign-in is kept in `~/.config/multipaas/credentials.json` (mode 0600), one entry per API URL, so a token is only ever sent to the API URL it was issued for.
+Your sign-in is kept in `~/.config/multipaas/credentials.json` (mode 0600), one entry per API URL and profile, so a token is only ever sent to the API URL it was issued for.
+
+### Profiles
+
+To be signed in as more than one developer on the same MultiPaaS, say one per client you work for, give each sign-in a profile name: it starts with a lowercase letter or digit, then lowercase letters, digits, `-` or `_`, up to 32 characters in all. Every command uses the profile `--profile` names, else the one `MULTIPAAS_PROFILE` names, else your unnamed sign-in, which is the one you had before profiles. Any other name is refused with `INVALID_PROFILE`.
+
+```bash
+export MULTIPAAS_PROFILE=acme   # in this shell, or in a gitignored .env.local you source
+multipaas login                 # signs in as acme's developer, beside your other sign-ins
+multipaas whoami                # Signed in as you@acme.example (profile acme)
+multipaas apps list --profile globex   # one command as another profile
+```
+
+Each shell, and any agent started from it, uses its own profile, so two shells can work as two clients' developers at once. `login`, `whoami` and `logout` act on the chosen profile only and name it, with `"profile"` in their `--json` output (`null` for the unnamed sign-in). A command that needs a sign-in, such as `whoami`, exits 2 when you haven't signed in to the profile, and the error names the login command to run: `multipaas login`, or `multipaas login --profile NAME` for a named profile. When an application, tenant or record can't be found, the error says which profile the command ran as, or, if none was chosen while others exist, that none was.
 
 ## Import
 

@@ -13,6 +13,7 @@ func main() {
 		stdin:       os.Stdin,
 		version:     version,
 		apiURL:      os.Getenv("MULTIPAAS_API_URL"),
+		profile:     os.Getenv("MULTIPAAS_PROFILE"),
 		origins:     originsFor,
 		openBrowser: openBrowser,
 	}))

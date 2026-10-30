@@ -17,7 +17,8 @@ const maxPageSize = 100
 
 // signedIn is who whoami and login report.
 type signedIn struct {
-	User MeMeUser `json:"user"`
+	User    MeMeUser `json:"user"`
+	Profile *string  `json:"profile"`
 }
 
 // app is an application the developer can reach, and the client that owns it.
@@ -42,7 +43,7 @@ func (s *session) whoami(ctx context.Context) (signedIn, error) {
 	if err != nil {
 		return signedIn{}, err
 	}
-	return signedIn{User: me.Me}, nil
+	return signedIn{User: me.Me, Profile: s.profileJSON()}, nil
 }
 
 // apps lists every application the developer's entitlements reach, each once.

@@ -52,7 +52,8 @@ type fakeMultiPaaS struct {
 	noModelEdit   bool                        // the signed-in user lacks model.edit
 	refuseChange  [2]string                   // a model mutation is refused with this code and message
 	failVersion   bool                        // LatestModelRevision answers HTTP 500
-	records       map[string][]map[string]any // entity id -> its live records, newest first
+	records       map[string][]map[string]any // entity id -> its live records, newest first; appWide marks the application's own
+	recordScopes  []string                    // the scope variable of every Records read ("" when absent)
 	oauthClients  []map[string]any            // the application's sign-in clients
 	appIdentities []map[string]any            // the application's app identities
 	identitySeq   int                         // app identities created so far; ids are never reused
@@ -351,11 +352,12 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			writeData(w, map[string]any{"apiSchemaDiff": map[string]any{"breaking": change("FIELD_REMOVED"), "dangerous": []map[string]any{}, "added": change("FIELD_ADDED")}})
 		}
 	case "Records":
-		if len(parts) < 3 {
-			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized") // listRecords: no app-tenant selected
-			return
-		}
-		rows := f.records[variables["entityId"].(string)]
+		scope, _ := variables["scope"].(string)
+		f.recordScopes = append(f.recordScopes, scope)
+		rows := slices.DeleteFunc(slices.Clone(f.records[variables["entityId"].(string)]), func(r map[string]any) bool {
+			appWide := r["appWide"] == true
+			return (scope == "APP_WIDE" && !appWide) || (scope == "TENANT" && appWide)
+		})
 		if reference, ok := variables["reference"].(map[string]any); ok {
 			rows = slices.DeleteFunc(slices.Clone(rows), func(r map[string]any) bool {
 				return r["data"].(map[string]any)[reference["fieldId"].(string)] != reference["recordId"]
@@ -363,11 +365,9 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		}
 		writeData(w, map[string]any{"records": pageOf(rows, variables)})
 	case "Record":
-		if len(parts) < 3 {
-			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized") // findRecord: no app-tenant selected
-			return
-		}
-		i := slices.IndexFunc(f.records[variables["entityId"].(string)], func(r map[string]any) bool { return r["id"] == variables["id"] })
+		i := slices.IndexFunc(f.records[variables["entityId"].(string)], func(r map[string]any) bool {
+			return r["id"] == variables["id"] && recordInScope(r, parts, false)
+		})
 		if i < 0 {
 			writeData(w, map[string]any{"record": nil})
 			return
@@ -594,26 +594,24 @@ func (f *fakeMultiPaaS) revisionRows(app string) []map[string]any {
 	return rows
 }
 
-// writeRecord shares these steps with the server, in order: an app-tenant in scope, then the write. An
+// writeRecord shares these steps with the server: the write lands in the app-tenant in scope, or is app-wide when none is. An
 // update merges data into the record after dropping clearFieldIds, as the server's does; it does not
 // check the data against the entity's fields.
 func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
 	f.mutations = append(f.mutations, variables)
-	if len(parts) < 3 {
-		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
-		return
-	}
 	input := variables["input"].(map[string]any)
 	entity := input["entityId"].(string)
 	field := strings.ToLower(operation[:1]) + operation[1:]
 	if operation == "CreateRecord" {
 		stamp := "2026-10-11T00:00:00.000Z"
-		created := map[string]any{"id": fmt.Sprintf("record-%d", len(f.records[entity])+1), "data": input["data"], "createdAt": stamp, "updatedAt": stamp}
+		created := map[string]any{"id": fmt.Sprintf("record-%d", len(f.records[entity])+1), "appWide": len(parts) < 3, "data": input["data"], "createdAt": stamp, "updatedAt": stamp}
 		f.records[entity] = append([]map[string]any{created}, f.records[entity]...)
 		writeData(w, map[string]any{field: created})
 		return
 	}
-	i := slices.IndexFunc(f.records[entity], func(r map[string]any) bool { return r["id"] == input["recordId"] })
+	i := slices.IndexFunc(f.records[entity], func(r map[string]any) bool {
+		return r["id"] == input["recordId"] && recordInScope(r, parts, true)
+	})
 	if i < 0 {
 		graphQLRefusal(w, "NOT_FOUND", "record not found")
 		return
@@ -633,6 +631,15 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 	record["data"] = data
 	f.records[entity][i] = record
 	writeData(w, map[string]any{field: record})
+}
+
+// recordInScope is the server's record policy: an app-wide request reaches only app-wide records, and a tenant
+// request reads its tenant's records and the app-wide ones but writes only its tenant's.
+func recordInScope(record map[string]any, parts []string, write bool) bool {
+	if len(parts) < 3 {
+		return record["appWide"] == true
+	}
+	return !write || record["appWide"] != true
 }
 
 // createApplication shares these steps with the server, in order: a client in scope (requireTenant),

@@ -10,13 +10,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// recordTarget is the app-tenant and entity a records command acts on.
-type recordTarget struct{ appID, tenantID, entityID string }
+// recordTarget is the app-tenant, or with appWide the application itself, and the entity a records
+// command acts on.
+type recordTarget struct {
+	appID, tenantID, entityID string
+	appWide                   bool
+}
 
-// recordCommands read and write an entity's records in one app-tenant, as the developer: test data for
-// an app built on the application. A record's data is a JSON object keyed by field id.
+// recordCommands read and write an entity's records in one app-tenant, or the application's app-wide
+// records, as the developer: test data for an app built on the application. A record's data is a JSON
+// object keyed by field id.
 func recordCommands(command commandFunc) *cobra.Command {
-	return group("records", "Read and write an entity's records in an app-tenant",
+	return group("records", "Read and write an entity's records in an app-tenant, or the application's app-wide records",
 		recordsList(command), recordGet(command), recordCreate(command), recordUpdate(command), recordRetire(command))
 }
 
@@ -31,14 +36,18 @@ func recordsList(command commandFunc) *cobra.Command {
 			}
 			reference = &RecordReferenceInput{FieldId: parentField, RecordId: parentRecord}
 		}
-		scope, err := s.appScope(ctx, target.appID, target.tenantID)
+		scope, err := s.recordScope(ctx, target)
 		if err != nil {
 			return nil, nil, err
+		}
+		recordScope := RecordScopeTenant
+		if target.appWide {
+			recordScope = RecordScopeAppWide
 		}
 		list, err := pages(func(page PageInput) ([]RecordParts, bool, error) {
 			var listed *RecordsResponse
 			err := s.call(ctx, scope, func(client graphql.Client) (err error) {
-				listed, err = Records(ctx, client, target.entityID, page, reference)
+				listed, err = Records(ctx, client, target.entityID, page, reference, recordScope)
 				return err
 			})
 			if err != nil {
@@ -64,7 +73,7 @@ func recordGet(command commandFunc) *cobra.Command {
 	var target recordTarget
 	var id string
 	cmd := command("get", "Show one record", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		scope, err := s.appScope(ctx, target.appID, target.tenantID)
+		scope, err := s.recordScope(ctx, target)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -142,13 +151,40 @@ func recordRetire(command commandFunc) *cobra.Command {
 	return cmd
 }
 
-// writeRecord runs one record mutation with data in the target's app-tenant, and reports the record.
+// recordScope is the scope header the target acts in: the app-tenant's, or with appWide the application's,
+// which only an entitlement that reaches the application itself, not one confined to an app-tenant, can give.
+func (s *session) recordScope(ctx context.Context, target recordTarget) (string, error) {
+	if !target.appWide {
+		return s.appScope(ctx, target.appID, target.tenantID)
+	}
+	entitlements, err := s.entitlements(ctx)
+	if err != nil {
+		return "", err
+	}
+	for _, entitlement := range entitlements {
+		if entitlement.AppTenantId != "" {
+			continue
+		}
+		apps, err := s.appsIn(ctx, entitlement)
+		if err != nil {
+			return "", err
+		}
+		for _, candidate := range apps {
+			if candidate.ID == target.appID {
+				return entitlement.Client.Id + "/" + target.appID, nil
+			}
+		}
+	}
+	return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no application-wide access to application " + target.appID + " that you can reach"}
+}
+
+// writeRecord runs one record mutation with data in the target's scope, and reports the record.
 // Data that is not JSON is refused before anything is sent; the server refuses JSON that is not an object.
 func (s *session) writeRecord(ctx context.Context, target recordTarget, data string, write func(graphql.Client, json.RawMessage) (RecordParts, error)) (any, func(io.Writer), error) {
 	if !json.Valid([]byte(data)) {
 		return nil, nil, fmt.Errorf("--data is not JSON: %s", data)
 	}
-	scope, err := s.appScope(ctx, target.appID, target.tenantID)
+	scope, err := s.recordScope(ctx, target)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -163,7 +199,9 @@ func (s *session) writeRecord(ctx context.Context, target recordTarget, data str
 
 func recordFlags(cmd *cobra.Command, target *recordTarget) {
 	appFlag(cmd, &target.appID)
-	tenantFlag(cmd, &target.appID, &target.tenantID)
+	tenantFlag(cmd, &target.appID, &target.tenantID, &target.appWide)
+	cmd.Flags().BoolVar(&target.appWide, "app-wide", false, "act on the application's app-wide records instead of an app-tenant's")
+	cmd.MarkFlagsMutuallyExclusive("tenant", "app-wide")
 	cmd.Flags().StringVar(&target.entityID, "entity", "", "the entity's id (from model show)")
 	_ = cmd.MarkFlagRequired("entity")
 }

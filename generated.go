@@ -1588,6 +1588,9 @@ type CreateRecordCreateRecord struct {
 // GetId returns CreateRecordCreateRecord.Id, and is useful for accessing the field via an interface.
 func (v *CreateRecordCreateRecord) GetId() string { return v.RecordParts.Id }
 
+// GetAppWide returns CreateRecordCreateRecord.AppWide, and is useful for accessing the field via an interface.
+func (v *CreateRecordCreateRecord) GetAppWide() bool { return v.RecordParts.AppWide }
+
 // GetData returns CreateRecordCreateRecord.Data, and is useful for accessing the field via an interface.
 func (v *CreateRecordCreateRecord) GetData() json.RawMessage { return v.RecordParts.Data }
 
@@ -1625,6 +1628,8 @@ func (v *CreateRecordCreateRecord) UnmarshalJSON(b []byte) error {
 type __premarshalCreateRecordCreateRecord struct {
 	Id string `json:"id"`
 
+	AppWide bool `json:"appWide"`
+
 	Data json.RawMessage `json:"data"`
 
 	CreatedAt string `json:"createdAt"`
@@ -1644,6 +1649,7 @@ func (v *CreateRecordCreateRecord) __premarshalJSON() (*__premarshalCreateRecord
 	var retval __premarshalCreateRecordCreateRecord
 
 	retval.Id = v.RecordParts.Id
+	retval.AppWide = v.RecordParts.AppWide
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
@@ -3455,7 +3461,9 @@ func (v *PageInput) GetPageSize() int { return v.PageSize }
 
 // RecordParts includes the GraphQL fields of Record requested by the fragment RecordParts.
 type RecordParts struct {
-	Id        string          `json:"id"`
+	Id string `json:"id"`
+	// Whether the record belongs to the application rather than to one app-tenant.
+	AppWide   bool            `json:"appWide"`
 	Data      json.RawMessage `json:"data"`
 	CreatedAt string          `json:"createdAt"`
 	UpdatedAt string          `json:"updatedAt"`
@@ -3463,6 +3471,9 @@ type RecordParts struct {
 
 // GetId returns RecordParts.Id, and is useful for accessing the field via an interface.
 func (v *RecordParts) GetId() string { return v.Id }
+
+// GetAppWide returns RecordParts.AppWide, and is useful for accessing the field via an interface.
+func (v *RecordParts) GetAppWide() bool { return v.AppWide }
 
 // GetData returns RecordParts.Data, and is useful for accessing the field via an interface.
 func (v *RecordParts) GetData() json.RawMessage { return v.Data }
@@ -3480,6 +3491,9 @@ type RecordRecord struct {
 
 // GetId returns RecordRecord.Id, and is useful for accessing the field via an interface.
 func (v *RecordRecord) GetId() string { return v.RecordParts.Id }
+
+// GetAppWide returns RecordRecord.AppWide, and is useful for accessing the field via an interface.
+func (v *RecordRecord) GetAppWide() bool { return v.RecordParts.AppWide }
 
 // GetData returns RecordRecord.Data, and is useful for accessing the field via an interface.
 func (v *RecordRecord) GetData() json.RawMessage { return v.RecordParts.Data }
@@ -3518,6 +3532,8 @@ func (v *RecordRecord) UnmarshalJSON(b []byte) error {
 type __premarshalRecordRecord struct {
 	Id string `json:"id"`
 
+	AppWide bool `json:"appWide"`
+
 	Data json.RawMessage `json:"data"`
 
 	CreatedAt string `json:"createdAt"`
@@ -3537,6 +3553,7 @@ func (v *RecordRecord) __premarshalJSON() (*__premarshalRecordRecord, error) {
 	var retval __premarshalRecordRecord
 
 	retval.Id = v.RecordParts.Id
+	retval.AppWide = v.RecordParts.AppWide
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
@@ -3562,6 +3579,21 @@ type RecordResponse struct {
 // GetRecord returns RecordResponse.Record, and is useful for accessing the field via an interface.
 func (v *RecordResponse) GetRecord() *RecordRecord { return v.Record }
 
+// Which records a list returns: both kinds, only the app-tenant's own, or only the application's app-wide ones.
+type RecordScope string
+
+const (
+	RecordScopeAll     RecordScope = "ALL"
+	RecordScopeAppWide RecordScope = "APP_WIDE"
+	RecordScopeTenant  RecordScope = "TENANT"
+)
+
+var AllRecordScope = []RecordScope{
+	RecordScopeAll,
+	RecordScopeAppWide,
+	RecordScopeTenant,
+}
+
 // RecordsRecordsRecordPage includes the requested fields of the GraphQL type RecordPage.
 type RecordsRecordsRecordPage struct {
 	Items    []RecordsRecordsRecordPageItemsRecord `json:"items"`
@@ -3581,6 +3613,9 @@ type RecordsRecordsRecordPageItemsRecord struct {
 
 // GetId returns RecordsRecordsRecordPageItemsRecord.Id, and is useful for accessing the field via an interface.
 func (v *RecordsRecordsRecordPageItemsRecord) GetId() string { return v.RecordParts.Id }
+
+// GetAppWide returns RecordsRecordsRecordPageItemsRecord.AppWide, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPageItemsRecord) GetAppWide() bool { return v.RecordParts.AppWide }
 
 // GetData returns RecordsRecordsRecordPageItemsRecord.Data, and is useful for accessing the field via an interface.
 func (v *RecordsRecordsRecordPageItemsRecord) GetData() json.RawMessage { return v.RecordParts.Data }
@@ -3619,6 +3654,8 @@ func (v *RecordsRecordsRecordPageItemsRecord) UnmarshalJSON(b []byte) error {
 type __premarshalRecordsRecordsRecordPageItemsRecord struct {
 	Id string `json:"id"`
 
+	AppWide bool `json:"appWide"`
+
 	Data json.RawMessage `json:"data"`
 
 	CreatedAt string `json:"createdAt"`
@@ -3638,6 +3675,7 @@ func (v *RecordsRecordsRecordPageItemsRecord) __premarshalJSON() (*__premarshalR
 	var retval __premarshalRecordsRecordsRecordPageItemsRecord
 
 	retval.Id = v.RecordParts.Id
+	retval.AppWide = v.RecordParts.AppWide
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
@@ -4184,6 +4222,9 @@ type RetireRecordRetireRecord struct {
 // GetId returns RetireRecordRetireRecord.Id, and is useful for accessing the field via an interface.
 func (v *RetireRecordRetireRecord) GetId() string { return v.RecordParts.Id }
 
+// GetAppWide returns RetireRecordRetireRecord.AppWide, and is useful for accessing the field via an interface.
+func (v *RetireRecordRetireRecord) GetAppWide() bool { return v.RecordParts.AppWide }
+
 // GetData returns RetireRecordRetireRecord.Data, and is useful for accessing the field via an interface.
 func (v *RetireRecordRetireRecord) GetData() json.RawMessage { return v.RecordParts.Data }
 
@@ -4221,6 +4262,8 @@ func (v *RetireRecordRetireRecord) UnmarshalJSON(b []byte) error {
 type __premarshalRetireRecordRetireRecord struct {
 	Id string `json:"id"`
 
+	AppWide bool `json:"appWide"`
+
 	Data json.RawMessage `json:"data"`
 
 	CreatedAt string `json:"createdAt"`
@@ -4240,6 +4283,7 @@ func (v *RetireRecordRetireRecord) __premarshalJSON() (*__premarshalRetireRecord
 	var retval __premarshalRetireRecordRetireRecord
 
 	retval.Id = v.RecordParts.Id
+	retval.AppWide = v.RecordParts.AppWide
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
@@ -5113,6 +5157,9 @@ type UpdateRecordUpdateRecord struct {
 // GetId returns UpdateRecordUpdateRecord.Id, and is useful for accessing the field via an interface.
 func (v *UpdateRecordUpdateRecord) GetId() string { return v.RecordParts.Id }
 
+// GetAppWide returns UpdateRecordUpdateRecord.AppWide, and is useful for accessing the field via an interface.
+func (v *UpdateRecordUpdateRecord) GetAppWide() bool { return v.RecordParts.AppWide }
+
 // GetData returns UpdateRecordUpdateRecord.Data, and is useful for accessing the field via an interface.
 func (v *UpdateRecordUpdateRecord) GetData() json.RawMessage { return v.RecordParts.Data }
 
@@ -5150,6 +5197,8 @@ func (v *UpdateRecordUpdateRecord) UnmarshalJSON(b []byte) error {
 type __premarshalUpdateRecordUpdateRecord struct {
 	Id string `json:"id"`
 
+	AppWide bool `json:"appWide"`
+
 	Data json.RawMessage `json:"data"`
 
 	CreatedAt string `json:"createdAt"`
@@ -5169,6 +5218,7 @@ func (v *UpdateRecordUpdateRecord) __premarshalJSON() (*__premarshalUpdateRecord
 	var retval __premarshalUpdateRecordUpdateRecord
 
 	retval.Id = v.RecordParts.Id
+	retval.AppWide = v.RecordParts.AppWide
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
@@ -5416,6 +5466,7 @@ type __RecordsInput struct {
 	EntityId  string                `json:"entityId"`
 	Page      PageInput             `json:"page"`
 	Reference *RecordReferenceInput `json:"reference"`
+	Scope     RecordScope           `json:"scope"`
 }
 
 // GetEntityId returns __RecordsInput.EntityId, and is useful for accessing the field via an interface.
@@ -5426,6 +5477,9 @@ func (v *__RecordsInput) GetPage() PageInput { return v.Page }
 
 // GetReference returns __RecordsInput.Reference, and is useful for accessing the field via an interface.
 func (v *__RecordsInput) GetReference() *RecordReferenceInput { return v.Reference }
+
+// GetScope returns __RecordsInput.Scope, and is useful for accessing the field via an interface.
+func (v *__RecordsInput) GetScope() RecordScope { return v.Scope }
 
 // __RemoveDataImportFileInput is used internally by genqlient
 type __RemoveDataImportFileInput struct {
@@ -6450,6 +6504,7 @@ mutation CreateRecord ($input: CreateRecordInput!) {
 }
 fragment RecordParts on Record {
 	id
+	appWide
 	data
 	createdAt
 	updatedAt
@@ -7121,6 +7176,7 @@ query Record ($entityId: ID!, $id: ID!) {
 }
 fragment RecordParts on Record {
 	id
+	appWide
 	data
 	createdAt
 	updatedAt
@@ -7156,8 +7212,8 @@ func Record(
 
 // The query executed by Records.
 const Records_Operation = `
-query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput) {
-	records(entityId: $entityId, page: $page, reference: $reference) {
+query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput, $scope: RecordScope) {
+	records(entityId: $entityId, page: $page, reference: $reference, scope: $scope) {
 		items {
 			... RecordParts
 		}
@@ -7168,6 +7224,7 @@ query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInp
 }
 fragment RecordParts on Record {
 	id
+	appWide
 	data
 	createdAt
 	updatedAt
@@ -7180,6 +7237,7 @@ func Records(
 	entityId string,
 	page PageInput,
 	reference *RecordReferenceInput,
+	scope RecordScope,
 ) (data_ *RecordsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "Records",
@@ -7188,6 +7246,7 @@ func Records(
 			EntityId:  entityId,
 			Page:      page,
 			Reference: reference,
+			Scope:     scope,
 		},
 	}
 
@@ -7483,6 +7542,7 @@ mutation RetireRecord ($input: RetireRecordInput!) {
 }
 fragment RecordParts on Record {
 	id
+	appWide
 	data
 	createdAt
 	updatedAt
@@ -7951,6 +8011,7 @@ mutation UpdateRecord ($input: UpdateRecordInput!) {
 }
 fragment RecordParts on Record {
 	id
+	appWide
 	data
 	createdAt
 	updatedAt

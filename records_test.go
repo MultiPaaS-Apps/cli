@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"testing"
@@ -21,8 +22,101 @@ func TestRecordsCreateWritesInTheProjectsTestAppTenant(t *testing.T) {
 	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
 		t.Fatalf("scope %q", last)
 	}
-	if compact(got.stdout) != `{"record":{"id":"record-1","data":{"field-1":"Ship it"},"createdAt":"2026-10-11T00:00:00.000Z","updatedAt":"2026-10-11T00:00:00.000Z"}}` {
+	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"Ship it"},"createdAt":"2026-10-11T00:00:00.000Z","updatedAt":"2026-10-11T00:00:00.000Z"}}` {
 		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsListAppWideActsAtApplicationScope(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{
+		{"id": "mine", "appWide": false, "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"},
+		{"id": "shared", "appWide": true, "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"},
+	}
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--app-wide", "--entity", "entity-1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	var records []RecordParts
+	decode(t, got.stdout, &records)
+	if len(records) != 1 || records[0].Id != "shared" || !records[0].AppWide {
+		t.Fatalf("listed %s", got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000" {
+		t.Fatalf("scope %q", last)
+	}
+	if !reflect.DeepEqual(fake.recordScopes, []string{"APP_WIDE"}) {
+		t.Fatalf("sent scopes %v", fake.recordScopes)
+	}
+}
+
+func TestRecordsListWithoutAppWideSendsTenantScope(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{
+		{"id": "mine", "appWide": false, "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"},
+		{"id": "shared", "appWide": true, "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"},
+	}
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json")
+	var records []RecordParts
+	decode(t, got.stdout, &records)
+	if len(records) != 1 || records[0].Id != "mine" {
+		t.Fatalf("listed %s", got.stdout)
+	}
+	if !reflect.DeepEqual(fake.recordScopes, []string{"TENANT"}) {
+		t.Fatalf("sent scopes %v", fake.recordScopes)
+	}
+}
+
+func TestRecordsCreateAppWideNeedsNoTenant(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "records", "create", "--app", "app-a-000", "--app-wide", "--entity", "entity-1", "--data", `{"field-1":"hola"}`, "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000" {
+		t.Fatalf("scope %q", last)
+	}
+	var created struct{ Record RecordParts }
+	decode(t, got.stdout, &created)
+	if !created.Record.AppWide {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsAppWideSkipsAnEntitlementConfinedToATenant(t *testing.T) {
+	fake := projectFake(t)
+	fake.entitlements = append([]entitlement{{clientID: "client-a", clientName: "Acme", applicationID: "app-a-000", appTenantID: "tenant-a"}}, fake.entitlements...)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--app-wide", "--entity", "entity-1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000" {
+		t.Fatalf("scope %q", last)
+	}
+}
+
+func TestRecordsAppWideRefusedWithOnlyTenantEntitlements(t *testing.T) {
+	fake := projectFake(t)
+	fake.entitlements = []entitlement{{clientID: "client-a", clientName: "Acme", applicationID: "app-a-000", appTenantID: "tenant-a"}}
+	fake.recordScopes = nil
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--app-wide", "--entity", "entity-1", "--json")
+	if got.exit == exitOK || !strings.Contains(got.stdout, "no application-wide access") {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if len(fake.recordScopes) != 0 {
+		t.Fatalf("sent %v", fake.recordScopes)
+	}
+}
+
+func TestRecordsTenantAndAppWideConflict(t *testing.T) {
+	fake := projectFake(t)
+	before := len(fake.scopes)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--app-wide", "--entity", "entity-1", "--json")
+	if got.exit == exitOK || !strings.Contains(got.stdout, "none of the others can be") {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if len(fake.scopes) != before {
+		t.Fatalf("sent %v", fake.scopes[before:])
 	}
 }
 
@@ -93,7 +187,7 @@ func TestRecordsGetPrintsTheRecord(t *testing.T) {
 	if got.exit != exitOK {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
-	if compact(got.stdout) != `{"record":{"id":"record-1","data":{"field-1":"a"},"createdAt":"x","updatedAt":"y"}}` {
+	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"a"},"createdAt":"x","updatedAt":"y"}}` {
 		t.Fatalf("printed %s", got.stdout)
 	}
 }
@@ -104,6 +198,58 @@ func TestRecordsGetSaysWhenThereIsNoSuchRecord(t *testing.T) {
 	assertFailure(t, missing, exitRefused, "NOT_FOUND")
 	if !strings.Contains(missing.stdout, "record-9") {
 		t.Fatalf("printed %s", missing.stdout)
+	}
+}
+
+func TestRecordsScopeRefusesWhatTheServerRefuses(t *testing.T) {
+	tenantRecord := map[string]any{"id": "mine", "appWide": false, "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "x"}
+	appWideRecord := map[string]any{"id": "shared", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}
+	tenant, tenantHeader := []string{"--tenant", "tenant-a"}, "client-a/app-a-000/tenant-a"
+	appWide, appWideHeader := []string{"--app-wide"}, "client-a/app-a-000"
+	cases := []struct {
+		name   string
+		verb   string
+		scope  []string
+		header string
+		target string
+	}{
+		{"app-wide get of a tenant record", "get", appWide, appWideHeader, "mine"},
+		{"app-wide update of a tenant record", "update", appWide, appWideHeader, "mine"},
+		{"app-wide retire of a tenant record", "retire", appWide, appWideHeader, "mine"},
+		{"tenant update of an app-wide record", "update", tenant, tenantHeader, "shared"},
+		{"tenant retire of an app-wide record", "retire", tenant, tenantHeader, "shared"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			fake := projectFake(t)
+			fake.records["entity-1"] = []map[string]any{maps.Clone(tenantRecord), maps.Clone(appWideRecord)}
+			before := fmt.Sprint(fake.records["entity-1"])
+			args := append([]string{"records", c.verb, "--app", "app-a-000"}, c.scope...)
+			args = append(args, "--entity", "entity-1", "--id", c.target)
+			if c.verb == "update" {
+				args = append(args, "--data", `{"field-1":"changed"}`)
+			}
+			got := fake.run(t, append(args, "--json")...)
+			assertFailure(t, got, exitRefused, "NOT_FOUND")
+			if last := fake.scopes[len(fake.scopes)-1]; last != c.header {
+				t.Fatalf("scope %q, want %q", last, c.header)
+			}
+			if after := fmt.Sprint(fake.records["entity-1"]); after != before {
+				t.Fatalf("records changed from %s to %s", before, after)
+			}
+		})
+	}
+}
+
+func TestRecordsScopeLetsATenantReadAnAppWideRecord(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "shared", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}}
+	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "shared", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"record":{"id":"shared","appWide":true,"data":{"field-1":"b"},"createdAt":"x","updatedAt":"x"}}` {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
+		t.Fatalf("scope %q", last)
 	}
 }
 

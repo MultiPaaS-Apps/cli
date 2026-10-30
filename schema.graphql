@@ -1170,6 +1170,10 @@ type Query {
 		entityId: ID!
 		page: PageInput!
 		reference: RecordReferenceInput
+"""
+Narrow the list to app-tenant records or app-wide records. Defaults to both.
+"""
+		scope: RecordScope
 	): RecordPage!
 	referencingFields(
 		entityId: ID!
@@ -1204,6 +1208,10 @@ Marks a mutation result that invalidates no cached list: it changes no data a li
 }
 
 type Record {
+"""
+Whether the record belongs to the application rather than to one app-tenant.
+"""
+	appWide: Boolean!
 	createdAt: DateTime!
 	data: JSON!
 	entity: Entity!
@@ -1262,6 +1270,15 @@ type RecordPage {
 input RecordReferenceInput {
 	fieldId: ID!
 	recordId: ID!
+}
+
+"""
+Which records a list returns: both kinds, only the app-tenant's own, or only the application's app-wide ones.
+"""
+enum RecordScope {
+	ALL
+	APP_WIDE
+	TENANT
 }
 
 type RecordShare implements AccessGrant{

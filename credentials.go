@@ -18,7 +18,7 @@ type credential struct {
 	ExpiresAt    time.Time `json:"expiresAt"`
 }
 
-// credentialFile is ~/.config/multipaas/credentials.json: one credential per api origin, readable by the user only.
+// credentialFile is ~/.config/multipaas/credentials.json: one credential per api origin and profile (see credentialKey), readable by the user only.
 type credentialFile map[string]credential
 
 // refreshMargin refreshes an access token this long before it expires, so it never expires in flight.
@@ -29,7 +29,7 @@ const refreshMargin = time.Minute
 func (s *session) token(ctx context.Context, rejected string) (string, error) {
 	token := ""
 	err := updateCredentials(func(creds credentialFile) error {
-		current, ok := creds[s.origins.api]
+		current, ok := creds[s.credentialKey()]
 		if !ok {
 			return nil
 		}
@@ -40,18 +40,18 @@ func (s *session) token(ctx context.Context, rejected string) (string, error) {
 		refreshed, err := s.refresh(ctx, current.RefreshToken)
 		var refusal *oauthError
 		if errors.As(err, &refusal) && refusal.Code == "invalid_grant" {
-			delete(creds, s.origins.api)
+			delete(creds, s.credentialKey())
 			return nil
 		}
 		if err != nil {
 			return err
 		}
-		creds[s.origins.api] = refreshed
+		creds[s.credentialKey()] = refreshed
 		token = refreshed.AccessToken
 		return nil
 	})
 	if err == nil && token == "" {
-		return "", &cliError{exit: exitSignedOut, Code: "NOT_SIGNED_IN", Message: "not signed in; run: multipaas login"}
+		return "", s.notSignedIn()
 	}
 	return token, err
 }
@@ -78,20 +78,38 @@ func updateCredentials(change func(credentialFile) error) error {
 	}
 
 	path := filepath.Join(dir, "credentials.json")
-	creds := credentialFile{}
-	data, err := os.ReadFile(path)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+	creds, err := decodeCredentials(path)
+	if err != nil {
 		return err
-	}
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &creds); err != nil {
-			return err
-		}
 	}
 	if err := change(creds); err != nil {
 		return err
 	}
 	return writeFileAtomically(path, creds)
+}
+
+// loadCredentials reads the saved credentials without the lock or any write: a write replaces the file by
+// rename, so a read always sees a whole file. No file means no credentials.
+func loadCredentials() (credentialFile, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	return decodeCredentials(filepath.Join(home, ".config", "multipaas", "credentials.json"))
+}
+
+func decodeCredentials(path string) (credentialFile, error) {
+	creds := credentialFile{}
+	data, err := os.ReadFile(path)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return nil, err
+	}
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &creds); err != nil {
+			return nil, err
+		}
+	}
+	return creds, nil
 }
 
 // writeFileAtomically writes through a 0600 temp file and a rename, so a crash never leaves half a file.

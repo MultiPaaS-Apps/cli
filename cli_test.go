@@ -299,7 +299,7 @@ func TestLogoutRevokesTheChainAndForgetsOnlyThatAPIURL(t *testing.T) {
 	writeCredentialsForTest(t, "https://api.other.example", credential{AccessToken: "a", RefreshToken: "r", ExpiresAt: time.Now().Add(time.Hour)})
 	refresh := readCredentials(t)[fake.server.URL].RefreshToken
 	result := fake.run(t, "logout", "--json")
-	if result.exit != exitOK || compact(result.stdout) != `{"signedOut":true}` {
+	if result.exit != exitOK || compact(result.stdout) != `{"profile":null,"signedOut":true}` {
 		t.Fatalf("exit %d: %s", result.exit, result.stdout)
 	}
 	if len(fake.revokes) != 1 || fake.revokes[0].Get("token") != refresh || fake.revokes[0].Get("client_id") != developerClientID {
@@ -336,11 +336,11 @@ func TestAUserWithoutANameIsReportedWithANullName(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	fake.nameless = true
 	got := fake.run(t, "whoami", "--json")
-	if got.exit != exitOK || compact(got.stdout) != `{"user":{"id":"user-1","email":"dev@example.com","name":null}}` {
+	if got.exit != exitOK || compact(got.stdout) != `{"user":{"id":"user-1","email":"dev@example.com","name":null},"profile":null}` {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
 	fake.nameless = false
-	if named := fake.run(t, "whoami", "--json"); compact(named.stdout) != `{"user":{"id":"user-1","email":"dev@example.com","name":"Dev"}}` {
+	if named := fake.run(t, "whoami", "--json"); compact(named.stdout) != `{"user":{"id":"user-1","email":"dev@example.com","name":"Dev"},"profile":null}` {
 		t.Fatalf("a named user: %s", named.stdout)
 	}
 }
@@ -512,7 +512,7 @@ func (f *fakeMultiPaaS) drive(t *testing.T, version string, open func(string) er
 	var stdout bytes.Buffer
 	stderr := &urlWatcher{}
 	exit := run(args, environment{
-		stdout: &stdout, stderr: stderr, stdin: strings.NewReader(stdin), version: version, origins: f.origins,
+		stdout: &stdout, stderr: stderr, stdin: strings.NewReader(stdin), version: version, origins: f.origins, profile: f.profile,
 		openBrowser: func(url string) error {
 			if err := open(url); err != nil {
 				return browse(stderr.printedURL())

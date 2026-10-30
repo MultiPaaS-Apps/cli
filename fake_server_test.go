@@ -40,6 +40,8 @@ type fakeMultiPaaS struct {
 	hangToken    bool                   // the token endpoint never answers
 	redirectTo   string                 // the token endpoint answers 307 to this URL
 	failRevoke   bool                   // the revoke endpoint answers HTTP 500
+	profile      string                 // MULTIPAAS_PROFILE for every command run against the fake
+	onGraphQL    func(operation string) // runs on each GraphQL request, before it is answered
 	release      chan struct{}          // closed at cleanup, to free handlers that never answer
 	accessTokens map[string]bool        // every access token minted, so a refresh grant can refuse one
 
@@ -235,6 +237,9 @@ func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 	defer f.mu.Unlock()
 	scope := r.Header.Get("X-MultiPaaS-Scope")
 	f.scopes = append(f.scopes, scope)
+	if f.onGraphQL != nil {
+		f.onGraphQL(request.OperationName)
+	}
 	f.cliVersion = r.Header.Get("X-MultiPaaS-Cli-Version")
 	token, _ := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
 	current, known := f.chains[token]

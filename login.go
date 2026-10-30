@@ -22,9 +22,10 @@ const developerClientID = "4b0285b8-29b9-468f-b31d-333f0bb128c8"
 // signInTimeout bounds how long login waits for the browser to come back.
 var signInTimeout = 5 * time.Minute
 
-// session is one command's view of one MultiPaaS, whose api origin keys its saved credentials.
+// session is one command's view of one MultiPaaS as one developer: its api origin and profile key the saved credentials.
 type session struct {
 	origins origins
+	profile string // "" = the unnamed sign-in
 	env     environment
 	http    *http.Client
 }
@@ -59,7 +60,7 @@ func (s *session) login(ctx context.Context) error {
 		return err
 	}
 	return updateCredentials(func(creds credentialFile) error {
-		creds[s.origins.api] = tokens.credential()
+		creds[s.credentialKey()] = tokens.credential()
 		return nil
 	})
 }
@@ -71,12 +72,12 @@ func (s *session) logout(ctx context.Context) (bool, error) {
 	signedOut := false
 	var revokeErr error
 	err := updateCredentials(func(creds credentialFile) error {
-		current, ok := creds[s.origins.api]
+		current, ok := creds[s.credentialKey()]
 		if !ok {
 			return nil
 		}
 		revokeErr = s.postForm(ctx, "/oauth/revoke", url.Values{"token": {current.RefreshToken}}, nil)
-		delete(creds, s.origins.api)
+		delete(creds, s.credentialKey())
 		signedOut = true
 		return nil
 	})

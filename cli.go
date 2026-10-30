@@ -34,6 +34,7 @@ type environment struct {
 	stdin          io.Reader
 	version        string
 	apiURL         string // MULTIPAAS_API_URL, empty when unset
+	profile        string // MULTIPAAS_PROFILE, empty when unset
 	origins        func(apiURL string) (origins, error)
 	openBrowser    func(url string) error
 }
@@ -41,6 +42,8 @@ type environment struct {
 // run parses args, runs one command, reports its result, and returns the exit code.
 func run(args []string, env environment) int {
 	var asJSON bool
+	var profileFlag string
+	var ran *session // the session the command ran as, for withProfileHint
 	root := &cobra.Command{
 		Use:           "multipaas",
 		Short:         "Sign in to MultiPaaS and work with your apps",
@@ -49,6 +52,7 @@ func run(args []string, env environment) int {
 		SilenceUsage:  true,
 	}
 	root.PersistentFlags().BoolVar(&asJSON, "json", false, "print exactly one JSON document on stdout")
+	root.PersistentFlags().StringVar(&profileFlag, "profile", "", "the developer sign-in to use (default $MULTIPAAS_PROFILE, else your unnamed sign-in)")
 
 	var command commandFunc = func(use, short string, do func(context.Context, *session) (any, func(io.Writer), error)) *cobra.Command {
 		return &cobra.Command{
@@ -56,11 +60,16 @@ func run(args []string, env environment) int {
 			Short: short,
 			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				profile, err := chooseProfile(profileFlag, env.profile)
+				if err != nil {
+					return err
+				}
 				hosts, err := env.origins(env.apiURL)
 				if err != nil {
 					return err
 				}
-				result, human, err := do(cmd.Context(), &session{origins: hosts, env: env, http: &http.Client{Timeout: requestTimeout, CheckRedirect: refuseRedirects}})
+				ran = &session{origins: hosts, profile: profile, env: env, http: &http.Client{Timeout: requestTimeout, CheckRedirect: refuseRedirects}}
+				result, human, err := do(cmd.Context(), ran)
 				if err != nil {
 					return err
 				}
@@ -79,16 +88,16 @@ func run(args []string, env environment) int {
 				return nil, nil, err
 			}
 			who, err := s.whoami(ctx)
-			return who, func(out io.Writer) { fmt.Fprintf(out, "Signed in as %s\n", who.User.Email) }, err
+			return who, func(out io.Writer) { fmt.Fprintf(out, "Signed in as %s%s\n", who.User.Email, s.profileSuffix()) }, err
 		}),
 		command("logout", "Sign out and revoke your tokens", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 			signedOut, err := s.logout(ctx)
-			result := map[string]any{"signedOut": signedOut}
-			return result, func(out io.Writer) { fmt.Fprintln(out, "Signed out") }, err
+			result := map[string]any{"signedOut": signedOut, "profile": s.profileJSON()}
+			return result, func(out io.Writer) { fmt.Fprintln(out, "Signed out"+s.profileSuffix()) }, err
 		}),
 		command("whoami", "Show who you are signed in as", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 			who, err := s.whoami(ctx)
-			return who, func(out io.Writer) { fmt.Fprintf(out, "Signed in as %s\n", who.User.Email) }, err
+			return who, func(out io.Writer) { fmt.Fprintf(out, "Signed in as %s%s\n", who.User.Email, s.profileSuffix()) }, err
 		}),
 	)
 
@@ -118,7 +127,7 @@ func run(args []string, env environment) int {
 	root.SetArgs(args)
 	root.SetOut(env.stdout)
 	root.SetErr(env.stderr)
-	return report(env, asJSON, root.Execute())
+	return report(env, asJSON, withProfileHint(ran, root.Execute()))
 }
 
 // appsCreate makes an application in one of the developer's clients. It needs client.applications.create, and the

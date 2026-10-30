@@ -1,7 +1,7 @@
 # multipaas
 
-The MultiPaaS command line. It signs you in with your MultiPaaS account and runs the same operations
-the MultiPaaS web app runs, with the same permissions.
+The MultiPaaS command line. It signs you in with your MultiPaaS account. It acts as that account, with that
+account's permissions.
 
 ## Install
 

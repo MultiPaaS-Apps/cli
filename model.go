@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -440,6 +441,31 @@ func (s *session) appScope(ctx context.Context, appID, tenantID string) (string,
 		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no app-tenant " + tenantID + " of application " + appID + " that you can reach"}
 	}
 	return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no application " + appID + " that you can reach"}
+}
+
+// envScope is the scope sent for an environment: the server resolves it to the environment's application.
+func envScope(envID string) string { return "env:" + envID }
+
+// scopeIn is envID's scope when it is not "", else appID's, which acts in the default environment.
+// An envID that is not one of appID's environments is refused, because --app can come from multipaas.json.
+func (s *session) scopeIn(ctx context.Context, appID, envID string) (string, error) {
+	scope, err := s.appScope(ctx, appID, "")
+	if err != nil || envID == "" {
+		return scope, err
+	}
+	owned, err := s.environmentsIn(ctx, scope)
+	if err != nil {
+		return "", err
+	}
+	if !slices.ContainsFunc(owned, func(e EnvironmentParts) bool { return e.Id == envID }) {
+		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "environment " + envID + " is not an environment of application " + appID + ": check --env against envs list --app " + appID}
+	}
+	return envScope(envID), nil
+}
+
+// envFlag is --env.
+func envFlag(cmd *cobra.Command, envID *string) {
+	cmd.Flags().StringVar(envID, "env", "", "the environment's id (from envs list; default: the application's default environment)")
 }
 
 // inApp runs one operation in appID's scope.

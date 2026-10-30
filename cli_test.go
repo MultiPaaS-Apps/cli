@@ -190,6 +190,90 @@ func TestTenantsCreateMakesOneInTheAppsScopeAndListShowsIt(t *testing.T) {
 	}
 }
 
+func TestEnvsCreateThenListShowsIt(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if compact(got.stdout) != `{"environment":{"id":"env-new-2","name":"test","isDefault":false,"deletionProtected":false}}` {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"name": "test"}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000" {
+		t.Fatalf("scope %q", last)
+	}
+	listed := fake.run(t, "envs", "list", "--app", "app-a-000", "--json")
+	if compact(listed.stdout) != `[{"id":"env-default","name":"Default","isDefault":true,"deletionProtected":true},{"id":"env-new-2","name":"test","isDefault":false,"deletionProtected":false}]` {
+		t.Fatalf("list %s", listed.stdout)
+	}
+	renamed := fake.run(t, "envs", "rename", "--app", "app-a-000", "--env", "env-new-2", "--name", "staging", "--json")
+	if compact(renamed.stdout) != `{"environment":{"id":"env-new-2","name":"staging","isDefault":false,"deletionProtected":false}}` {
+		t.Fatalf("rename %s", renamed.stdout)
+	}
+	assertFailure(t, fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "staging", "--json"), exitRefused, "VALIDATION")
+}
+
+func TestTenantsListWithEnvSendsTheEnvScope(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	listed := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--json")
+	if compact(listed.stdout) != `[{"id":"tenant-e","name":"Env tenant"}]` {
+		t.Fatalf("list %s", listed.stdout)
+	}
+	if fake.scopes[len(fake.scopes)-1] != "env:env-default" {
+		t.Fatalf("scopes %v", fake.scopes)
+	}
+	created := fake.run(t, "tenants", "create", "--app", "app-a-000", "--env", "env-default", "--name", "Second", "--json")
+	if compact(created.stdout) != `{"appTenant":{"id":"tenant-env-2","name":"Second"}}` {
+		t.Fatalf("create %s", created.stdout)
+	}
+	if fake.scopes[len(fake.scopes)-1] != "env:env-default" {
+		t.Fatalf("scopes %v", fake.scopes)
+	}
+	fake.run(t, "records", "list", "--app", "app-a-000", "--env", "env-default", "--app-wide", "--entity", "entity-1", "--json")
+	if fake.scopes[len(fake.scopes)-1] != "env:env-default" {
+		t.Fatalf("scopes %v", fake.scopes)
+	}
+}
+
+func TestEnvAndTenantTogetherAreRefused(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-a", "--entity", "entity-1", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "--env and --tenant: choose one") {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+	if len(fake.scopes) != 0 {
+		t.Fatalf("sent %v", fake.scopes)
+	}
+}
+
+func TestEnvOfAnotherApplicationIsRefused(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.environments["app-a-001"] = []fakeEnv{{id: "env-other", name: "Default", isDefault: true}}
+	commands := [][]string{
+		{"tenants", "list", "--app", "app-a-000", "--env", "env-other", "--json"},
+		{"tenants", "create", "--app", "app-a-000", "--env", "env-other", "--name", "Second", "--json"},
+		{"records", "list", "--app", "app-a-000", "--env", "env-other", "--app-wide", "--entity", "entity-1", "--json"},
+		{"import", "status", "--app", "app-a-000", "--env", "env-other", "--import", "import-1", "--json"},
+	}
+	for _, args := range commands {
+		got := fake.run(t, args...)
+		assertFailure(t, got, exitRefused, "NOT_FOUND")
+		if !strings.Contains(got.stdout, "environment env-other is not an environment of application app-a-000") {
+			t.Fatalf("%v: stdout %s", args, got.stdout)
+		}
+	}
+	for _, scope := range fake.scopes {
+		if strings.HasPrefix(scope, "env:") {
+			t.Fatalf("sent %v", fake.scopes)
+		}
+	}
+}
+
 func TestTenantsCreateWithoutManageApplicationIsRefusedUnauthorized(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	fake.noManageApp = true
@@ -579,6 +663,8 @@ func signedInFake(t *testing.T, expiredToken bool) *fakeMultiPaaS {
 		fake.apps["client-a"] = append(fake.apps["client-a"], fakeRow{id: id, name: "App " + id})
 	}
 	fake.tenants["app-a-000"] = []fakeRow{{id: "tenant-a", name: "Test"}}
+	fake.environments["app-a-000"] = []fakeEnv{{id: "env-default", name: "Default", isDefault: true}}
+	fake.envTenants["env-default"] = []fakeRow{{id: "tenant-e", name: "Env tenant"}}
 	fake.tenants["app-b"] = []fakeRow{{id: "tenant-b", name: "Beta test"}}
 	fake.scopedApps["tenant-b"] = fakeRow{id: "app-b", name: "Orders"}
 	if got := fake.run(t, "login", "--json"); got.exit != exitOK {

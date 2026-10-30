@@ -109,17 +109,27 @@ func run(args []string, env environment) int {
 		}, err
 	}), appsCreate(command))
 
-	var appID string
+	var appID, envID string
 	tenants := &cobra.Command{Use: "tenants", Short: "App-tenants you can reach"}
 	tenantsList := command("list", "List an application's app-tenants you can reach", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		list, err := s.tenants(ctx, appID)
+		var list []appTenant
+		var err error
+		if envID != "" {
+			var scope string
+			if scope, err = s.scopeIn(ctx, appID, envID); err == nil {
+				list, err = s.tenantsAt(ctx, scope)
+			}
+		} else {
+			list, err = s.tenants(ctx, appID)
+		}
 		return list, func(out io.Writer) {
 			table(out, "NAME\tID", list, func(t appTenant) string { return t.Name + "\t" + t.ID })
 		}, err
 	})
 	appFlag(tenantsList, &appID)
+	envFlag(tenantsList, &envID)
 	tenants.AddCommand(tenantsList, tenantsCreate(command))
-	root.AddCommand(apps, tenants)
+	root.AddCommand(apps, tenants, envsCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
 	root.AddCommand(recordCommands(command), oauthClientCommands(command), appIdentityCommands(command), importCommands(command), feedbackCommands(command))
@@ -159,21 +169,25 @@ func appsCreate(command commandFunc) *cobra.Command {
 // tenantsCreate makes an app-tenant to build and test an app in. It needs access.manage.application on the
 // application, the same permission the web app's app-tenants page asks for.
 func tenantsCreate(command commandFunc) *cobra.Command {
-	var appID, name string
+	var appID, envID, name string
 	cmd := command("create", "Create an app-tenant to test your app in", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var created appTenant
-		err := s.inApp(ctx, appID, func(client graphql.Client) error {
-			response, err := CreateAppTenant(ctx, client, CreateAppTenantInput{Name: name})
-			if err == nil {
-				created = appTenant{ID: response.CreateAppTenant.Id, Name: response.CreateAppTenant.Name}
-			}
-			return err
-		})
+		scope, err := s.scopeIn(ctx, appID, envID)
+		if err == nil {
+			err = s.call(ctx, scope, func(client graphql.Client) error {
+				response, err := CreateAppTenant(ctx, client, CreateAppTenantInput{Name: name})
+				if err == nil {
+					created = appTenant{ID: response.CreateAppTenant.Id, Name: response.CreateAppTenant.Name}
+				}
+				return err
+			})
+		}
 		return map[string]appTenant{"appTenant": created}, func(out io.Writer) {
 			fmt.Fprintf(out, "app-tenant %s %q\n", created.ID, created.Name)
 		}, err
 	})
 	appFlag(cmd, &appID)
+	envFlag(cmd, &envID)
 	cmd.Flags().StringVar(&name, "name", "", "the app-tenant's name")
 	_ = cmd.MarkFlagRequired("name")
 	return cmd

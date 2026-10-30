@@ -1355,6 +1355,95 @@ func (v *CreateEnumTypeResponse) GetCreateEnumType() CreateEnumTypeCreateEnumTyp
 	return v.CreateEnumType
 }
 
+// CreateEnvironmentCreateEnvironment includes the requested fields of the GraphQL type Environment.
+type CreateEnvironmentCreateEnvironment struct {
+	EnvironmentParts `json:"-"`
+}
+
+// GetId returns CreateEnvironmentCreateEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *CreateEnvironmentCreateEnvironment) GetId() string { return v.EnvironmentParts.Id }
+
+// GetName returns CreateEnvironmentCreateEnvironment.Name, and is useful for accessing the field via an interface.
+func (v *CreateEnvironmentCreateEnvironment) GetName() string { return v.EnvironmentParts.Name }
+
+// GetIsDefault returns CreateEnvironmentCreateEnvironment.IsDefault, and is useful for accessing the field via an interface.
+func (v *CreateEnvironmentCreateEnvironment) GetIsDefault() bool { return v.EnvironmentParts.IsDefault }
+
+// GetDeletionProtected returns CreateEnvironmentCreateEnvironment.DeletionProtected, and is useful for accessing the field via an interface.
+func (v *CreateEnvironmentCreateEnvironment) GetDeletionProtected() bool {
+	return v.EnvironmentParts.DeletionProtected
+}
+
+func (v *CreateEnvironmentCreateEnvironment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateEnvironmentCreateEnvironment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateEnvironmentCreateEnvironment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnvironmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateEnvironmentCreateEnvironment struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	IsDefault bool `json:"isDefault"`
+
+	DeletionProtected bool `json:"deletionProtected"`
+}
+
+func (v *CreateEnvironmentCreateEnvironment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateEnvironmentCreateEnvironment) __premarshalJSON() (*__premarshalCreateEnvironmentCreateEnvironment, error) {
+	var retval __premarshalCreateEnvironmentCreateEnvironment
+
+	retval.Id = v.EnvironmentParts.Id
+	retval.Name = v.EnvironmentParts.Name
+	retval.IsDefault = v.EnvironmentParts.IsDefault
+	retval.DeletionProtected = v.EnvironmentParts.DeletionProtected
+	return &retval, nil
+}
+
+type CreateEnvironmentInput struct {
+	Name string `json:"name"`
+}
+
+// GetName returns CreateEnvironmentInput.Name, and is useful for accessing the field via an interface.
+func (v *CreateEnvironmentInput) GetName() string { return v.Name }
+
+// CreateEnvironmentResponse is returned by CreateEnvironment on success.
+type CreateEnvironmentResponse struct {
+	CreateEnvironment CreateEnvironmentCreateEnvironment `json:"createEnvironment"`
+}
+
+// GetCreateEnvironment returns CreateEnvironmentResponse.CreateEnvironment, and is useful for accessing the field via an interface.
+func (v *CreateEnvironmentResponse) GetCreateEnvironment() CreateEnvironmentCreateEnvironment {
+	return v.CreateEnvironment
+}
+
 // CreateFieldCreateField includes the requested fields of the GraphQL type Field.
 type CreateFieldCreateField struct {
 	FieldParts `json:"-"`
@@ -2430,6 +2519,130 @@ type EnumTypesResponse struct {
 
 // GetEnumTypes returns EnumTypesResponse.EnumTypes, and is useful for accessing the field via an interface.
 func (v *EnumTypesResponse) GetEnumTypes() EnumTypesEnumTypesEnumTypePage { return v.EnumTypes }
+
+// EnvironmentParts includes the GraphQL fields of Environment requested by the fragment EnvironmentParts.
+type EnvironmentParts struct {
+	Id                string `json:"id"`
+	Name              string `json:"name"`
+	IsDefault         bool   `json:"isDefault"`
+	DeletionProtected bool   `json:"deletionProtected"`
+}
+
+// GetId returns EnvironmentParts.Id, and is useful for accessing the field via an interface.
+func (v *EnvironmentParts) GetId() string { return v.Id }
+
+// GetName returns EnvironmentParts.Name, and is useful for accessing the field via an interface.
+func (v *EnvironmentParts) GetName() string { return v.Name }
+
+// GetIsDefault returns EnvironmentParts.IsDefault, and is useful for accessing the field via an interface.
+func (v *EnvironmentParts) GetIsDefault() bool { return v.IsDefault }
+
+// GetDeletionProtected returns EnvironmentParts.DeletionProtected, and is useful for accessing the field via an interface.
+func (v *EnvironmentParts) GetDeletionProtected() bool { return v.DeletionProtected }
+
+// EnvironmentsMeUser includes the requested fields of the GraphQL type User.
+type EnvironmentsMeUser struct {
+	Application EnvironmentsMeUserApplication `json:"application"`
+}
+
+// GetApplication returns EnvironmentsMeUser.Application, and is useful for accessing the field via an interface.
+func (v *EnvironmentsMeUser) GetApplication() EnvironmentsMeUserApplication { return v.Application }
+
+// EnvironmentsMeUserApplication includes the requested fields of the GraphQL type Application.
+type EnvironmentsMeUserApplication struct {
+	Environments []EnvironmentsMeUserApplicationEnvironmentsEnvironment `json:"environments"`
+}
+
+// GetEnvironments returns EnvironmentsMeUserApplication.Environments, and is useful for accessing the field via an interface.
+func (v *EnvironmentsMeUserApplication) GetEnvironments() []EnvironmentsMeUserApplicationEnvironmentsEnvironment {
+	return v.Environments
+}
+
+// EnvironmentsMeUserApplicationEnvironmentsEnvironment includes the requested fields of the GraphQL type Environment.
+type EnvironmentsMeUserApplicationEnvironmentsEnvironment struct {
+	EnvironmentParts `json:"-"`
+}
+
+// GetId returns EnvironmentsMeUserApplicationEnvironmentsEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) GetId() string {
+	return v.EnvironmentParts.Id
+}
+
+// GetName returns EnvironmentsMeUserApplicationEnvironmentsEnvironment.Name, and is useful for accessing the field via an interface.
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) GetName() string {
+	return v.EnvironmentParts.Name
+}
+
+// GetIsDefault returns EnvironmentsMeUserApplicationEnvironmentsEnvironment.IsDefault, and is useful for accessing the field via an interface.
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) GetIsDefault() bool {
+	return v.EnvironmentParts.IsDefault
+}
+
+// GetDeletionProtected returns EnvironmentsMeUserApplicationEnvironmentsEnvironment.DeletionProtected, and is useful for accessing the field via an interface.
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) GetDeletionProtected() bool {
+	return v.EnvironmentParts.DeletionProtected
+}
+
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*EnvironmentsMeUserApplicationEnvironmentsEnvironment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.EnvironmentsMeUserApplicationEnvironmentsEnvironment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnvironmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalEnvironmentsMeUserApplicationEnvironmentsEnvironment struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	IsDefault bool `json:"isDefault"`
+
+	DeletionProtected bool `json:"deletionProtected"`
+}
+
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) __premarshalJSON() (*__premarshalEnvironmentsMeUserApplicationEnvironmentsEnvironment, error) {
+	var retval __premarshalEnvironmentsMeUserApplicationEnvironmentsEnvironment
+
+	retval.Id = v.EnvironmentParts.Id
+	retval.Name = v.EnvironmentParts.Name
+	retval.IsDefault = v.EnvironmentParts.IsDefault
+	retval.DeletionProtected = v.EnvironmentParts.DeletionProtected
+	return &retval, nil
+}
+
+// EnvironmentsResponse is returned by Environments on success.
+type EnvironmentsResponse struct {
+	Me EnvironmentsMeUser `json:"me"`
+}
+
+// GetMe returns EnvironmentsResponse.Me, and is useful for accessing the field via an interface.
+func (v *EnvironmentsResponse) GetMe() EnvironmentsMeUser { return v.Me }
 
 type FeedbackKind string
 
@@ -3714,6 +3927,99 @@ type RemoveDataImportFileResponse struct {
 // GetRemoveDataImportFile returns RemoveDataImportFileResponse.RemoveDataImportFile, and is useful for accessing the field via an interface.
 func (v *RemoveDataImportFileResponse) GetRemoveDataImportFile() RemoveDataImportFileRemoveDataImportFileDataImport {
 	return v.RemoveDataImportFile
+}
+
+type RenameEnvironmentInput struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns RenameEnvironmentInput.Id, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentInput) GetId() string { return v.Id }
+
+// GetName returns RenameEnvironmentInput.Name, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentInput) GetName() string { return v.Name }
+
+// RenameEnvironmentRenameEnvironment includes the requested fields of the GraphQL type Environment.
+type RenameEnvironmentRenameEnvironment struct {
+	EnvironmentParts `json:"-"`
+}
+
+// GetId returns RenameEnvironmentRenameEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentRenameEnvironment) GetId() string { return v.EnvironmentParts.Id }
+
+// GetName returns RenameEnvironmentRenameEnvironment.Name, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentRenameEnvironment) GetName() string { return v.EnvironmentParts.Name }
+
+// GetIsDefault returns RenameEnvironmentRenameEnvironment.IsDefault, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentRenameEnvironment) GetIsDefault() bool { return v.EnvironmentParts.IsDefault }
+
+// GetDeletionProtected returns RenameEnvironmentRenameEnvironment.DeletionProtected, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentRenameEnvironment) GetDeletionProtected() bool {
+	return v.EnvironmentParts.DeletionProtected
+}
+
+func (v *RenameEnvironmentRenameEnvironment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RenameEnvironmentRenameEnvironment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RenameEnvironmentRenameEnvironment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnvironmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRenameEnvironmentRenameEnvironment struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	IsDefault bool `json:"isDefault"`
+
+	DeletionProtected bool `json:"deletionProtected"`
+}
+
+func (v *RenameEnvironmentRenameEnvironment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RenameEnvironmentRenameEnvironment) __premarshalJSON() (*__premarshalRenameEnvironmentRenameEnvironment, error) {
+	var retval __premarshalRenameEnvironmentRenameEnvironment
+
+	retval.Id = v.EnvironmentParts.Id
+	retval.Name = v.EnvironmentParts.Name
+	retval.IsDefault = v.EnvironmentParts.IsDefault
+	retval.DeletionProtected = v.EnvironmentParts.DeletionProtected
+	return &retval, nil
+}
+
+// RenameEnvironmentResponse is returned by RenameEnvironment on success.
+type RenameEnvironmentResponse struct {
+	RenameEnvironment RenameEnvironmentRenameEnvironment `json:"renameEnvironment"`
+}
+
+// GetRenameEnvironment returns RenameEnvironmentResponse.RenameEnvironment, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentResponse) GetRenameEnvironment() RenameEnvironmentRenameEnvironment {
+	return v.RenameEnvironment
 }
 
 // RetireAppIdentityResponse is returned by RetireAppIdentity on success.
@@ -5353,6 +5659,14 @@ type __CreateEnumTypeInput struct {
 // GetInput returns __CreateEnumTypeInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateEnumTypeInput) GetInput() map[string]any { return v.Input }
 
+// __CreateEnvironmentInput is used internally by genqlient
+type __CreateEnvironmentInput struct {
+	Input CreateEnvironmentInput `json:"input"`
+}
+
+// GetInput returns __CreateEnvironmentInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateEnvironmentInput) GetInput() CreateEnvironmentInput { return v.Input }
+
 // __CreateFieldInput is used internally by genqlient
 type __CreateFieldInput struct {
 	Input map[string]any `json:"input"`
@@ -5492,6 +5806,14 @@ func (v *__RemoveDataImportFileInput) GetImportId() string { return v.ImportId }
 
 // GetFileId returns __RemoveDataImportFileInput.FileId, and is useful for accessing the field via an interface.
 func (v *__RemoveDataImportFileInput) GetFileId() string { return v.FileId }
+
+// __RenameEnvironmentInput is used internally by genqlient
+type __RenameEnvironmentInput struct {
+	Input RenameEnvironmentInput `json:"input"`
+}
+
+// GetInput returns __RenameEnvironmentInput.Input, and is useful for accessing the field via an interface.
+func (v *__RenameEnvironmentInput) GetInput() RenameEnvironmentInput { return v.Input }
 
 // __RetireAppIdentityInput is used internally by genqlient
 type __RetireAppIdentityInput struct {
@@ -6398,6 +6720,46 @@ func CreateEnumType(
 	return data_, err_
 }
 
+// The mutation executed by CreateEnvironment.
+const CreateEnvironment_Operation = `
+mutation CreateEnvironment ($input: CreateEnvironmentInput!) {
+	createEnvironment(input: $input) {
+		... EnvironmentParts
+	}
+}
+fragment EnvironmentParts on Environment {
+	id
+	name
+	isDefault
+	deletionProtected
+}
+`
+
+func CreateEnvironment(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateEnvironmentInput,
+) (data_ *CreateEnvironmentResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateEnvironment",
+		Query:  CreateEnvironment_Operation,
+		Variables: &__CreateEnvironmentInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateEnvironmentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by CreateField.
 const CreateField_Operation = `
 mutation CreateField ($input: CreateFieldInput!) {
@@ -6765,6 +7127,46 @@ func EnumTypes(
 	}
 
 	data_ = &EnumTypesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Environments.
+const Environments_Operation = `
+query Environments {
+	me {
+		application {
+			environments {
+				... EnvironmentParts
+			}
+		}
+	}
+}
+fragment EnvironmentParts on Environment {
+	id
+	name
+	isDefault
+	deletionProtected
+}
+`
+
+func Environments(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *EnvironmentsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Environments",
+		Query:  Environments_Operation,
+	}
+
+	data_ = &EnvironmentsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -7287,6 +7689,46 @@ func RemoveDataImportFile(
 	}
 
 	data_ = &RemoveDataImportFileResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RenameEnvironment.
+const RenameEnvironment_Operation = `
+mutation RenameEnvironment ($input: RenameEnvironmentInput!) {
+	renameEnvironment(input: $input) {
+		... EnvironmentParts
+	}
+}
+fragment EnvironmentParts on Environment {
+	id
+	name
+	isDefault
+	deletionProtected
+}
+`
+
+func RenameEnvironment(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input RenameEnvironmentInput,
+) (data_ *RenameEnvironmentResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RenameEnvironment",
+		Query:  RenameEnvironment_Operation,
+		Variables: &__RenameEnvironmentInput{
+			Input: input,
+		},
+	}
+
+	data_ = &RenameEnvironmentResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

@@ -579,3 +579,32 @@ query MyFeedbackReport($id: ID!) {
     }
   }
 }
+
+fragment EnvironmentParts on Environment {
+  id
+  name
+  isDefault
+  deletionProtected
+}
+
+query Environments {
+  me {
+    application {
+      environments {
+        ...EnvironmentParts
+      }
+    }
+  }
+}
+
+mutation CreateEnvironment($input: CreateEnvironmentInput!) {
+  createEnvironment(input: $input) {
+    ...EnvironmentParts
+  }
+}
+
+mutation RenameEnvironment($input: RenameEnvironmentInput!) {
+  renameEnvironment(input: $input) {
+    ...EnvironmentParts
+  }
+}

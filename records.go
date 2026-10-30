@@ -13,8 +13,8 @@ import (
 // recordTarget is the app-tenant, or with appWide the application itself, and the entity a records
 // command acts on.
 type recordTarget struct {
-	appID, tenantID, entityID string
-	appWide                   bool
+	appID, tenantID, envID, entityID string
+	appWide                          bool
 }
 
 // recordCommands read and write an entity's records in one app-tenant, or the application's app-wide
@@ -157,6 +157,9 @@ func (s *session) recordScope(ctx context.Context, target recordTarget) (string,
 	if !target.appWide {
 		return s.appScope(ctx, target.appID, target.tenantID)
 	}
+	if target.envID != "" {
+		return s.scopeIn(ctx, target.appID, target.envID)
+	}
 	entitlements, err := s.entitlements(ctx)
 	if err != nil {
 		return "", err
@@ -198,8 +201,18 @@ func (s *session) writeRecord(ctx context.Context, target recordTarget, data str
 }
 
 func recordFlags(cmd *cobra.Command, target *recordTarget) {
+	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
+		switch {
+		case target.envID != "" && cmd.Flags().Changed("tenant"):
+			return fmt.Errorf("--env and --tenant: choose one; a tenant already belongs to one environment")
+		case target.envID != "" && !target.appWide:
+			return fmt.Errorf("--env needs --app-wide: an app-tenant's records are reached with --tenant, which already belongs to one environment")
+		}
+		return nil
+	}
 	appFlag(cmd, &target.appID)
-	tenantFlag(cmd, &target.appID, &target.tenantID, &target.appWide)
+	envFlag(cmd, &target.envID)
+	tenantFlag(cmd, &target.appID, &target.tenantID, func() bool { return target.appWide || target.envID != "" })
 	cmd.Flags().BoolVar(&target.appWide, "app-wide", false, "act on the application's app-wide records instead of an app-tenant's")
 	cmd.MarkFlagsMutuallyExclusive("tenant", "app-wide")
 	cmd.Flags().StringVar(&target.entityID, "entity", "", "the entity's id (from model show)")

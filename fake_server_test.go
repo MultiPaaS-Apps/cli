@@ -34,6 +34,8 @@ type fakeMultiPaaS struct {
 	apps         map[string][]fakeRow   // client id -> its apps
 	tenants      map[string][]fakeRow   // app id -> its app-tenants
 	scopedApps   map[string]fakeRow     // app-tenant id -> its app
+	environments map[string][]fakeEnv   // app id -> its environments, the default first
+	envTenants   map[string][]fakeRow   // environment id -> its app-tenants
 	scopes       []string               // X-MultiPaaS-Scope per GraphQL request ("" when absent)
 	refused      map[string]bool        // client ids myTenants lists but the scope check refuses
 	nameless     bool                   // the signed-in user has no name
@@ -95,11 +97,16 @@ type entitlement struct{ clientID, clientName, applicationID, appTenantID string
 
 type fakeRow struct{ id, name string }
 
+type fakeEnv struct {
+	id, name  string
+	isDefault bool
+}
+
 func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 	fake := &fakeMultiPaaS{
 		t: t, accessTTL: 3600,
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
-		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, refused: map[string]bool{},
+		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{},
 		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
 		records: map[string][]map[string]any{},
@@ -289,10 +296,14 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.createAppTenant(w, parts, variables)
 	case "AppTenants":
 		apps := []fakeRow{}
-		if len(parts) >= 2 {
+		if env, ok := strings.CutPrefix(scope, "env:"); ok {
+			apps = f.envTenants[env]
+		} else if len(parts) >= 2 {
 			apps = f.tenants[parts[1]]
 		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
+	case "Environments", "CreateEnvironment", "RenameEnvironment":
+		f.manageEnvironments(w, operation, appOf(parts), variables)
 	case "ScopedAppTenant":
 		scopedApp := f.scopedApps[parts[len(parts)-1]]
 		var tenant fakeRow
@@ -415,6 +426,9 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 // entitled mirrors the server's scope check: a client-level entitlement covers any app and app-tenant
 // under its client; an app-tenant-level one covers exactly its own application and app-tenant.
 func (f *fakeMultiPaaS) entitled(scope string) bool {
+	if env, ok := strings.CutPrefix(scope, "env:"); ok {
+		return f.entitledToEnvironment(env)
+	}
 	parts := strings.Split(scope, "/")
 	if len(parts) > 3 || slices.Contains(parts, "") || f.refused[parts[0]] {
 		return false
@@ -667,11 +681,18 @@ func (f *fakeMultiPaaS) createApplication(w http.ResponseWriter, parts []string,
 func (f *fakeMultiPaaS) createAppTenant(w http.ResponseWriter, parts []string, variables map[string]any) {
 	f.mutations = append(f.mutations, variables)
 	app := appOf(parts)
-	if app == "" || f.noManageApp {
+	env, inEnv := strings.CutPrefix(parts[0], "env:")
+	if (app == "" && !inEnv) || f.noManageApp {
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
 		return
 	}
 	name, _ := variables["input"].(map[string]any)["name"].(string)
+	if inEnv {
+		created := fakeRow{id: fmt.Sprintf("tenant-env-%d", len(f.envTenants[env])+1), name: name}
+		f.envTenants[env] = append(f.envTenants[env], created)
+		writeData(w, map[string]any{"createAppTenant": map[string]any{"id": created.id, "name": created.name}})
+		return
+	}
 	created := fakeRow{id: fmt.Sprintf("tenant-new-%d", len(f.tenants[app])+1), name: name}
 	f.tenants[app] = append(f.tenants[app], created)
 	writeData(w, map[string]any{"createAppTenant": map[string]any{"id": created.id, "name": created.name}})
@@ -838,4 +859,61 @@ func (f *fakeMultiPaaS) appName(id string) string {
 		}
 	}
 	return ""
+}
+
+// entitledToEnvironment mirrors the server resolving an env: scope to its application: a client-level
+// entitlement covers every environment of an application under its client.
+func (f *fakeMultiPaaS) entitledToEnvironment(env string) bool {
+	for app, envs := range f.environments {
+		if !slices.ContainsFunc(envs, func(e fakeEnv) bool { return e.id == env }) {
+			continue
+		}
+		for client, apps := range f.apps {
+			if slices.ContainsFunc(apps, func(a fakeRow) bool { return a.id == app }) && !f.refused[client] {
+				return slices.ContainsFunc(f.entitlements, func(e entitlement) bool { return e.clientID == client && e.appTenantID == "" })
+			}
+		}
+	}
+	return false
+}
+
+// manageEnvironments shares these steps with the server, in order: an application in scope, then
+// access.manage.application for a change, then the change. Names are unique within an application.
+func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app string, variables map[string]any) {
+	if operation != "Environments" {
+		f.mutations = append(f.mutations, variables)
+	}
+	if app == "" || (operation != "Environments" && f.noManageApp) {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	shown := func(e fakeEnv) map[string]any {
+		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.isDefault}
+	}
+	input, _ := variables["input"].(map[string]any)
+	name, _ := input["name"].(string)
+	if operation != "Environments" && slices.ContainsFunc(f.environments[app], func(e fakeEnv) bool { return e.name == name }) {
+		graphQLRefusal(w, "VALIDATION", "an environment with this name already exists")
+		return
+	}
+	switch operation {
+	case "CreateEnvironment":
+		created := fakeEnv{id: fmt.Sprintf("env-new-%d", len(f.environments[app])+1), name: name}
+		f.environments[app] = append(f.environments[app], created)
+		writeData(w, map[string]any{"createEnvironment": shown(created)})
+	case "RenameEnvironment":
+		i := slices.IndexFunc(f.environments[app], func(e fakeEnv) bool { return e.id == input["id"] })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "environment not found")
+			return
+		}
+		f.environments[app][i].name = name
+		writeData(w, map[string]any{"renameEnvironment": shown(f.environments[app][i])})
+	default:
+		listed := []map[string]any{}
+		for _, e := range f.environments[app] {
+			listed = append(listed, shown(e))
+		}
+		writeData(w, map[string]any{"me": map[string]any{"application": map[string]any{"environments": listed}}})
+	}
 }

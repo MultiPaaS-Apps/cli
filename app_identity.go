@@ -11,10 +11,10 @@ import (
 )
 
 // appIdentityCommands manage the identities an app's own code calls the API as. Each needs
-// application.manage_oauth on the application.
+// application.manage_oauth on the application; role add and remove also need access.manage where they act, or access.manage.application with --app-wide.
 func appIdentityCommands(command commandFunc) *cobra.Command {
 	return group("app-identity", "Manage the app's own identities for background jobs",
-		appIdentityList(command), appIdentityCreate(command), appIdentitySecretGroup(command), appIdentityRetire(command))
+		appIdentityList(command), appIdentityCreate(command), appIdentitySecretGroup(command), appIdentityRoleGroup(command), appIdentityRetire(command))
 }
 
 func appIdentityList(command commandFunc) *cobra.Command {

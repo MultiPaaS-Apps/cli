@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"regexp"
 	"slices"
 	"strconv"
@@ -63,6 +64,10 @@ type fakeMultiPaaS struct {
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
 	noCreateApp   bool                        // the signed-in user lacks client.applications.create
+	roles         []map[string]any            // the application's roles; appTenant is nil for an application role
+	assignments   []map[string]any            // role assignments: id, roleId, userId, appTenant
+	roleSeq       int                         // roles created so far; ids are never reused
+	assignmentSeq int                         // assignments created so far; ids are never reused
 
 	imports          map[string]*fakeImport // import id -> its state
 	uploads          map[string]fakeUpload  // File id -> what its PUT received
@@ -384,6 +389,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageOAuth(w, operation, parts, variables)
 	case "AppIdentities", "CreateAppIdentity", "CreateAppIdentitySecret", "RevokeAppIdentitySecret", "RetireAppIdentity":
 		f.manageAppIdentity(w, operation, parts, variables)
+	case "Roles", "PermissionCatalog", "CreateRole", "RoleAssignments", "AssignRole", "UnassignRole":
+		f.manageRoles(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
 	case "SubmitFeedback":
@@ -772,6 +779,102 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		retired := f.appIdentities[i]
 		f.appIdentities = slices.Delete(f.appIdentities, i, i+1)
 		writeData(w, map[string]any{"retireAppIdentity": retired})
+	}
+}
+
+// manageRoles serves roles as the server scopes them. A role or assignment made in an app-tenant's scope
+// belongs to that app-tenant, and one made in the application's scope belongs to the application. A read in an
+// app-tenant's scope sees both, so the CLI must do its own filtering by scope.
+func (f *fakeMultiPaaS) manageRoles(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	write := operation == "CreateRole" || operation == "AssignRole" || operation == "UnassignRole"
+	if write {
+		f.mutations = append(f.mutations, variables)
+	}
+	if appOf(parts) == "" || (write && f.noManageApp) {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	var tenant any
+	if len(parts) > 2 {
+		tenant = map[string]any{"id": parts[2]}
+	}
+	sameScope := func(row map[string]any) bool { return reflect.DeepEqual(row["appTenant"], tenant) }
+	visible := func(row map[string]any) bool { return row["appTenant"] == nil || sameScope(row) }
+	roleByID := func(id any) map[string]any {
+		if i := slices.IndexFunc(f.roles, func(r map[string]any) bool { return r["id"] == id }); i >= 0 {
+			return f.roles[i]
+		}
+		return nil
+	}
+	shown := func(a map[string]any) map[string]any {
+		return map[string]any{"id": a["id"], "appTenant": a["appTenant"], "role": roleByID(a["roleId"])}
+	}
+	switch operation {
+	case "Roles":
+		listed := []map[string]any{}
+		for _, role := range f.roles {
+			if visible(role) {
+				listed = append(listed, role)
+			}
+		}
+		writeData(w, map[string]any{"roles": listed})
+	case "PermissionCatalog":
+		writeData(w, map[string]any{"permissionCatalog": []map[string]any{
+			{"key": "record.view_all", "level": "appTenant", "entityTargeted": true},
+			{"key": "record.app_wide.create", "level": "application", "entityTargeted": true},
+		}})
+	case "CreateRole":
+		input, _ := variables["input"].(map[string]any)
+		if slices.ContainsFunc(f.roles, func(r map[string]any) bool { return sameScope(r) && r["key"] == input["key"] }) {
+			graphQLRefusal(w, "DUPLICATE_ROLE_KEY", "a role with this key already exists")
+			return
+		}
+		permissions := []map[string]any{}
+		for _, given := range input["permissions"].([]any) {
+			p := given.(map[string]any)
+			permissions = append(permissions, map[string]any{"permission": p["permission"], "entityId": p["entityId"]})
+		}
+		f.roleSeq++
+		role := map[string]any{"id": fmt.Sprintf("role-%d", f.roleSeq), "key": input["key"], "name": input["name"], "appTenant": tenant, "permissions": permissions}
+		f.roles = append(f.roles, role)
+		writeData(w, map[string]any{"createRole": role})
+	case "RoleAssignments":
+		listed := []map[string]any{}
+		for _, a := range f.assignments {
+			if visible(a) && a["userId"] == variables["userId"] {
+				listed = append(listed, shown(a))
+			}
+		}
+		writeData(w, map[string]any{"roleAssignments": listed})
+	case "AssignRole":
+		role := roleByID(variables["roleId"])
+		if role == nil || !visible(role) {
+			graphQLRefusal(w, "NOT_FOUND", "role not found")
+			return
+		}
+		if !slices.ContainsFunc(f.appIdentities, func(a map[string]any) bool { return a["user"].(map[string]any)["id"] == variables["userId"] }) {
+			graphQLRefusal(w, "NOT_FOUND", "user not found")
+			return
+		}
+		if slices.ContainsFunc(f.assignments, func(a map[string]any) bool {
+			return sameScope(a) && a["roleId"] == variables["roleId"] && a["userId"] == variables["userId"]
+		}) {
+			graphQLRefusal(w, "DUPLICATE_ROLE_ASSIGNMENT", "this user already holds this role")
+			return
+		}
+		f.assignmentSeq++
+		assignment := map[string]any{"id": fmt.Sprintf("assignment-%d", f.assignmentSeq), "roleId": variables["roleId"], "userId": variables["userId"], "appTenant": tenant}
+		f.assignments = append(f.assignments, assignment)
+		writeData(w, map[string]any{"assignRole": shown(assignment)})
+	case "UnassignRole":
+		i := slices.IndexFunc(f.assignments, func(a map[string]any) bool { return a["id"] == variables["id"] && sameScope(a) })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "roleAssignment not found")
+			return
+		}
+		removed := shown(f.assignments[i])
+		f.assignments = slices.Delete(f.assignments, i, i+1)
+		writeData(w, map[string]any{"unassignRole": removed})
 	}
 }
 

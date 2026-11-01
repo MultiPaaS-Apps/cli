@@ -198,12 +198,18 @@ func (s *session) writeRecord(ctx context.Context, target recordTarget, data str
 }
 
 func recordFlags(cmd *cobra.Command, target *recordTarget) {
-	appFlag(cmd, &target.appID)
-	tenantFlag(cmd, &target.appID, &target.tenantID, &target.appWide)
-	cmd.Flags().BoolVar(&target.appWide, "app-wide", false, "act on the application's app-wide records instead of an app-tenant's")
-	cmd.MarkFlagsMutuallyExclusive("tenant", "app-wide")
+	scopeFlags(cmd, target, "act on the application's app-wide records instead of an app-tenant's")
 	cmd.Flags().StringVar(&target.entityID, "entity", "", "the entity's id (from model show)")
 	_ = cmd.MarkFlagRequired("entity")
+}
+
+// scopeFlags are --app, --tenant and --app-wide: one app-tenant, by default multipaas.json's test app-tenant,
+// or with --app-wide the application itself.
+func scopeFlags(cmd *cobra.Command, target *recordTarget, appWideUsage string) {
+	appFlag(cmd, &target.appID)
+	tenantFlag(cmd, &target.appID, &target.tenantID, &target.appWide)
+	cmd.Flags().BoolVar(&target.appWide, "app-wide", false, appWideUsage)
+	cmd.MarkFlagsMutuallyExclusive("tenant", "app-wide")
 }
 
 func recordID(cmd *cobra.Command, id *string) {

@@ -52,9 +52,9 @@ func importCommands(command commandFunc) *cobra.Command {
 }
 
 func importCreate(command commandFunc) *cobra.Command {
-	var appID, dir string
+	var appID, envID, dir string
 	cmd := command("create", "Create an import, adding every .jsonl file in --dir", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		scope, err := s.appScope(ctx, appID, "")
+		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -91,17 +91,18 @@ func importCreate(command commandFunc) *cobra.Command {
 		return shownImport(created)
 	})
 	appFlag(cmd, &appID)
+	envFlag(cmd, &envID)
 	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it")
 	return cmd
 }
 
 func importAdd(command commandFunc) *cobra.Command {
-	var appID, importID, kind, entityID, path string
+	var appID, envID, importID, kind, entityID, path string
 	cmd := command("add", "Add one export file to an import", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		if !slices.Contains([]string{"tenants", "users", "memberships", "records"}, kind) {
 			return nil, nil, fmt.Errorf("--kind must be one of tenants, users, memberships, records")
 		}
-		scope, err := s.appScope(ctx, appID, "")
+		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -114,6 +115,7 @@ func importAdd(command commandFunc) *cobra.Command {
 		}, nil
 	})
 	appFlag(cmd, &appID)
+	envFlag(cmd, &envID)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	cmd.Flags().StringVar(&kind, "kind", "", "what the file holds: tenants, users, memberships or records")
 	cmd.Flags().StringVar(&entityID, "entity", "", "the entity's id (from model show), for --kind records")
@@ -147,10 +149,10 @@ func importRun(command commandFunc) *cobra.Command {
 }
 
 func importStatus(command commandFunc) *cobra.Command {
-	var appID, importID string
+	var appID, envID, importID string
 	var includeDeleted bool
 	cmd := command("status", "Show an import: its files, counts and every problem", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		scope, err := s.appScope(ctx, appID, "")
+		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -164,6 +166,7 @@ func importStatus(command commandFunc) *cobra.Command {
 		return shownImport(current)
 	})
 	appFlag(cmd, &appID)
+	envFlag(cmd, &envID)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	cmd.Flags().BoolVar(&includeDeleted, "include-deleted", false, "find the import even if it was deleted")
 	_ = cmd.MarkFlagRequired("import")
@@ -171,9 +174,9 @@ func importStatus(command commandFunc) *cobra.Command {
 }
 
 func importDelete(command commandFunc) *cobra.Command {
-	var appID, importID string
+	var appID, envID, importID string
 	cmd := command("delete", "Delete an import that is not checking or importing; its files and imported data stay", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		scope, err := s.appScope(ctx, appID, "")
+		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -191,6 +194,7 @@ func importDelete(command commandFunc) *cobra.Command {
 		return shownImport(deleted)
 	})
 	appFlag(cmd, &appID)
+	envFlag(cmd, &envID)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	_ = cmd.MarkFlagRequired("import")
 	return cmd
@@ -198,10 +202,10 @@ func importDelete(command commandFunc) *cobra.Command {
 
 // importStep is check or run: request it, wait for it to finish unless --wait=false, then show the import.
 func importStep(command commandFunc, use, short string, request func(context.Context, graphql.Client, string) (DataImportParts, error)) *cobra.Command {
-	var appID, importID string
+	var appID, envID, importID string
 	waiting := true
 	cmd := command(use, short, func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		scope, err := s.appScope(ctx, appID, "")
+		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -224,6 +228,7 @@ func importStep(command commandFunc, use, short string, request func(context.Con
 		return shownImport(current)
 	})
 	appFlag(cmd, &appID)
+	envFlag(cmd, &envID)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	cmd.Flags().BoolVar(&waiting, "wait", true, "wait until it finishes; --wait=false returns right after the request")
 	_ = cmd.MarkFlagRequired("import")

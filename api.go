@@ -174,9 +174,15 @@ func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsT
 	if err != nil || !slices.ContainsFunc(apps, func(candidate app) bool { return candidate.ID == appID }) {
 		return nil, false, err
 	}
-	tenants, err := pages(func(page PageInput) ([]appTenant, bool, error) {
+	tenants, err := s.tenantsAt(ctx, entitlement.Client.Id+"/"+appID)
+	return tenants, true, err
+}
+
+// tenantsAt lists the app-tenants scope reaches: every one of an application, or one environment's.
+func (s *session) tenantsAt(ctx context.Context, scope string) ([]appTenant, error) {
+	return pages(func(page PageInput) ([]appTenant, bool, error) {
 		var listed *AppTenantsResponse
-		err := s.call(ctx, entitlement.Client.Id+"/"+appID, func(client graphql.Client) (err error) {
+		err := s.call(ctx, scope, func(client graphql.Client) (err error) {
 			listed, err = AppTenants(ctx, client, page)
 			return err
 		})
@@ -189,7 +195,6 @@ func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsT
 		}
 		return reached, listed.AppTenants.PageInfo.HasMore, nil
 	})
-	return tenants, true, err
 }
 
 // scopedAppTenant reads the app and app-tenant an app-tenant-level entitlement names, in its own scope.

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.11.0...v0.12.0) (2026-11-01)
+
+
+### Features
+
+* [MP-237] add multipaas api ([#38](https://github.com/MultiPaaS-Apps/cli/issues/38)) ([421bc89](https://github.com/MultiPaaS-Apps/cli/commit/421bc8939b15458c1f262bfc05d32f903956f0d7))
+
 ## [0.11.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.10.0...v0.11.0) (2026-11-01)
 
 

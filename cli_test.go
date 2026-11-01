@@ -233,7 +233,9 @@ func TestTenantsListWithEnvSendsTheEnvScope(t *testing.T) {
 	if fake.scopes[len(fake.scopes)-1] != "env:env-default" {
 		t.Fatalf("scopes %v", fake.scopes)
 	}
-	fake.run(t, "records", "list", "--app", "app-a-000", "--env", "env-default", "--app-wide", "--entity", "entity-1", "--json")
+	if got := fake.run(t, "records", "list", "--app", "app-a-000", "--env", "env-default", "--app-wide", "--entity", "entity-1", "--json"); got.exit != exitOK {
+		t.Fatalf("records list failed: exit %d: %s", got.exit, got.stdout)
+	}
 	if fake.scopes[len(fake.scopes)-1] != "env:env-default" {
 		t.Fatalf("scopes %v", fake.scopes)
 	}

@@ -267,7 +267,7 @@ func (s *session) inGrantScope(ctx context.Context, target recordTarget, clientI
 		}
 		here := []RoleAssignmentParts{}
 		for _, item := range response.RoleAssignments {
-			if heldIn(item.RoleAssignmentParts.AppTenant, target) {
+			if heldIn(item.AppTenant, target) {
 				here = append(here, item.RoleAssignmentParts)
 			}
 		}

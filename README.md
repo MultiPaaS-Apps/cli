@@ -6,12 +6,8 @@ account's permissions.
 ## Install
 
 ```bash
-brew tap multipaas-apps/tap
-HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)" brew install multipaas-apps/tap/multipaas
+brew install multipaas-apps/tap/multipaas
 ```
-
-While this repository is private, installing needs your GitHub access. See
-[the tap's README](https://github.com/MultiPaaS-Apps/homebrew-tap).
 
 ## Use
 

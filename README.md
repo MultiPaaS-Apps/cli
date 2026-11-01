@@ -45,6 +45,7 @@ multipaas feedback list
 multipaas feedback show --id ID
 multipaas feedback settings [--auto-send on|off]
 multipaas logout
+multipaas api --query '{ me { email } }'                  # any GraphQL, as you
 ```
 
 The model commands are `model show`, `entity create|update|retire`, `enum create|update|retire`, `field add|update|retire` and `constraint add|retire`; `--help` on each lists its flags. Each change prints the changed entity, enum type, field or constraint and `apiVersion`: the API version the model is at after the change.
@@ -143,6 +144,25 @@ its status history. With `--json` they print `[{...}]` and `{"feedback": {...}}`
 
 `feedback settings` prints whether Claude may send your feedback without asking first, and `feedback settings --auto-send on`
 (or `off`) changes it. It starts off.
+
+## API
+
+`api` sends one GraphQL document to the MultiPaaS API as you and prints the server's response, `data` and `errors`
+together, as JSON. It is for anything the other commands don't cover. Give the document with `--query`, or from a
+file with `--query-file F`, or from standard input with `--query-file -`. `--variables` takes the document's
+variables as a JSON object, and `--scope CLIENT[/APP[/APP_TENANT]]` sends the request in that scope; without it the
+request has none.
+
+```bash
+multipaas api --query '{ me { email } }'
+multipaas api --query-file report.graphql --variables '{"id": "<id>"}'
+```
+
+It exits 0 when the response is a successful GraphQL response with no `errors`, 1 when it has any (its `data` may
+still hold what succeeded) or when the server answered with an error status or a JSON body that isn't a GraphQL
+response (the body is still printed), 2 when you aren't signed in, and 3 when the server says to upgrade. A body that
+isn't JSON is reported as a `CLI_ERROR` with exit 1, like any other failure. It runs with your own permissions, and the
+server refuses anything they don't allow.
 
 ## Develop
 

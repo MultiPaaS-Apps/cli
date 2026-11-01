@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"text/tabwriter"
 	"time"
 
@@ -122,7 +123,7 @@ func run(args []string, env environment) int {
 	root.AddCommand(apps, tenants)
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
-	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), importCommands(command), feedbackCommands(command))
+	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
 
 	root.SetArgs(args)
 	root.SetOut(env.stdout)
@@ -196,10 +197,15 @@ type fieldError struct {
 
 func (e *cliError) Error() string { return e.Message }
 
-// report prints a failure (stdout as JSON, else stderr) and returns the exit code for it.
+// report prints a failure (stdout as JSON, else stderr) and returns the exit code for it. A response the api
+// command already printed only sets the exit code.
 func report(env environment, asJSON bool, err error) int {
 	if err == nil {
 		return exitOK
+	}
+	var printed *printedResponse
+	if errors.As(err, &printed) {
+		return printed.exit
 	}
 	failure := asCLIError(err)
 	if asJSON {
@@ -236,4 +242,23 @@ func table[T any](out io.Writer, header string, rows []T, line func(T) string) {
 		fmt.Fprintln(writer, line(row))
 	}
 	_ = writer.Flush()
+}
+
+// textOrFile is text, or the contents of file when one is given, where - is stdin. flag names the file flag in a
+// read failure.
+func textOrFile(stdin io.Reader, text, file, flag string) (string, error) {
+	if file == "" {
+		return text, nil
+	}
+	var data []byte
+	var err error
+	if file == "-" {
+		data, err = io.ReadAll(stdin)
+	} else {
+		data, err = os.ReadFile(file)
+	}
+	if err != nil {
+		return "", fmt.Errorf("read %s: %w", flag, err)
+	}
+	return string(data), nil
 }

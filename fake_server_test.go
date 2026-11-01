@@ -84,6 +84,10 @@ type fakeMultiPaaS struct {
 	feedback   []map[string]any // the reports submitted, newest last
 	cliVersion string           // X-MultiPaaS-Cli-Version of the latest GraphQL request
 	autoSend   bool             // the signed-in user's feedback auto-send setting
+
+	rawAnswers  []map[string]any // what the server answers each api command document, in order
+	rawRequests []map[string]any // the query and variables of each api command document received
+	rawStatus   int              // HTTP status of rawAnswers; 200 when zero
 }
 
 type pendingCode struct{ redirectURI, challenge string }
@@ -231,6 +235,7 @@ func (f *fakeMultiPaaS) revoke(w http.ResponseWriter, r *http.Request) {
 // refusal is HTTP 200 with errors[0].extensions.code.
 func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 	var request struct {
+		Query         string         `json:"query"`
 		OperationName string         `json:"operationName"`
 		Variables     map[string]any `json:"variables"`
 	}
@@ -257,9 +262,24 @@ func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
 	case scope != "" && !f.entitled(scope):
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+	case request.OperationName == "" && len(f.rawAnswers) > 0:
+		f.answerRaw(w, request.Query, request.Variables)
 	default:
 		f.answer(w, request.OperationName, scope, request.Variables)
 	}
+}
+
+// answerRaw answers an api command document: each gets the next of rawAnswers, as the server would send it, and is
+// kept in rawRequests. It runs after the token and scope checks, as a resolver would.
+func (f *fakeMultiPaaS) answerRaw(w http.ResponseWriter, query string, variables map[string]any) {
+	f.rawRequests = append(f.rawRequests, map[string]any{"query": query, "variables": variables})
+	answer := f.rawAnswers[0]
+	f.rawAnswers = f.rawAnswers[1:]
+	status := f.rawStatus
+	if status == 0 {
+		status = http.StatusOK
+	}
+	writeJSONResponse(w, status, answer)
 }
 
 // answer serves the operations the CLI sends, shaped as the schema shapes them.

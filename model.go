@@ -463,9 +463,21 @@ func (s *session) scopeIn(ctx context.Context, appID, envID string) (string, err
 	return envScope(envID), nil
 }
 
-// envFlag is --env.
+// envFlag is --env. An --env given empty is refused, never read as the default environment.
 func envFlag(cmd *cobra.Command, envID *string) {
 	cmd.Flags().StringVar(envID, "env", "", "the environment's id (from envs list; default: the application's default environment)")
+	previous := cmd.PreRunE
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if previous != nil {
+			if err := previous(cmd, args); err != nil {
+				return err
+			}
+		}
+		if cmd.Flags().Changed("env") && *envID == "" {
+			return fmt.Errorf("--env is empty: give an environment id from envs list, or leave --env off for the default environment")
+		}
+		return nil
+	}
 }
 
 // inApp runs one operation in appID's scope.

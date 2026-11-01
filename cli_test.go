@@ -251,6 +251,26 @@ func TestEnvAndTenantTogetherAreRefused(t *testing.T) {
 	}
 }
 
+func TestEmptyEnvIsRefusedNotTheDefault(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	commands := [][]string{
+		{"tenants", "list", "--app", "app-a-000", "--env", "", "--json"},
+		{"tenants", "create", "--app", "app-a-000", "--env", "", "--name", "Second", "--json"},
+		{"records", "create", "--app", "app-a-000", "--env", "", "--app-wide", "--entity", "entity-1", "--data", "{}", "--json"},
+		{"import", "create", "--app", "app-a-000", "--env", "", "--json"},
+	}
+	for _, args := range commands {
+		got := fake.run(t, args...)
+		assertFailure(t, got, exitRefused, "CLI_ERROR")
+		if !strings.Contains(got.stdout, "--env is empty") {
+			t.Fatalf("%v: stdout %s", args, got.stdout)
+		}
+	}
+	if len(fake.scopes) != 0 || len(fake.mutations) != 0 {
+		t.Fatalf("sent scopes %v, mutations %v", fake.scopes, fake.mutations)
+	}
+}
+
 func TestEnvOfAnotherApplicationIsRefused(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	fake.environments["app-a-001"] = []fakeEnv{{id: "env-other", name: "Default", isDefault: true}}

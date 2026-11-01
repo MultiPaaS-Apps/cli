@@ -227,13 +227,18 @@ func (s *session) call(ctx context.Context, scope string, operation func(graphql
 
 // client sends the bearer, the CLI version, and the scope (when there is one) on every request.
 func (s *session) client(token, scope string) graphql.Client {
+	return graphql.NewClient(s.origins.webappAPI+"/graphql", withHeader{doer: s.http, header: s.headers(token, scope)})
+}
+
+// headers are what every webapp-api request carries: the bearer, the CLI version, and the scope when there is one.
+func (s *session) headers(token, scope string) http.Header {
 	header := http.Header{}
 	header.Set("Authorization", "Bearer "+token)
 	header.Set("X-MultiPaaS-Cli-Version", s.env.version)
 	if scope != "" {
 		header.Set("X-MultiPaaS-Scope", scope)
 	}
-	return graphql.NewClient(s.origins.webappAPI+"/graphql", withHeader{doer: s.http, header: header})
+	return header
 }
 
 type withHeader struct {

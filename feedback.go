@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/Khan/genqlient/graphql"
@@ -24,7 +23,7 @@ func feedbackSend(command commandFunc) *cobra.Command {
 	var kind, summary, details, detailsFile, appID, via string
 	var general bool
 	cmd := command("send", "Send a bug report or feature request to MultiPaaS", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		text, err := feedbackDetails(s.env.stdin, details, detailsFile)
+		text, err := textOrFile(s.env.stdin, details, detailsFile, "--details-file")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -201,24 +200,6 @@ func feedbackInput(kind, summary, details, appID, via string, general bool) (map
 		input["apiVersion"] = project.APIVersion
 	}
 	return input, scopeApp, nil
-}
-
-// feedbackDetails is --details, or the contents of --details-file, where - is stdin.
-func feedbackDetails(stdin io.Reader, details, detailsFile string) (string, error) {
-	if detailsFile == "" {
-		return details, nil
-	}
-	var data []byte
-	var err error
-	if detailsFile == "-" {
-		data, err = io.ReadAll(stdin)
-	} else {
-		data, err = os.ReadFile(detailsFile)
-	}
-	if err != nil {
-		return "", fmt.Errorf("read --details-file: %w", err)
-	}
-	return string(data), nil
 }
 
 // feedbackApplication names the application a report is about. A report sent from a scope that has since been

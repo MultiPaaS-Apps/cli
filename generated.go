@@ -392,6 +392,82 @@ func (v *ApplicationsResponse) GetApplications() ApplicationsApplicationsApplica
 	return v.Applications
 }
 
+// AssignRoleAssignRoleRoleAssignment includes the requested fields of the GraphQL type RoleAssignment.
+type AssignRoleAssignRoleRoleAssignment struct {
+	RoleAssignmentParts `json:"-"`
+}
+
+// GetId returns AssignRoleAssignRoleRoleAssignment.Id, and is useful for accessing the field via an interface.
+func (v *AssignRoleAssignRoleRoleAssignment) GetId() string { return v.RoleAssignmentParts.Id }
+
+// GetAppTenant returns AssignRoleAssignRoleRoleAssignment.AppTenant, and is useful for accessing the field via an interface.
+func (v *AssignRoleAssignRoleRoleAssignment) GetAppTenant() *RoleAssignmentPartsAppTenant {
+	return v.RoleAssignmentParts.AppTenant
+}
+
+// GetRole returns AssignRoleAssignRoleRoleAssignment.Role, and is useful for accessing the field via an interface.
+func (v *AssignRoleAssignRoleRoleAssignment) GetRole() *RoleAssignmentPartsRole {
+	return v.RoleAssignmentParts.Role
+}
+
+func (v *AssignRoleAssignRoleRoleAssignment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*AssignRoleAssignRoleRoleAssignment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.AssignRoleAssignRoleRoleAssignment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RoleAssignmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalAssignRoleAssignRoleRoleAssignment struct {
+	Id string `json:"id"`
+
+	AppTenant *RoleAssignmentPartsAppTenant `json:"appTenant"`
+
+	Role *RoleAssignmentPartsRole `json:"role"`
+}
+
+func (v *AssignRoleAssignRoleRoleAssignment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *AssignRoleAssignRoleRoleAssignment) __premarshalJSON() (*__premarshalAssignRoleAssignRoleRoleAssignment, error) {
+	var retval __premarshalAssignRoleAssignRoleRoleAssignment
+
+	retval.Id = v.RoleAssignmentParts.Id
+	retval.AppTenant = v.RoleAssignmentParts.AppTenant
+	retval.Role = v.RoleAssignmentParts.Role
+	return &retval, nil
+}
+
+// AssignRoleResponse is returned by AssignRole on success.
+type AssignRoleResponse struct {
+	AssignRole AssignRoleAssignRoleRoleAssignment `json:"assignRole"`
+}
+
+// GetAssignRole returns AssignRoleResponse.AssignRole, and is useful for accessing the field via an interface.
+func (v *AssignRoleResponse) GetAssignRole() AssignRoleAssignRoleRoleAssignment { return v.AssignRole }
+
 // CheckDataImportCheckDataImport includes the requested fields of the GraphQL type DataImport.
 type CheckDataImportCheckDataImport struct {
 	DataImportParts `json:"-"`
@@ -1674,6 +1750,107 @@ type CreateRecordResponse struct {
 
 // GetCreateRecord returns CreateRecordResponse.CreateRecord, and is useful for accessing the field via an interface.
 func (v *CreateRecordResponse) GetCreateRecord() CreateRecordCreateRecord { return v.CreateRecord }
+
+// CreateRoleCreateRole includes the requested fields of the GraphQL type Role.
+type CreateRoleCreateRole struct {
+	RoleParts `json:"-"`
+}
+
+// GetId returns CreateRoleCreateRole.Id, and is useful for accessing the field via an interface.
+func (v *CreateRoleCreateRole) GetId() string { return v.RoleParts.Id }
+
+// GetKey returns CreateRoleCreateRole.Key, and is useful for accessing the field via an interface.
+func (v *CreateRoleCreateRole) GetKey() string { return v.RoleParts.Key }
+
+// GetName returns CreateRoleCreateRole.Name, and is useful for accessing the field via an interface.
+func (v *CreateRoleCreateRole) GetName() string { return v.RoleParts.Name }
+
+// GetAppTenant returns CreateRoleCreateRole.AppTenant, and is useful for accessing the field via an interface.
+func (v *CreateRoleCreateRole) GetAppTenant() *RolePartsAppTenant { return v.RoleParts.AppTenant }
+
+// GetPermissions returns CreateRoleCreateRole.Permissions, and is useful for accessing the field via an interface.
+func (v *CreateRoleCreateRole) GetPermissions() []RolePartsPermissionsRolePermission {
+	return v.RoleParts.Permissions
+}
+
+func (v *CreateRoleCreateRole) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateRoleCreateRole
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateRoleCreateRole = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RoleParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateRoleCreateRole struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	AppTenant *RolePartsAppTenant `json:"appTenant"`
+
+	Permissions []RolePartsPermissionsRolePermission `json:"permissions"`
+}
+
+func (v *CreateRoleCreateRole) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateRoleCreateRole) __premarshalJSON() (*__premarshalCreateRoleCreateRole, error) {
+	var retval __premarshalCreateRoleCreateRole
+
+	retval.Id = v.RoleParts.Id
+	retval.Key = v.RoleParts.Key
+	retval.Name = v.RoleParts.Name
+	retval.AppTenant = v.RoleParts.AppTenant
+	retval.Permissions = v.RoleParts.Permissions
+	return &retval, nil
+}
+
+type CreateRoleInput struct {
+	Key         string                `json:"key"`
+	Name        string                `json:"name"`
+	Permissions []RolePermissionInput `json:"permissions"`
+}
+
+// GetKey returns CreateRoleInput.Key, and is useful for accessing the field via an interface.
+func (v *CreateRoleInput) GetKey() string { return v.Key }
+
+// GetName returns CreateRoleInput.Name, and is useful for accessing the field via an interface.
+func (v *CreateRoleInput) GetName() string { return v.Name }
+
+// GetPermissions returns CreateRoleInput.Permissions, and is useful for accessing the field via an interface.
+func (v *CreateRoleInput) GetPermissions() []RolePermissionInput { return v.Permissions }
+
+// CreateRoleResponse is returned by CreateRole on success.
+type CreateRoleResponse struct {
+	CreateRole CreateRoleCreateRole `json:"createRole"`
+}
+
+// GetCreateRole returns CreateRoleResponse.CreateRole, and is useful for accessing the field via an interface.
+func (v *CreateRoleResponse) GetCreateRole() CreateRoleCreateRole { return v.CreateRole }
 
 // DataImportDataImport includes the requested fields of the GraphQL type DataImport.
 type DataImportDataImport struct {
@@ -3459,6 +3636,34 @@ func (v *PageInput) GetPage() int { return v.Page }
 // GetPageSize returns PageInput.PageSize, and is useful for accessing the field via an interface.
 func (v *PageInput) GetPageSize() int { return v.PageSize }
 
+// PermissionCatalogPermissionCatalogPermissionInfo includes the requested fields of the GraphQL type PermissionInfo.
+type PermissionCatalogPermissionCatalogPermissionInfo struct {
+	Key            string `json:"key"`
+	Level          string `json:"level"`
+	EntityTargeted bool   `json:"entityTargeted"`
+}
+
+// GetKey returns PermissionCatalogPermissionCatalogPermissionInfo.Key, and is useful for accessing the field via an interface.
+func (v *PermissionCatalogPermissionCatalogPermissionInfo) GetKey() string { return v.Key }
+
+// GetLevel returns PermissionCatalogPermissionCatalogPermissionInfo.Level, and is useful for accessing the field via an interface.
+func (v *PermissionCatalogPermissionCatalogPermissionInfo) GetLevel() string { return v.Level }
+
+// GetEntityTargeted returns PermissionCatalogPermissionCatalogPermissionInfo.EntityTargeted, and is useful for accessing the field via an interface.
+func (v *PermissionCatalogPermissionCatalogPermissionInfo) GetEntityTargeted() bool {
+	return v.EntityTargeted
+}
+
+// PermissionCatalogResponse is returned by PermissionCatalog on success.
+type PermissionCatalogResponse struct {
+	PermissionCatalog []PermissionCatalogPermissionCatalogPermissionInfo `json:"permissionCatalog"`
+}
+
+// GetPermissionCatalog returns PermissionCatalogResponse.PermissionCatalog, and is useful for accessing the field via an interface.
+func (v *PermissionCatalogResponse) GetPermissionCatalog() []PermissionCatalogPermissionCatalogPermissionInfo {
+	return v.PermissionCatalog
+}
+
 // RecordParts includes the GraphQL fields of Record requested by the fragment RecordParts.
 type RecordParts struct {
 	Id string `json:"id"`
@@ -4389,6 +4594,329 @@ func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) __premarshal
 	return &retval, nil
 }
 
+// RoleAssignmentParts includes the GraphQL fields of RoleAssignment requested by the fragment RoleAssignmentParts.
+type RoleAssignmentParts struct {
+	Id        string                        `json:"id"`
+	AppTenant *RoleAssignmentPartsAppTenant `json:"appTenant"`
+	Role      *RoleAssignmentPartsRole      `json:"role"`
+}
+
+// GetId returns RoleAssignmentParts.Id, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentParts) GetId() string { return v.Id }
+
+// GetAppTenant returns RoleAssignmentParts.AppTenant, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentParts) GetAppTenant() *RoleAssignmentPartsAppTenant { return v.AppTenant }
+
+// GetRole returns RoleAssignmentParts.Role, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentParts) GetRole() *RoleAssignmentPartsRole { return v.Role }
+
+// RoleAssignmentPartsAppTenant includes the requested fields of the GraphQL type AppTenant.
+type RoleAssignmentPartsAppTenant struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RoleAssignmentPartsAppTenant.Id, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentPartsAppTenant) GetId() string { return v.Id }
+
+// RoleAssignmentPartsRole includes the requested fields of the GraphQL type Role.
+type RoleAssignmentPartsRole struct {
+	RoleParts `json:"-"`
+}
+
+// GetId returns RoleAssignmentPartsRole.Id, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentPartsRole) GetId() string { return v.RoleParts.Id }
+
+// GetKey returns RoleAssignmentPartsRole.Key, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentPartsRole) GetKey() string { return v.RoleParts.Key }
+
+// GetName returns RoleAssignmentPartsRole.Name, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentPartsRole) GetName() string { return v.RoleParts.Name }
+
+// GetAppTenant returns RoleAssignmentPartsRole.AppTenant, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentPartsRole) GetAppTenant() *RolePartsAppTenant { return v.RoleParts.AppTenant }
+
+// GetPermissions returns RoleAssignmentPartsRole.Permissions, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentPartsRole) GetPermissions() []RolePartsPermissionsRolePermission {
+	return v.RoleParts.Permissions
+}
+
+func (v *RoleAssignmentPartsRole) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RoleAssignmentPartsRole
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RoleAssignmentPartsRole = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RoleParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRoleAssignmentPartsRole struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	AppTenant *RolePartsAppTenant `json:"appTenant"`
+
+	Permissions []RolePartsPermissionsRolePermission `json:"permissions"`
+}
+
+func (v *RoleAssignmentPartsRole) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RoleAssignmentPartsRole) __premarshalJSON() (*__premarshalRoleAssignmentPartsRole, error) {
+	var retval __premarshalRoleAssignmentPartsRole
+
+	retval.Id = v.RoleParts.Id
+	retval.Key = v.RoleParts.Key
+	retval.Name = v.RoleParts.Name
+	retval.AppTenant = v.RoleParts.AppTenant
+	retval.Permissions = v.RoleParts.Permissions
+	return &retval, nil
+}
+
+// RoleAssignmentsResponse is returned by RoleAssignments on success.
+type RoleAssignmentsResponse struct {
+	RoleAssignments []RoleAssignmentsRoleAssignmentsRoleAssignment `json:"roleAssignments"`
+}
+
+// GetRoleAssignments returns RoleAssignmentsResponse.RoleAssignments, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentsResponse) GetRoleAssignments() []RoleAssignmentsRoleAssignmentsRoleAssignment {
+	return v.RoleAssignments
+}
+
+// RoleAssignmentsRoleAssignmentsRoleAssignment includes the requested fields of the GraphQL type RoleAssignment.
+type RoleAssignmentsRoleAssignmentsRoleAssignment struct {
+	RoleAssignmentParts `json:"-"`
+}
+
+// GetId returns RoleAssignmentsRoleAssignmentsRoleAssignment.Id, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentsRoleAssignmentsRoleAssignment) GetId() string {
+	return v.RoleAssignmentParts.Id
+}
+
+// GetAppTenant returns RoleAssignmentsRoleAssignmentsRoleAssignment.AppTenant, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentsRoleAssignmentsRoleAssignment) GetAppTenant() *RoleAssignmentPartsAppTenant {
+	return v.RoleAssignmentParts.AppTenant
+}
+
+// GetRole returns RoleAssignmentsRoleAssignmentsRoleAssignment.Role, and is useful for accessing the field via an interface.
+func (v *RoleAssignmentsRoleAssignmentsRoleAssignment) GetRole() *RoleAssignmentPartsRole {
+	return v.RoleAssignmentParts.Role
+}
+
+func (v *RoleAssignmentsRoleAssignmentsRoleAssignment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RoleAssignmentsRoleAssignmentsRoleAssignment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RoleAssignmentsRoleAssignmentsRoleAssignment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RoleAssignmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRoleAssignmentsRoleAssignmentsRoleAssignment struct {
+	Id string `json:"id"`
+
+	AppTenant *RoleAssignmentPartsAppTenant `json:"appTenant"`
+
+	Role *RoleAssignmentPartsRole `json:"role"`
+}
+
+func (v *RoleAssignmentsRoleAssignmentsRoleAssignment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RoleAssignmentsRoleAssignmentsRoleAssignment) __premarshalJSON() (*__premarshalRoleAssignmentsRoleAssignmentsRoleAssignment, error) {
+	var retval __premarshalRoleAssignmentsRoleAssignmentsRoleAssignment
+
+	retval.Id = v.RoleAssignmentParts.Id
+	retval.AppTenant = v.RoleAssignmentParts.AppTenant
+	retval.Role = v.RoleAssignmentParts.Role
+	return &retval, nil
+}
+
+// RoleParts includes the GraphQL fields of Role requested by the fragment RoleParts.
+type RoleParts struct {
+	Id          string                               `json:"id"`
+	Key         string                               `json:"key"`
+	Name        string                               `json:"name"`
+	AppTenant   *RolePartsAppTenant                  `json:"appTenant"`
+	Permissions []RolePartsPermissionsRolePermission `json:"permissions"`
+}
+
+// GetId returns RoleParts.Id, and is useful for accessing the field via an interface.
+func (v *RoleParts) GetId() string { return v.Id }
+
+// GetKey returns RoleParts.Key, and is useful for accessing the field via an interface.
+func (v *RoleParts) GetKey() string { return v.Key }
+
+// GetName returns RoleParts.Name, and is useful for accessing the field via an interface.
+func (v *RoleParts) GetName() string { return v.Name }
+
+// GetAppTenant returns RoleParts.AppTenant, and is useful for accessing the field via an interface.
+func (v *RoleParts) GetAppTenant() *RolePartsAppTenant { return v.AppTenant }
+
+// GetPermissions returns RoleParts.Permissions, and is useful for accessing the field via an interface.
+func (v *RoleParts) GetPermissions() []RolePartsPermissionsRolePermission { return v.Permissions }
+
+// RolePartsAppTenant includes the requested fields of the GraphQL type AppTenant.
+type RolePartsAppTenant struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RolePartsAppTenant.Id, and is useful for accessing the field via an interface.
+func (v *RolePartsAppTenant) GetId() string { return v.Id }
+
+// RolePartsPermissionsRolePermission includes the requested fields of the GraphQL type RolePermission.
+type RolePartsPermissionsRolePermission struct {
+	Permission string  `json:"permission"`
+	EntityId   *string `json:"entityId"`
+}
+
+// GetPermission returns RolePartsPermissionsRolePermission.Permission, and is useful for accessing the field via an interface.
+func (v *RolePartsPermissionsRolePermission) GetPermission() string { return v.Permission }
+
+// GetEntityId returns RolePartsPermissionsRolePermission.EntityId, and is useful for accessing the field via an interface.
+func (v *RolePartsPermissionsRolePermission) GetEntityId() *string { return v.EntityId }
+
+type RolePermissionInput struct {
+	EntityId   string `json:"entityId,omitempty"`
+	Permission string `json:"permission"`
+}
+
+// GetEntityId returns RolePermissionInput.EntityId, and is useful for accessing the field via an interface.
+func (v *RolePermissionInput) GetEntityId() string { return v.EntityId }
+
+// GetPermission returns RolePermissionInput.Permission, and is useful for accessing the field via an interface.
+func (v *RolePermissionInput) GetPermission() string { return v.Permission }
+
+// RolesResponse is returned by Roles on success.
+type RolesResponse struct {
+	Roles []RolesRolesRole `json:"roles"`
+}
+
+// GetRoles returns RolesResponse.Roles, and is useful for accessing the field via an interface.
+func (v *RolesResponse) GetRoles() []RolesRolesRole { return v.Roles }
+
+// RolesRolesRole includes the requested fields of the GraphQL type Role.
+type RolesRolesRole struct {
+	RoleParts `json:"-"`
+}
+
+// GetId returns RolesRolesRole.Id, and is useful for accessing the field via an interface.
+func (v *RolesRolesRole) GetId() string { return v.RoleParts.Id }
+
+// GetKey returns RolesRolesRole.Key, and is useful for accessing the field via an interface.
+func (v *RolesRolesRole) GetKey() string { return v.RoleParts.Key }
+
+// GetName returns RolesRolesRole.Name, and is useful for accessing the field via an interface.
+func (v *RolesRolesRole) GetName() string { return v.RoleParts.Name }
+
+// GetAppTenant returns RolesRolesRole.AppTenant, and is useful for accessing the field via an interface.
+func (v *RolesRolesRole) GetAppTenant() *RolePartsAppTenant { return v.RoleParts.AppTenant }
+
+// GetPermissions returns RolesRolesRole.Permissions, and is useful for accessing the field via an interface.
+func (v *RolesRolesRole) GetPermissions() []RolePartsPermissionsRolePermission {
+	return v.RoleParts.Permissions
+}
+
+func (v *RolesRolesRole) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RolesRolesRole
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RolesRolesRole = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RoleParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRolesRolesRole struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	AppTenant *RolePartsAppTenant `json:"appTenant"`
+
+	Permissions []RolePartsPermissionsRolePermission `json:"permissions"`
+}
+
+func (v *RolesRolesRole) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RolesRolesRole) __premarshalJSON() (*__premarshalRolesRolesRole, error) {
+	var retval __premarshalRolesRolesRole
+
+	retval.Id = v.RoleParts.Id
+	retval.Key = v.RoleParts.Key
+	retval.Name = v.RoleParts.Name
+	retval.AppTenant = v.RoleParts.AppTenant
+	retval.Permissions = v.RoleParts.Permissions
+	return &retval, nil
+}
+
 // RunDataImportResponse is returned by RunDataImport on success.
 type RunDataImportResponse struct {
 	RunDataImport RunDataImportRunDataImport `json:"runDataImport"`
@@ -4720,6 +5248,84 @@ func (v *SubmitFeedbackSubmitFeedback) __premarshalJSON() (*__premarshalSubmitFe
 	retval.SentFromRemovedScope = v.FeedbackParts.SentFromRemovedScope
 	retval.CreatedAt = v.FeedbackParts.CreatedAt
 	retval.UpdatedAt = v.FeedbackParts.UpdatedAt
+	return &retval, nil
+}
+
+// UnassignRoleResponse is returned by UnassignRole on success.
+type UnassignRoleResponse struct {
+	UnassignRole UnassignRoleUnassignRoleRoleAssignment `json:"unassignRole"`
+}
+
+// GetUnassignRole returns UnassignRoleResponse.UnassignRole, and is useful for accessing the field via an interface.
+func (v *UnassignRoleResponse) GetUnassignRole() UnassignRoleUnassignRoleRoleAssignment {
+	return v.UnassignRole
+}
+
+// UnassignRoleUnassignRoleRoleAssignment includes the requested fields of the GraphQL type RoleAssignment.
+type UnassignRoleUnassignRoleRoleAssignment struct {
+	RoleAssignmentParts `json:"-"`
+}
+
+// GetId returns UnassignRoleUnassignRoleRoleAssignment.Id, and is useful for accessing the field via an interface.
+func (v *UnassignRoleUnassignRoleRoleAssignment) GetId() string { return v.RoleAssignmentParts.Id }
+
+// GetAppTenant returns UnassignRoleUnassignRoleRoleAssignment.AppTenant, and is useful for accessing the field via an interface.
+func (v *UnassignRoleUnassignRoleRoleAssignment) GetAppTenant() *RoleAssignmentPartsAppTenant {
+	return v.RoleAssignmentParts.AppTenant
+}
+
+// GetRole returns UnassignRoleUnassignRoleRoleAssignment.Role, and is useful for accessing the field via an interface.
+func (v *UnassignRoleUnassignRoleRoleAssignment) GetRole() *RoleAssignmentPartsRole {
+	return v.RoleAssignmentParts.Role
+}
+
+func (v *UnassignRoleUnassignRoleRoleAssignment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UnassignRoleUnassignRoleRoleAssignment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UnassignRoleUnassignRoleRoleAssignment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RoleAssignmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUnassignRoleUnassignRoleRoleAssignment struct {
+	Id string `json:"id"`
+
+	AppTenant *RoleAssignmentPartsAppTenant `json:"appTenant"`
+
+	Role *RoleAssignmentPartsRole `json:"role"`
+}
+
+func (v *UnassignRoleUnassignRoleRoleAssignment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UnassignRoleUnassignRoleRoleAssignment) __premarshalJSON() (*__premarshalUnassignRoleUnassignRoleRoleAssignment, error) {
+	var retval __premarshalUnassignRoleUnassignRoleRoleAssignment
+
+	retval.Id = v.RoleAssignmentParts.Id
+	retval.AppTenant = v.RoleAssignmentParts.AppTenant
+	retval.Role = v.RoleAssignmentParts.Role
 	return &retval, nil
 }
 
@@ -5269,6 +5875,18 @@ type __ApplicationsInput struct {
 // GetPage returns __ApplicationsInput.Page, and is useful for accessing the field via an interface.
 func (v *__ApplicationsInput) GetPage() PageInput { return v.Page }
 
+// __AssignRoleInput is used internally by genqlient
+type __AssignRoleInput struct {
+	RoleId string `json:"roleId"`
+	UserId string `json:"userId"`
+}
+
+// GetRoleId returns __AssignRoleInput.RoleId, and is useful for accessing the field via an interface.
+func (v *__AssignRoleInput) GetRoleId() string { return v.RoleId }
+
+// GetUserId returns __AssignRoleInput.UserId, and is useful for accessing the field via an interface.
+func (v *__AssignRoleInput) GetUserId() string { return v.UserId }
+
 // __CheckDataImportInput is used internally by genqlient
 type __CheckDataImportInput struct {
 	ImportId string `json:"importId"`
@@ -5376,6 +5994,14 @@ type __CreateRecordInput struct {
 
 // GetInput returns __CreateRecordInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateRecordInput) GetInput() CreateRecordInput { return v.Input }
+
+// __CreateRoleInput is used internally by genqlient
+type __CreateRoleInput struct {
+	Input CreateRoleInput `json:"input"`
+}
+
+// GetInput returns __CreateRoleInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateRoleInput) GetInput() CreateRoleInput { return v.Input }
 
 // __DataImportInput is used internally by genqlient
 type __DataImportInput struct {
@@ -5549,6 +6175,14 @@ type __RevokeAppIdentitySecretInput struct {
 // GetId returns __RevokeAppIdentitySecretInput.Id, and is useful for accessing the field via an interface.
 func (v *__RevokeAppIdentitySecretInput) GetId() string { return v.Id }
 
+// __RoleAssignmentsInput is used internally by genqlient
+type __RoleAssignmentsInput struct {
+	UserId string `json:"userId"`
+}
+
+// GetUserId returns __RoleAssignmentsInput.UserId, and is useful for accessing the field via an interface.
+func (v *__RoleAssignmentsInput) GetUserId() string { return v.UserId }
+
 // __RunDataImportInput is used internally by genqlient
 type __RunDataImportInput struct {
 	ImportId string `json:"importId"`
@@ -5572,6 +6206,14 @@ type __SubmitFeedbackInput struct {
 
 // GetInput returns __SubmitFeedbackInput.Input, and is useful for accessing the field via an interface.
 func (v *__SubmitFeedbackInput) GetInput() map[string]any { return v.Input }
+
+// __UnassignRoleInput is used internally by genqlient
+type __UnassignRoleInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __UnassignRoleInput.Id, and is useful for accessing the field via an interface.
+func (v *__UnassignRoleInput) GetId() string { return v.Id }
 
 // __UpdateEntityInput is used internally by genqlient
 type __UpdateEntityInput struct {
@@ -5888,6 +6530,63 @@ func Applications(
 	}
 
 	data_ = &ApplicationsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by AssignRole.
+const AssignRole_Operation = `
+mutation AssignRole ($roleId: ID!, $userId: ID!) {
+	assignRole(roleId: $roleId, userId: $userId) {
+		... RoleAssignmentParts
+	}
+}
+fragment RoleAssignmentParts on RoleAssignment {
+	id
+	appTenant {
+		id
+	}
+	role {
+		... RoleParts
+	}
+}
+fragment RoleParts on Role {
+	id
+	key
+	name
+	appTenant {
+		id
+	}
+	permissions {
+		permission
+		entityId
+	}
+}
+`
+
+func AssignRole(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	roleId string,
+	userId string,
+) (data_ *AssignRoleResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "AssignRole",
+		Query:  AssignRole_Operation,
+		Variables: &__AssignRoleInput{
+			RoleId: roleId,
+			UserId: userId,
+		},
+	}
+
+	data_ = &AssignRoleResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -6536,6 +7235,52 @@ func CreateRecord(
 	return data_, err_
 }
 
+// The mutation executed by CreateRole.
+const CreateRole_Operation = `
+mutation CreateRole ($input: CreateRoleInput!) {
+	createRole(input: $input) {
+		... RoleParts
+	}
+}
+fragment RoleParts on Role {
+	id
+	key
+	name
+	appTenant {
+		id
+	}
+	permissions {
+		permission
+		entityId
+	}
+}
+`
+
+func CreateRole(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateRoleInput,
+) (data_ *CreateRoleResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateRole",
+		Query:  CreateRole_Operation,
+		Variables: &__CreateRoleInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateRoleResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by DataImport.
 const DataImport_Operation = `
 query DataImport ($id: ID!, $includeDeleted: Boolean!) {
@@ -7167,6 +7912,38 @@ func OAuthClients(
 	return data_, err_
 }
 
+// The query executed by PermissionCatalog.
+const PermissionCatalog_Operation = `
+query PermissionCatalog {
+	permissionCatalog {
+		key
+		level
+		entityTargeted
+	}
+}
+`
+
+func PermissionCatalog(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *PermissionCatalogResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "PermissionCatalog",
+		Query:  PermissionCatalog_Operation,
+	}
+
+	data_ = &PermissionCatalogResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Record.
 const Record_Operation = `
 query Record ($entityId: ID!, $id: ID!) {
@@ -7622,6 +8399,103 @@ func RevokeAppIdentitySecret(
 	return data_, err_
 }
 
+// The query executed by RoleAssignments.
+const RoleAssignments_Operation = `
+query RoleAssignments ($userId: ID) {
+	roleAssignments(userId: $userId) {
+		... RoleAssignmentParts
+	}
+}
+fragment RoleAssignmentParts on RoleAssignment {
+	id
+	appTenant {
+		id
+	}
+	role {
+		... RoleParts
+	}
+}
+fragment RoleParts on Role {
+	id
+	key
+	name
+	appTenant {
+		id
+	}
+	permissions {
+		permission
+		entityId
+	}
+}
+`
+
+func RoleAssignments(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	userId string,
+) (data_ *RoleAssignmentsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RoleAssignments",
+		Query:  RoleAssignments_Operation,
+		Variables: &__RoleAssignmentsInput{
+			UserId: userId,
+		},
+	}
+
+	data_ = &RoleAssignmentsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Roles.
+const Roles_Operation = `
+query Roles {
+	roles {
+		... RoleParts
+	}
+}
+fragment RoleParts on Role {
+	id
+	key
+	name
+	appTenant {
+		id
+	}
+	permissions {
+		permission
+		entityId
+	}
+}
+`
+
+func Roles(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *RolesResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Roles",
+		Query:  Roles_Operation,
+	}
+
+	data_ = &RolesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by RunDataImport.
 const RunDataImport_Operation = `
 mutation RunDataImport ($importId: ID!) {
@@ -7810,6 +8684,61 @@ func SubmitFeedback(
 	}
 
 	data_ = &SubmitFeedbackResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UnassignRole.
+const UnassignRole_Operation = `
+mutation UnassignRole ($id: ID!) {
+	unassignRole(id: $id) {
+		... RoleAssignmentParts
+	}
+}
+fragment RoleAssignmentParts on RoleAssignment {
+	id
+	appTenant {
+		id
+	}
+	role {
+		... RoleParts
+	}
+}
+fragment RoleParts on Role {
+	id
+	key
+	name
+	appTenant {
+		id
+	}
+	permissions {
+		permission
+		entityId
+	}
+}
+`
+
+func UnassignRole(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *UnassignRoleResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UnassignRole",
+		Query:  UnassignRole_Operation,
+		Variables: &__UnassignRoleInput{
+			Id: id,
+		},
+	}
+
+	data_ = &UnassignRoleResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

@@ -579,3 +579,71 @@ query MyFeedbackReport($id: ID!) {
     }
   }
 }
+
+fragment RoleParts on Role {
+  id
+  key
+  name
+  # @genqlient(pointer: true)
+  appTenant {
+    id
+  }
+  permissions {
+    permission
+    # @genqlient(pointer: true)
+    entityId
+  }
+}
+
+fragment RoleAssignmentParts on RoleAssignment {
+  id
+  # @genqlient(pointer: true)
+  appTenant {
+    id
+  }
+  # @genqlient(pointer: true)
+  role {
+    ...RoleParts
+  }
+}
+
+query Roles {
+  roles {
+    ...RoleParts
+  }
+}
+
+query PermissionCatalog {
+  permissionCatalog {
+    key
+    level
+    entityTargeted
+  }
+}
+
+# @genqlient(for: "RolePermissionInput.entityId", omitempty: true)
+mutation CreateRole(
+  $input: CreateRoleInput!
+) {
+  createRole(input: $input) {
+    ...RoleParts
+  }
+}
+
+query RoleAssignments($userId: ID) {
+  roleAssignments(userId: $userId) {
+    ...RoleAssignmentParts
+  }
+}
+
+mutation AssignRole($roleId: ID!, $userId: ID!) {
+  assignRole(roleId: $roleId, userId: $userId) {
+    ...RoleAssignmentParts
+  }
+}
+
+mutation UnassignRole($id: ID!) {
+  unassignRole(id: $id) {
+    ...RoleAssignmentParts
+  }
+}

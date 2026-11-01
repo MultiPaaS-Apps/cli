@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.9.0...v0.10.0) (2026-10-30)
+
+
+### Features
+
+* [MP-198] records --app-wide ([#29](https://github.com/MultiPaaS-Apps/cli/issues/29)) ([d3cbb0f](https://github.com/MultiPaaS-Apps/cli/commit/d3cbb0fb2cfe2950bb552689db0e7c4e80161989))
+* [MP-212] choose a developer sign-in per shell with named profiles ([#32](https://github.com/MultiPaaS-Apps/cli/issues/32)) ([0c31847](https://github.com/MultiPaaS-Apps/cli/commit/0c31847d439f9436d8ff130dbe102d489de74b96))
+
 ## [0.9.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.8.0...v0.9.0) (2026-10-28)
 
 

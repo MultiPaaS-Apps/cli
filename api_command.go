@@ -124,8 +124,8 @@ func refusedToken(response json.RawMessage) bool {
 }
 
 // answerExit is the api command's exit code for a response: 3 when its first error says to upgrade, 1 for any other
-// error, and 1 for anything that is not a successful GraphQL response (a non-2xx status, or a body with no data).
-// It is 0 only for a 2xx response with a data key and no errors.
+// error, and 1 for anything that is not a successful GraphQL response (a non-2xx status, or a body whose data is not
+// an object). It is 0 only for a 2xx response with a data object and no errors.
 func answerExit(response apiResponse) int {
 	var answer graphQLAnswer
 	var keys map[string]json.RawMessage
@@ -138,7 +138,7 @@ func answerExit(response apiResponse) int {
 	case len(answer.Errors) > 0, response.status < 200, response.status > 299:
 		return exitRefused
 	}
-	if _, hasData := keys["data"]; !hasData {
+	if !bytes.HasPrefix(bytes.TrimSpace(keys["data"]), []byte("{")) {
 		return exitRefused
 	}
 	return exitOK

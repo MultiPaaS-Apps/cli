@@ -79,6 +79,19 @@ func TestAPIExitsOneForABodyWithoutData(t *testing.T) {
 	}
 }
 
+func TestAPIExitsOneForDataThatIsNotAnObject(t *testing.T) {
+	for _, data := range []any{1, nil, []any{}} {
+		fake := signedInFake(t, fresh)
+		fake.rawAnswers = []map[string]any{{"data": data}}
+
+		got := fake.run(t, "api", "--query", "{ me { id } }")
+		want, _ := json.Marshal(map[string]any{"data": data})
+		if got.exit != exitRefused || compact(got.stdout) != string(want) {
+			t.Errorf("data %v: exit %d: %s %s", data, got.exit, got.stdout, got.stderr)
+		}
+	}
+}
+
 func TestAPINeverRetriesAFieldsRefusal(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	fake.rawAnswers = []map[string]any{{

@@ -159,9 +159,10 @@ multipaas api --query-file report.graphql --variables '{"id": "<id>"}'
 ```
 
 It exits 0 when the response is a successful GraphQL response with no `errors`, 1 when it has any (its `data` may
-still hold what succeeded) or when the server answered with an error status or a body that isn't a GraphQL response
-(the body is still printed), 2 when you aren't signed in, and 3 when the server says to upgrade. It runs with your own permissions, and the server
-refuses anything they don't allow.
+still hold what succeeded) or when the server answered with an error status or a JSON body that isn't a GraphQL
+response (the body is still printed), 2 when you aren't signed in, and 3 when the server says to upgrade. A body that
+isn't JSON is reported as a `CLI_ERROR` with exit 1, like any other failure. It runs with your own permissions, and the
+server refuses anything they don't allow.
 
 ## Develop
 

@@ -100,6 +100,10 @@ Each shell, and any agent started from it, uses its own profile, so two shells c
   references. A user whose email already has an account is linked to that account, which keeps its id and name.
 - An `id` is at most 1,024 bytes in UTF-8 and has no control characters or unpaired surrogates (problems
   `id-too-long` and `id-invalid-character`).
+- A tenant's `name`, a user's `name` and `email`, and every text field value have no NUL character and no unpaired
+  surrogate (problem `invalid-character`). Other control characters, such as newlines and tabs, are fine in them.
+- A record's `fields`, as UTF-8 JSON, come to under about 3.75 MiB, less when the text holds many quotes or
+  backslashes (problem `row-too-large`).
 - `fields` is keyed by each field's GraphQL name. `createdBy`, the three timestamps and `deletedAt` are
   optional; a non-null `deletedAt` imports the record as deleted.
 - `create --dir` matches `<entity>.jsonl` to an entity by its name, type name or plural name, ignoring

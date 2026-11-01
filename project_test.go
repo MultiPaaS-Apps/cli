@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -32,6 +33,24 @@ func TestInitWritesTheProjectAndPinsTheNewestAPIVersion(t *testing.T) {
 	}
 	if printed.Config != want || printed.Endpoints != wantEndpoints {
 		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestInitTakesATestAppTenantFromTheNamedEnvironment(t *testing.T) {
+	fake := projectFake(t)
+	assertFailure(t, fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-e", "--json"), exitRefused, "NOT_FOUND")
+	if _, err := os.Stat(projectFile); err == nil {
+		t.Fatal("multipaas.json was written for an app-tenant of another environment")
+	}
+	got := fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-e", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if saved := readProjectForTest(t); saved.ApplicationID != "app-a-000" || saved.TestAppTenantID != "tenant-e" {
+		t.Fatalf("multipaas.json %+v", saved)
+	}
+	if !slices.Contains(fake.scopes, "env:env-default") {
+		t.Fatalf("scopes %v", fake.scopes)
 	}
 }
 

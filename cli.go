@@ -112,22 +112,13 @@ func run(args []string, env environment) int {
 	var appID, envID string
 	tenants := &cobra.Command{Use: "tenants", Short: "App-tenants you can reach"}
 	tenantsList := command("list", "List an application's app-tenants you can reach", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		var list []appTenant
-		var err error
-		if envID != "" {
-			var scope string
-			if scope, err = s.scopeIn(ctx, appID, envID); err == nil {
-				list, err = s.tenantsAt(ctx, scope)
-			}
-		} else {
-			list, err = s.tenants(ctx, appID)
-		}
+		list, err := s.testTenants(ctx, appID, envID)
 		return list, func(out io.Writer) {
 			table(out, "NAME\tID", list, func(t appTenant) string { return t.Name + "\t" + t.ID })
 		}, err
 	})
 	appFlag(tenantsList, &appID)
-	envFlag(tenantsList, &envID)
+	tenantsEnvFlag(tenantsList, &envID)
 	tenants.AddCommand(tenantsList, tenantsCreate(command))
 	root.AddCommand(apps, tenants, envsCommands(command))
 	root.AddCommand(modelCommands(command)...)

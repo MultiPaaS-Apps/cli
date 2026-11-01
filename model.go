@@ -480,6 +480,12 @@ func envFlag(cmd *cobra.Command, envID *string) {
 	}
 }
 
+// tenantsEnvFlag is --env for a command that lists app-tenants, which without it also lists those the developer holds a role in directly.
+func tenantsEnvFlag(cmd *cobra.Command, envID *string) {
+	envFlag(cmd, envID)
+	cmd.Flags().Lookup("env").Usage = "the environment's id (from envs list); with it, only that environment's app-tenants. Without it: the default environment's, plus any app-tenant you hold a role at directly, whatever environment it is in"
+}
+
 // inApp runs one operation in appID's scope.
 func (s *session) inApp(ctx context.Context, appID string, operation func(graphql.Client) error) error {
 	scope, err := s.appScope(ctx, appID, "")

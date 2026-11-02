@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.12.0...v0.13.0) (2026-11-02)
+
+
+### Features
+
+* [MP-234] envs commands and --env ([#34](https://github.com/MultiPaaS-Apps/cli/issues/34)) ([899dafa](https://github.com/MultiPaaS-Apps/cli/commit/899dafa0408d80c06d5a49b2d6e8a48a409918a5))
+
+
+### Bug Fixes
+
+* [MP-238] document the invalid-character and row-too-large import rules ([#39](https://github.com/MultiPaaS-Apps/cli/issues/39)) ([45eccb8](https://github.com/MultiPaaS-Apps/cli/commit/45eccb8dc7afad4473761e381807fb71571a48ae))
+
 ## [0.12.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.11.0...v0.12.0) (2026-11-01)
 
 

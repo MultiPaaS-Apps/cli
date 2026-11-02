@@ -134,6 +134,7 @@ type AppTenantPage {
 
 type Application {
 	createdAt: DateTime!
+	environments: [Environment!]!
 	id: ID!
 	name: String!
 	updatedAt: DateTime!
@@ -329,6 +330,10 @@ input CreateEnumTypeInput {
 	values: [EnumValueInput!]!
 }
 
+input CreateEnvironmentInput {
+	name: String!
+}
+
 input CreateFieldInput {
 	defaultValue: JSON
 	entityId: ID!
@@ -489,6 +494,15 @@ type EnumValue {
 input EnumValueInput {
 	graphqlName: String
 	value: String!
+}
+
+type Environment {
+	createdAt: DateTime!
+	deletionProtected: Boolean!
+	id: ID!
+	isDefault: Boolean!
+	name: String!
+	updatedAt: DateTime!
 }
 
 type Feedback {
@@ -723,6 +737,9 @@ type Mutation {
 	createEnumType(
 		input: CreateEnumTypeInput!
 	): EnumType!
+	createEnvironment(
+		input: CreateEnvironmentInput!
+	): Environment!
 	createField(
 		input: CreateFieldInput!
 	): Field!
@@ -797,6 +814,9 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 		id: ID!
 		name: String!
 	): ClientGroup!
+	renameEnvironment(
+		input: RenameEnvironmentInput!
+	): Environment!
 	renamePlatformGroup(
 		id: ID!
 		name: String!
@@ -1308,6 +1328,11 @@ type RecordVersionPage {
 
 input RemoveMemberInput {
 	id: ID!
+}
+
+input RenameEnvironmentInput {
+	id: ID!
+	name: String!
 }
 
 input RequestSignInInput {

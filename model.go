@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -440,6 +441,49 @@ func (s *session) appScope(ctx context.Context, appID, tenantID string) (string,
 		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no app-tenant " + tenantID + " of application " + appID + " that you can reach"}
 	}
 	return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no application " + appID + " that you can reach"}
+}
+
+// envScope is the scope sent for an environment: the server resolves it to the environment's application.
+func envScope(envID string) string { return "env:" + envID }
+
+// scopeIn is envID's scope when it is not "", else appID's, which acts in the default environment.
+// An envID that is not one of appID's environments is refused, because --app can come from multipaas.json.
+func (s *session) scopeIn(ctx context.Context, appID, envID string) (string, error) {
+	scope, err := s.appScope(ctx, appID, "")
+	if err != nil || envID == "" {
+		return scope, err
+	}
+	owned, err := s.environmentsIn(ctx, scope)
+	if err != nil {
+		return "", err
+	}
+	if !slices.ContainsFunc(owned, func(e EnvironmentParts) bool { return e.Id == envID }) {
+		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "environment " + envID + " is not an environment of application " + appID + ": check --env against envs list --app " + appID}
+	}
+	return envScope(envID), nil
+}
+
+// envFlag is --env. An --env given empty is refused, never read as the default environment.
+func envFlag(cmd *cobra.Command, envID *string) {
+	cmd.Flags().StringVar(envID, "env", "", "the environment's id (from envs list; default: the application's default environment)")
+	previous := cmd.PreRunE
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if previous != nil {
+			if err := previous(cmd, args); err != nil {
+				return err
+			}
+		}
+		if cmd.Flags().Changed("env") && *envID == "" {
+			return fmt.Errorf("--env is empty: give an environment id from envs list, or leave --env off for the default environment")
+		}
+		return nil
+	}
+}
+
+// tenantsEnvFlag is --env for a command that lists app-tenants, which without it also lists those the developer holds a role in directly.
+func tenantsEnvFlag(cmd *cobra.Command, envID *string) {
+	envFlag(cmd, envID)
+	cmd.Flags().Lookup("env").Usage = "the environment's id (from envs list); with it, only that environment's app-tenants. Without it: the default environment's, plus any app-tenant you hold a role at directly, whatever environment it is in"
 }
 
 // inApp runs one operation in appID's scope.

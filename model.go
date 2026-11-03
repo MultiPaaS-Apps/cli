@@ -485,6 +485,29 @@ func envFlag(cmd *cobra.Command, envID *string) {
 	}
 }
 
+// envFlagFromProject is --env, which defaults to multipaas.json's environmentId when that file is for appID.
+// A non-nil skip that returns true leaves --env unset without a default.
+func envFlagFromProject(cmd *cobra.Command, appID, envID *string, skip func() bool) {
+	envFlag(cmd, envID)
+	previous := cmd.PreRunE
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := previous(cmd, args); err != nil {
+			return err
+		}
+		if *envID != "" || (skip != nil && skip()) {
+			return nil
+		}
+		config, err := readProject()
+		if err != nil {
+			return err
+		}
+		if config.ApplicationID == *appID {
+			*envID = config.EnvironmentID
+		}
+		return nil
+	}
+}
+
 // tenantsEnvFlag is --env for a command that lists app-tenants, which without it also lists those the developer holds a role in directly.
 func tenantsEnvFlag(cmd *cobra.Command, envID *string) {
 	envFlag(cmd, envID)
@@ -494,6 +517,15 @@ func tenantsEnvFlag(cmd *cobra.Command, envID *string) {
 // inApp runs one operation in appID's scope.
 func (s *session) inApp(ctx context.Context, appID string, operation func(graphql.Client) error) error {
 	scope, err := s.appScope(ctx, appID, "")
+	if err != nil {
+		return err
+	}
+	return s.call(ctx, scope, operation)
+}
+
+// inEnv runs one operation in envID's scope, or in appID's when envID is "".
+func (s *session) inEnv(ctx context.Context, appID, envID string, operation func(graphql.Client) error) error {
+	scope, err := s.scopeIn(ctx, appID, envID)
 	if err != nil {
 		return err
 	}

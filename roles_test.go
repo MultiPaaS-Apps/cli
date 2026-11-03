@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -220,6 +221,38 @@ func TestAppIdentityRoleAddListAndRemoveKeepAppTenantAndAppWideGrantsApart(t *te
 	}
 	if len(fake.assignments) != 1 || fake.assignments[0]["id"] != "assignment-1" {
 		t.Fatalf("assignments left %v", fake.assignments)
+	}
+}
+
+func TestAppIdentityRoleAddWithEnvGrantsInThatEnvironment(t *testing.T) {
+	fake := projectFake(t)
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-two", name: "Staging"})
+	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--env", "env-two", "--name", "staging sync", "--json")
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--json")
+
+	got := fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--env", "env-two", "--app-wide", "--role", "sync", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "env:env-two" {
+		t.Fatalf("scope %q", last)
+	}
+	assertFailure(t, fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--app-wide", "--role", "sync", "--json"), exitRefused, "NOT_FOUND")
+	assertFailure(t, fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--env", "env-two", "--role", "sync", "--json"), exitRefused, "CLI_ERROR")
+}
+
+func TestAppIdentityRoleAddAtATenantLooksTheIdentityUpInTheTenantScope(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--json")
+	fake.scopes = nil
+
+	got := fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--tenant", "tenant-a", "--role", "sync", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if slices.Contains(fake.scopes, "client-a/app-a-000") || !slices.Contains(fake.scopes, "client-a/app-a-000/tenant-a") {
+		t.Fatalf("the identity lookup left the app-tenant's scope: %v", fake.scopes)
 	}
 }
 

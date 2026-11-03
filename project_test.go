@@ -16,7 +16,7 @@ func TestInitWritesTheProjectAndPinsTheNewestAPIVersion(t *testing.T) {
 	if got.exit != exitOK {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
-	want := projectConfig{ApplicationID: "app-a-000", TestAppTenantID: "tenant-a", APIVersion: "rev-3"}
+	want := projectConfig{ApplicationID: "app-a-000", TestAppTenantID: "tenant-a", EnvironmentID: "env-default", APIVersion: "rev-3"}
 	if saved := readProjectForTest(t); saved != want {
 		t.Fatalf("multipaas.json %+v, want %+v", saved, want)
 	}
@@ -50,6 +50,110 @@ func TestInitTakesATestAppTenantFromTheNamedEnvironment(t *testing.T) {
 		t.Fatalf("multipaas.json %+v", saved)
 	}
 	if !slices.Contains(fake.scopes, "env:env-default") {
+		t.Fatalf("scopes %v", fake.scopes)
+	}
+}
+
+func TestInitRefusesATenantOfAnotherEnvironmentThanTheNamedOne(t *testing.T) {
+	fake := projectFake(t)
+	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-o", name: "Other env", env: "env-other"})
+	assertFailure(t, fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-o", "--json"), exitRefused, "NOT_FOUND")
+	if _, err := os.Stat(projectFile); err == nil {
+		t.Fatal("multipaas.json was written for an app-tenant of another environment")
+	}
+}
+
+func TestInitWithEnvWritesTheEnvironment(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-e", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if saved := readProjectForTest(t); saved.EnvironmentID != "env-default" {
+		t.Fatalf("multipaas.json %+v", saved)
+	}
+	var printed struct{ Config projectConfig }
+	decode(t, got.stdout, &printed)
+	if printed.Config.EnvironmentID != "env-default" {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestInitWithoutEnvSavesTheTestTenantsEnvironment(t *testing.T) {
+	fake := projectFake(t)
+	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-o", name: "Other env", env: "env-other"})
+	fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-e", "--json")
+	got := fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-o", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if saved := readProjectForTest(t); saved.TestAppTenantID != "tenant-o" || saved.EnvironmentID != "env-other" {
+		t.Fatalf("multipaas.json %+v", saved)
+	}
+	got = fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if saved := readProjectForTest(t); saved.EnvironmentID != "env-default" {
+		t.Fatalf("multipaas.json %+v", saved)
+	}
+}
+
+func TestInitOnAnotherAppReplacesTheEnvironment(t *testing.T) {
+	fake := projectFake(t)
+	fake.tenants["app-a-001"] = []fakeRow{{id: "tenant-x", name: "Other", env: "env-x"}}
+	project := `{"applicationId":"app-a-000","testAppTenantId":"tenant-e","environmentId":"env-default","apiVersion":"rev-1"}`
+	if err := os.WriteFile(projectFile, []byte(project), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got := fake.run(t, "init", "--app", "app-a-001", "--tenant", "tenant-x", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if saved := readProjectForTest(t); saved.ApplicationID != "app-a-001" || saved.EnvironmentID != "env-x" {
+		t.Fatalf("multipaas.json %+v", saved)
+	}
+}
+
+func TestRecordsListDefaultsEnvFromTheProject(t *testing.T) {
+	fake := projectFake(t)
+	project := `{"applicationId":"app-a-000","testAppTenantId":"tenant-a","environmentId":"env-default","apiVersion":"rev-1"}`
+	if err := os.WriteFile(projectFile, []byte(project), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got := fake.run(t, "records", "list", "--app-wide", "--entity", "entity-1", "--json"); got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "env:env-default" {
+		t.Fatalf("scopes %v", fake.scopes)
+	}
+	if got := fake.run(t, "app-identity", "list", "--json"); got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "env:env-default" {
+		t.Fatalf("scopes %v", fake.scopes)
+	}
+	fake.scopes = nil
+	if got := fake.run(t, "app-identity", "list", "--app", "app-a-001", "--json"); got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	for _, scope := range fake.scopes {
+		if strings.HasPrefix(scope, "env:") {
+			t.Fatalf("another application took the project's environment: %v", fake.scopes)
+		}
+	}
+}
+
+func TestTenantFromTheProjectWinsOverItsEnvironment(t *testing.T) {
+	fake := projectFake(t)
+	project := `{"applicationId":"app-a-000","testAppTenantId":"tenant-a","environmentId":"env-default","apiVersion":"rev-1"}`
+	if err := os.WriteFile(projectFile, []byte(project), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got := fake.run(t, "records", "list", "--entity", "entity-1", "--json"); got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
 		t.Fatalf("scopes %v", fake.scopes)
 	}
 }

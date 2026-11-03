@@ -91,7 +91,7 @@ func importCreate(command commandFunc) *cobra.Command {
 		return shownImport(created)
 	})
 	appFlag(cmd, &appID)
-	envFlag(cmd, &envID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it")
 	return cmd
 }
@@ -115,7 +115,7 @@ func importAdd(command commandFunc) *cobra.Command {
 		}, nil
 	})
 	appFlag(cmd, &appID)
-	envFlag(cmd, &envID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	cmd.Flags().StringVar(&kind, "kind", "", "what the file holds: tenants, users, memberships or records")
 	cmd.Flags().StringVar(&entityID, "entity", "", "the entity's id (from model show), for --kind records")
@@ -166,7 +166,7 @@ func importStatus(command commandFunc) *cobra.Command {
 		return shownImport(current)
 	})
 	appFlag(cmd, &appID)
-	envFlag(cmd, &envID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	cmd.Flags().BoolVar(&includeDeleted, "include-deleted", false, "find the import even if it was deleted")
 	_ = cmd.MarkFlagRequired("import")
@@ -194,7 +194,7 @@ func importDelete(command commandFunc) *cobra.Command {
 		return shownImport(deleted)
 	})
 	appFlag(cmd, &appID)
-	envFlag(cmd, &envID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	_ = cmd.MarkFlagRequired("import")
 	return cmd
@@ -228,7 +228,7 @@ func importStep(command commandFunc, use, short string, request func(context.Con
 		return shownImport(current)
 	})
 	appFlag(cmd, &appID)
-	envFlag(cmd, &envID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
 	cmd.Flags().BoolVar(&waiting, "wait", true, "wait until it finishes; --wait=false returns right after the request")
 	_ = cmd.MarkFlagRequired("import")

@@ -165,6 +165,11 @@ func (v *AppIdentitiesAppIdentitiesAppIdentity) GetId() string { return v.AppIde
 // GetName returns AppIdentitiesAppIdentitiesAppIdentity.Name, and is useful for accessing the field via an interface.
 func (v *AppIdentitiesAppIdentitiesAppIdentity) GetName() string { return v.AppIdentityParts.Name }
 
+// GetEnvironmentId returns AppIdentitiesAppIdentitiesAppIdentity.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *AppIdentitiesAppIdentitiesAppIdentity) GetEnvironmentId() string {
+	return v.AppIdentityParts.EnvironmentId
+}
+
 // GetUser returns AppIdentitiesAppIdentitiesAppIdentity.User, and is useful for accessing the field via an interface.
 func (v *AppIdentitiesAppIdentitiesAppIdentity) GetUser() *AppIdentityPartsUser {
 	return v.AppIdentityParts.User
@@ -210,6 +215,8 @@ type __premarshalAppIdentitiesAppIdentitiesAppIdentity struct {
 
 	Name string `json:"name"`
 
+	EnvironmentId string `json:"environmentId"`
+
 	User *AppIdentityPartsUser `json:"user"`
 
 	CreatedAt string `json:"createdAt"`
@@ -230,6 +237,7 @@ func (v *AppIdentitiesAppIdentitiesAppIdentity) __premarshalJSON() (*__premarsha
 
 	retval.Id = v.AppIdentityParts.Id
 	retval.Name = v.AppIdentityParts.Name
+	retval.EnvironmentId = v.AppIdentityParts.EnvironmentId
 	retval.User = v.AppIdentityParts.User
 	retval.CreatedAt = v.AppIdentityParts.CreatedAt
 	retval.Secrets = v.AppIdentityParts.Secrets
@@ -253,6 +261,8 @@ func (v *AppIdentitiesResponse) GetAppIdentities() []AppIdentitiesAppIdentitiesA
 type AppIdentityParts struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+	// The environment this identity lives in.
+	EnvironmentId string `json:"environmentId"`
 	// The service user this identity acts as.
 	User      *AppIdentityPartsUser                      `json:"user"`
 	CreatedAt string                                     `json:"createdAt"`
@@ -264,6 +274,9 @@ func (v *AppIdentityParts) GetId() string { return v.Id }
 
 // GetName returns AppIdentityParts.Name, and is useful for accessing the field via an interface.
 func (v *AppIdentityParts) GetName() string { return v.Name }
+
+// GetEnvironmentId returns AppIdentityParts.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *AppIdentityParts) GetEnvironmentId() string { return v.EnvironmentId }
 
 // GetUser returns AppIdentityParts.User, and is useful for accessing the field via an interface.
 func (v *AppIdentityParts) GetUser() *AppIdentityPartsUser { return v.User }
@@ -322,6 +335,8 @@ func (v *AppTenantsAppTenantsAppTenantPage) GetPageInfo() AppTenantsAppTenantsAp
 type AppTenantsAppTenantsAppTenantPageItemsAppTenant struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+	// The environment this app-tenant lives in.
+	EnvironmentId string `json:"environmentId"`
 }
 
 // GetId returns AppTenantsAppTenantsAppTenantPageItemsAppTenant.Id, and is useful for accessing the field via an interface.
@@ -329,6 +344,11 @@ func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetId() string { retur
 
 // GetName returns AppTenantsAppTenantsAppTenantPageItemsAppTenant.Name, and is useful for accessing the field via an interface.
 func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetName() string { return v.Name }
+
+// GetEnvironmentId returns AppTenantsAppTenantsAppTenantPageItemsAppTenant.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetEnvironmentId() string {
+	return v.EnvironmentId
+}
 
 // AppTenantsAppTenantsAppTenantPagePageInfo includes the requested fields of the GraphQL type PageInfo.
 type AppTenantsAppTenantsAppTenantPagePageInfo struct {
@@ -785,6 +805,11 @@ func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) Get
 	return v.AppIdentityParts.Name
 }
 
+// GetEnvironmentId returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) GetEnvironmentId() string {
+	return v.AppIdentityParts.EnvironmentId
+}
+
 // GetUser returns CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity.User, and is useful for accessing the field via an interface.
 func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) GetUser() *AppIdentityPartsUser {
 	return v.AppIdentityParts.User
@@ -830,6 +855,8 @@ type __premarshalCreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdent
 
 	Name string `json:"name"`
 
+	EnvironmentId string `json:"environmentId"`
+
 	User *AppIdentityPartsUser `json:"user"`
 
 	CreatedAt string `json:"createdAt"`
@@ -850,6 +877,7 @@ func (v *CreateAppIdentityCreateAppIdentityAppIdentityWithSecretAppIdentity) __p
 
 	retval.Id = v.AppIdentityParts.Id
 	retval.Name = v.AppIdentityParts.Name
+	retval.EnvironmentId = v.AppIdentityParts.EnvironmentId
 	retval.User = v.AppIdentityParts.User
 	retval.CreatedAt = v.AppIdentityParts.CreatedAt
 	retval.Secrets = v.AppIdentityParts.Secrets
@@ -910,6 +938,11 @@ func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppI
 	return v.AppIdentityParts.Name
 }
 
+// GetEnvironmentId returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) GetEnvironmentId() string {
+	return v.AppIdentityParts.EnvironmentId
+}
+
 // GetUser returns CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity.User, and is useful for accessing the field via an interface.
 func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppIdentity) GetUser() *AppIdentityPartsUser {
 	return v.AppIdentityParts.User
@@ -955,6 +988,8 @@ type __premarshalCreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSe
 
 	Name string `json:"name"`
 
+	EnvironmentId string `json:"environmentId"`
+
 	User *AppIdentityPartsUser `json:"user"`
 
 	CreatedAt string `json:"createdAt"`
@@ -975,6 +1010,7 @@ func (v *CreateAppIdentitySecretCreateAppIdentitySecretAppIdentityWithSecretAppI
 
 	retval.Id = v.AppIdentityParts.Id
 	retval.Name = v.AppIdentityParts.Name
+	retval.EnvironmentId = v.AppIdentityParts.EnvironmentId
 	retval.User = v.AppIdentityParts.User
 	retval.CreatedAt = v.AppIdentityParts.CreatedAt
 	retval.Secrets = v.AppIdentityParts.Secrets
@@ -4297,6 +4333,11 @@ func (v *RetireAppIdentityRetireAppIdentity) GetId() string { return v.AppIdenti
 // GetName returns RetireAppIdentityRetireAppIdentity.Name, and is useful for accessing the field via an interface.
 func (v *RetireAppIdentityRetireAppIdentity) GetName() string { return v.AppIdentityParts.Name }
 
+// GetEnvironmentId returns RetireAppIdentityRetireAppIdentity.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *RetireAppIdentityRetireAppIdentity) GetEnvironmentId() string {
+	return v.AppIdentityParts.EnvironmentId
+}
+
 // GetUser returns RetireAppIdentityRetireAppIdentity.User, and is useful for accessing the field via an interface.
 func (v *RetireAppIdentityRetireAppIdentity) GetUser() *AppIdentityPartsUser {
 	return v.AppIdentityParts.User
@@ -4342,6 +4383,8 @@ type __premarshalRetireAppIdentityRetireAppIdentity struct {
 
 	Name string `json:"name"`
 
+	EnvironmentId string `json:"environmentId"`
+
 	User *AppIdentityPartsUser `json:"user"`
 
 	CreatedAt string `json:"createdAt"`
@@ -4362,6 +4405,7 @@ func (v *RetireAppIdentityRetireAppIdentity) __premarshalJSON() (*__premarshalRe
 
 	retval.Id = v.AppIdentityParts.Id
 	retval.Name = v.AppIdentityParts.Name
+	retval.EnvironmentId = v.AppIdentityParts.EnvironmentId
 	retval.User = v.AppIdentityParts.User
 	retval.CreatedAt = v.AppIdentityParts.CreatedAt
 	retval.Secrets = v.AppIdentityParts.Secrets
@@ -4881,6 +4925,11 @@ func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetName() st
 	return v.AppIdentityParts.Name
 }
 
+// GetEnvironmentId returns RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetEnvironmentId() string {
+	return v.AppIdentityParts.EnvironmentId
+}
+
 // GetUser returns RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity.User, and is useful for accessing the field via an interface.
 func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) GetUser() *AppIdentityPartsUser {
 	return v.AppIdentityParts.User
@@ -4926,6 +4975,8 @@ type __premarshalRevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity struc
 
 	Name string `json:"name"`
 
+	EnvironmentId string `json:"environmentId"`
+
 	User *AppIdentityPartsUser `json:"user"`
 
 	CreatedAt string `json:"createdAt"`
@@ -4946,6 +4997,7 @@ func (v *RevokeAppIdentitySecretRevokeAppIdentitySecretAppIdentity) __premarshal
 
 	retval.Id = v.AppIdentityParts.Id
 	retval.Name = v.AppIdentityParts.Name
+	retval.EnvironmentId = v.AppIdentityParts.EnvironmentId
 	retval.User = v.AppIdentityParts.User
 	retval.CreatedAt = v.AppIdentityParts.CreatedAt
 	retval.Secrets = v.AppIdentityParts.Secrets
@@ -5415,6 +5467,8 @@ func (v *ScopedAppTenantMeUser) GetAppTenant() ScopedAppTenantMeUserAppTenant { 
 type ScopedAppTenantMeUserAppTenant struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+	// The environment this app-tenant lives in.
+	EnvironmentId string `json:"environmentId"`
 }
 
 // GetId returns ScopedAppTenantMeUserAppTenant.Id, and is useful for accessing the field via an interface.
@@ -5422,6 +5476,9 @@ func (v *ScopedAppTenantMeUserAppTenant) GetId() string { return v.Id }
 
 // GetName returns ScopedAppTenantMeUserAppTenant.Name, and is useful for accessing the field via an interface.
 func (v *ScopedAppTenantMeUserAppTenant) GetName() string { return v.Name }
+
+// GetEnvironmentId returns ScopedAppTenantMeUserAppTenant.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *ScopedAppTenantMeUserAppTenant) GetEnvironmentId() string { return v.EnvironmentId }
 
 // ScopedAppTenantMeUserApplication includes the requested fields of the GraphQL type Application.
 type ScopedAppTenantMeUserApplication struct {
@@ -6960,6 +7017,7 @@ query AppIdentities {
 fragment AppIdentityParts on AppIdentity {
 	id
 	name
+	environmentId
 	user {
 		id
 	}
@@ -7001,6 +7059,7 @@ query AppTenants ($page: PageInput!) {
 		items {
 			id
 			name
+			environmentId
 		}
 		pageInfo {
 			hasMore
@@ -7269,6 +7328,7 @@ mutation CreateAppIdentity ($input: CreateAppIdentityInput!) {
 fragment AppIdentityParts on AppIdentity {
 	id
 	name
+	environmentId
 	user {
 		id
 	}
@@ -7320,6 +7380,7 @@ mutation CreateAppIdentitySecret ($id: ID!) {
 fragment AppIdentityParts on AppIdentity {
 	id
 	name
+	environmentId
 	user {
 		id
 	}
@@ -8786,6 +8847,7 @@ mutation RetireAppIdentity ($id: ID!) {
 fragment AppIdentityParts on AppIdentity {
 	id
 	name
+	environmentId
 	user {
 		id
 	}
@@ -9063,6 +9125,7 @@ mutation RevokeAppIdentitySecret ($id: ID!) {
 fragment AppIdentityParts on AppIdentity {
 	id
 	name
+	environmentId
 	user {
 		id
 	}
@@ -9281,6 +9344,7 @@ query ScopedAppTenant {
 		appTenant {
 			id
 			name
+			environmentId
 		}
 	}
 }

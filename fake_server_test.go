@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"maps"
@@ -107,7 +108,8 @@ type chain struct {
 
 type entitlement struct{ clientID, clientName, applicationID, appTenantID string }
 
-type fakeRow struct{ id, name string }
+// env is the environment an app-tenant lives in; the empty string reads as the default environment.
+type fakeRow struct{ id, name, env string }
 
 type fakeEnv struct {
 	id, name  string
@@ -331,10 +333,17 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.createAppTenant(w, parts, variables)
 	case "AppTenants":
 		apps := []fakeRow{}
-		if env, ok := strings.CutPrefix(scope, "env:"); ok {
-			apps = f.envTenants[env]
-		} else if len(parts) >= 2 {
+		inEnv, scoped := strings.CutPrefix(scope, "env:")
+		if scoped {
+			apps = f.envTenants[inEnv]
+		} else if inEnv = ""; len(parts) >= 2 {
 			apps = f.tenants[parts[1]]
+		}
+		apps = slices.Clone(apps)
+		for i := range apps {
+			if apps[i].env == "" {
+				apps[i].env = cmp.Or(inEnv, "env-default")
+			}
 		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
 	case "Environments", "CreateEnvironment", "RenameEnvironment":
@@ -349,7 +358,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		}
 		writeData(w, map[string]any{"me": map[string]any{
 			"application": map[string]any{"id": scopedApp.id, "name": scopedApp.name},
-			"appTenant":   map[string]any{"id": tenant.id, "name": tenant.name},
+			"appTenant":   map[string]any{"id": tenant.id, "name": tenant.name, "environmentId": cmp.Or(tenant.env, "env-default")},
 		}})
 	case "Entities":
 		writeData(w, map[string]any{"entities": pageOf(f.entities[appOf(parts)], variables)})
@@ -543,6 +552,9 @@ func page(rows []fakeRow, variables map[string]any) map[string]any {
 	items := []map[string]any{}
 	for _, row := range rows[start:end] {
 		item := map[string]any{"id": row.id, "name": row.name}
+		if row.env != "" {
+			item["environmentId"] = row.env
+		}
 		items = append(items, item)
 	}
 	return map[string]any{"items": items, "pageInfo": map[string]any{"hasMore": end < len(rows)}}
@@ -776,16 +788,31 @@ func (f *fakeMultiPaaS) manageOAuth(w http.ResponseWriter, operation string, par
 	}
 }
 
+// scopeEnvironment is the environment a scope acts in: the named one, else its application's default.
+func (f *fakeMultiPaaS) scopeEnvironment(parts []string) string {
+	if env, ok := strings.CutPrefix(parts[0], "env:"); ok {
+		return env
+	}
+	for _, e := range f.environments[appOf(parts)] {
+		if e.isDefault {
+			return e.id
+		}
+	}
+	return ""
+}
+
 // manageAppIdentity takes the same steps as manageOAuth: an application in scope, then
 // application.manage_oauth, then the change. A secret's plaintext is in the create answers only.
 func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
 	if operation != "AppIdentities" {
 		f.mutations = append(f.mutations, variables)
 	}
-	if appOf(parts) == "" || f.noManageOAuth {
+	if (appOf(parts) == "" && !strings.HasPrefix(parts[0], "env:")) || f.noManageOAuth {
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
 		return
 	}
+	scopeEnv := f.scopeEnvironment(parts)
+	inScope := func(identity map[string]any) bool { return identity["environmentId"] == scopeEnv }
 	secretsOf := func(identity map[string]any) []map[string]any { return identity["secrets"].([]map[string]any) }
 	addSecret := func(i int) string {
 		f.secretSeq++
@@ -797,16 +824,22 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		return fmt.Sprintf("mps_plaintext_%d", n)
 	}
 	byID := func(id any) int {
-		return slices.IndexFunc(f.appIdentities, func(a map[string]any) bool { return a["id"] == id })
+		return slices.IndexFunc(f.appIdentities, func(a map[string]any) bool { return a["id"] == id && inScope(a) })
 	}
 	switch operation {
 	case "AppIdentities":
-		writeData(w, map[string]any{"appIdentities": append([]map[string]any{}, f.appIdentities...)})
+		listed := []map[string]any{}
+		for _, identity := range f.appIdentities {
+			if inScope(identity) {
+				listed = append(listed, identity)
+			}
+		}
+		writeData(w, map[string]any{"appIdentities": listed})
 	case "CreateAppIdentity":
 		input, _ := variables["input"].(map[string]any)
 		f.identitySeq++
 		n := f.identitySeq
-		f.appIdentities = append(f.appIdentities, map[string]any{"id": fmt.Sprintf("app-identity-%d", n), "name": input["name"],
+		f.appIdentities = append(f.appIdentities, map[string]any{"id": fmt.Sprintf("app-identity-%d", n), "name": input["name"], "environmentId": scopeEnv,
 			"user": map[string]any{"id": fmt.Sprintf("service-user-%d", n)}, "createdAt": "2026-10-27T00:00:00.000Z", "secrets": []map[string]any{}})
 		last := len(f.appIdentities) - 1
 		secret := addSecret(last)
@@ -821,6 +854,9 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		writeData(w, map[string]any{"createAppIdentitySecret": map[string]any{"appIdentity": f.appIdentities[i], "secret": secret}})
 	case "RevokeAppIdentitySecret":
 		for i, identity := range f.appIdentities {
+			if !inScope(identity) {
+				continue
+			}
 			if j := slices.IndexFunc(secretsOf(identity), func(s map[string]any) bool { return s["id"] == variables["id"] }); j >= 0 {
 				revoked := maps.Clone(identity)
 				revoked["secrets"] = slices.Delete(slices.Clone(secretsOf(identity)), j, j+1)
@@ -850,7 +886,7 @@ func (f *fakeMultiPaaS) manageRoles(w http.ResponseWriter, operation string, par
 	if write {
 		f.mutations = append(f.mutations, variables)
 	}
-	if appOf(parts) == "" || (write && f.noManageApp) {
+	if (appOf(parts) == "" && !strings.HasPrefix(parts[0], "env:")) || (write && f.noManageApp) {
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
 		return
 	}

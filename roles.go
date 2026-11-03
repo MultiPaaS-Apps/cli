@@ -273,7 +273,7 @@ func appIdentityRoleList(command commandFunc) *cobra.Command {
 		}, err
 	})
 	cmd.Args = oneID(&clientID)
-	scopeFlags(cmd, &target, "list the roles held across the application instead of in an app-tenant", false)
+	scopeFlags(cmd, &target, "list the roles held across the application instead of in an app-tenant", true)
 	return cmd
 }
 
@@ -304,7 +304,7 @@ func appIdentityRoleAdd(command commandFunc) *cobra.Command {
 		}, err
 	})
 	cmd.Args = oneID(&clientID)
-	scopeFlags(cmd, &target, "give the role across the application instead of in an app-tenant", false)
+	scopeFlags(cmd, &target, "give the role across the application instead of in an app-tenant", true)
 	cmd.Flags().StringVar(&roleKey, "role", "", "the role's key or id (from roles list)")
 	_ = cmd.MarkFlagRequired("role")
 	return cmd
@@ -345,18 +345,29 @@ func appIdentityRoleRemove(command commandFunc) *cobra.Command {
 		}, err
 	})
 	cmd.Args = oneID(&clientID)
-	scopeFlags(cmd, &target, "remove a role held across the application instead of in an app-tenant", false)
+	scopeFlags(cmd, &target, "remove a role held across the application instead of in an app-tenant", true)
 	cmd.Flags().StringVar(&roleKey, "role", "", "the role's key or id (from roles list)")
 	_ = cmd.MarkFlagRequired("role")
 	return cmd
 }
 
 // inGrantScope runs operation in the target's scope, with the app identity clientID names and the role
-// assignments it holds in exactly that scope. The server can show an app-tenant's read the application's
+// assignments it holds in exactly that scope. The identity is looked up in an app-tenant's own scope for an
+// app-tenant target, because the server lists the identities of that app-tenant's environment there. The server can show an app-tenant's read the application's
 // grants as well, so they are filtered out here.
 func (s *session) inGrantScope(ctx context.Context, target recordTarget, clientID string, operation func(graphql.Client, AppIdentityParts, []RoleAssignmentParts) error) error {
 	var identity AppIdentityParts
-	err := s.inApp(ctx, target.appID, func(client graphql.Client) error {
+	lookup := func(operation func(graphql.Client) error) error {
+		if target.appWide || target.tenantID == "" {
+			return s.inEnv(ctx, target.appID, target.envID, operation)
+		}
+		scope, err := s.recordScope(ctx, target)
+		if err != nil {
+			return err
+		}
+		return s.call(ctx, scope, operation)
+	}
+	err := lookup(func(client graphql.Client) error {
 		listed, err := appIdentities(ctx, client)
 		if err != nil {
 			return err

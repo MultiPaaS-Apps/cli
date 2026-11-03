@@ -179,7 +179,7 @@ func tenantsCreate(command commandFunc) *cobra.Command {
 		}, err
 	})
 	appFlag(cmd, &appID)
-	envFlag(cmd, &envID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&name, "name", "", "the app-tenant's name")
 	_ = cmd.MarkFlagRequired("name")
 	return cmd

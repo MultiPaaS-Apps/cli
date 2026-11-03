@@ -275,15 +275,6 @@ func (s *session) writeRecord(ctx context.Context, target recordTarget, data str
 }
 
 func recordFlags(cmd *cobra.Command, target *recordTarget) {
-	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		switch {
-		case target.envID != "" && cmd.Flags().Changed("tenant"):
-			return fmt.Errorf("--env and --tenant: choose one; a tenant already belongs to one environment")
-		case target.envID != "" && !target.appWide:
-			return fmt.Errorf("--env needs --app-wide: an app-tenant's records are reached with --tenant, which already belongs to one environment")
-		}
-		return nil
-	}
 	scopeFlags(cmd, target, "act on the application's app-wide records instead of an app-tenant's", true)
 	cmd.Flags().StringVar(&target.entityID, "entity", "", "the entity's id (from model show)")
 	_ = cmd.MarkFlagRequired("entity")
@@ -293,9 +284,20 @@ func recordFlags(cmd *cobra.Command, target *recordTarget) {
 // or with --app-wide the application itself. With withEnv it adds --env, which names the environment an
 // --app-wide target is in.
 func scopeFlags(cmd *cobra.Command, target *recordTarget, appWideUsage string, withEnv bool) {
+	if withEnv {
+		cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
+			switch {
+			case target.envID != "" && cmd.Flags().Changed("tenant"):
+				return fmt.Errorf("--env and --tenant: choose one; a tenant already belongs to one environment")
+			case target.envID != "" && !target.appWide:
+				return fmt.Errorf("--env needs --app-wide: an app-tenant's records are reached with --tenant, which already belongs to one environment")
+			}
+			return nil
+		}
+	}
 	appFlag(cmd, &target.appID)
 	if withEnv {
-		envFlag(cmd, &target.envID)
+		envFlagFromProject(cmd, &target.appID, &target.envID, func() bool { return !target.appWide })
 	}
 	tenantFlag(cmd, &target.appID, &target.tenantID, func() bool { return target.appWide || target.envID != "" })
 	cmd.Flags().BoolVar(&target.appWide, "app-wide", false, appWideUsage)

@@ -186,8 +186,10 @@ go test ./...
 
 The typed operations are generated from `operations.graphql` and `schema.graphql`, a copy of webapp-api's schema.
 Every CI run regenerates them from the committed `schema.graphql` and fails if `generated.go` is out of date. The
-`schema-drift` job, which runs nightly and when run by hand from the Actions tab, compares `schema.graphql` with the
-live schema at the repository secret `SCHEMA_ENDPOINT` and fails with the diff when they differ. To regenerate:
+`schema-update` workflow, which runs nightly and when run by hand from the Actions tab, regenerates both from the
+live webapp-api schema at the repository secret `SCHEMA_ENDPOINT`, with `scripts/regenerate-schema`. When anything changed, it opens or updates one PR,
+`fix: update the webapp-api schema`, authored by the `multipaas-bot` GitHub App. If `genqlient` fails against
+the new schema, that PR carries only `schema.graphql`, so its CI fails. To regenerate by hand:
 
 ```bash
 go tool gqlfetch --endpoint <your MultiPaaS's webapp-api /graphql> --without-builtins > schema.graphql

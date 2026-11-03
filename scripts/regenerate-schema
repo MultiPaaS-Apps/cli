@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Regenerates schema.graphql and generated.go from a live webapp-api, and writes a PR body describing the
+# change. Prints changed=true|false and genqlient=ok|failed, one per line, for $GITHUB_OUTPUT.
+# When genqlient fails, generated.go is left as it was, so the PR's CI fails on it: that red check is how a
+# schema change that breaks the CLI reaches a person.
+set -euo pipefail
+export LC_ALL=C
+
+readonly MAX_DIFF_BYTES=50000
+
+main() {
+  local endpoint="${1:?usage: regenerate-schema <endpoint> <pr-body-file>}"
+  local body_file="${2:?usage: regenerate-schema <endpoint> <pr-body-file>}"
+  work="$(mktemp -d)"
+  trap 'rm -rf "$work"' EXIT
+
+  cp schema.graphql "$work/before.graphql"
+  go tool gqlfetch --endpoint "$endpoint" --without-builtins > "$work/live.graphql"
+  mv "$work/live.graphql" schema.graphql
+
+  genqlient=ok
+  if ! go tool genqlient > "$work/genqlient.err" 2>&1; then
+    genqlient=failed
+    git checkout -- generated.go
+  fi
+
+  if git diff --quiet; then
+    echo changed=false
+  else
+    echo changed=true
+    write_body > "$body_file"
+  fi
+  echo "genqlient=$genqlient"
+}
+
+write_body() {
+  echo "Regenerated from the live webapp-api schema."
+  echo
+  echo "**Types added:** $(types_only_in schema.graphql "$work/before.graphql")"
+  echo "**Types removed:** $(types_only_in "$work/before.graphql" schema.graphql)"
+  if git diff --quiet -- generated.go; then
+    echo "**Generated code changed:** no"
+  else
+    echo "**Generated code changed:** yes"
+  fi
+  if [ "$genqlient" = failed ]; then
+    echo
+    echo "**\`go tool genqlient\` failed against this schema**, so \`generated.go\` is unchanged and CI fails on it:"
+    echo
+    echo '```text'
+    cat "$work/genqlient.err"
+    echo '```'
+  fi
+  echo
+  echo "<details><summary>schema.graphql diff</summary>"
+  echo
+  echo '```diff'
+  git diff -- schema.graphql > "$work/schema.diff"
+  head -c "$MAX_DIFF_BYTES" "$work/schema.diff"
+  echo '```'
+  if [ "$(wc -c < "$work/schema.diff")" -gt "$MAX_DIFF_BYTES" ]; then
+    echo
+    echo "The diff is cut at $MAX_DIFF_BYTES bytes; the full diff is in the PR's Files tab."
+  fi
+  echo
+  echo "</details>"
+}
+
+# The type names declared in $1 and not in $2, as a comma-separated list of code spans, or "none".
+types_only_in() {
+  local names
+  names="$(comm -23 <(type_names "$1") <(type_names "$2") | sed "s/.*/\`&\`/" | paste -sd, - | sed 's/,/, /g')"
+  echo "${names:-none}"
+}
+
+type_names() {
+  grep -oE '^(type|input|enum|interface|union|scalar) [A-Za-z0-9_]+' "$1" | cut -d' ' -f2 | sort -u
+}
+
+main "$@"

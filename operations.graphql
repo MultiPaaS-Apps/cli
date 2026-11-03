@@ -304,14 +304,30 @@ query Records(
   # @genqlient(pointer: true)
   $reference: RecordReferenceInput
   $scope: RecordScope
+  $where: JSON
+  # @genqlient(pointer: true)
+  $orderBy: RecordOrderInput
 ) {
-  records(entityId: $entityId, page: $page, reference: $reference, scope: $scope) {
+  records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where, orderBy: $orderBy) {
     items {
       ...RecordParts
     }
     pageInfo {
       hasMore
     }
+  }
+}
+
+query RecordsCount(
+  $entityId: ID!
+  $page: PageInput!
+  # @genqlient(pointer: true)
+  $reference: RecordReferenceInput
+  $scope: RecordScope
+  $where: JSON
+) {
+  records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where) {
+    totalCount
   }
 }
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/spf13/cobra"
@@ -27,8 +28,9 @@ func recordCommands(command commandFunc) *cobra.Command {
 
 func recordsList(command commandFunc) *cobra.Command {
 	var target recordTarget
-	var parentField, parentRecord string
-	cmd := command("list", "List an entity's records, newest first", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	var parentField, parentRecord, where, orderBy string
+	var count bool
+	cmd := command("list", "List an entity's records, newest first unless --order-by says otherwise", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var reference *RecordReferenceInput
 		if parentField != "" || parentRecord != "" {
 			if parentField == "" || parentRecord == "" {
@@ -44,10 +46,33 @@ func recordsList(command commandFunc) *cobra.Command {
 		if target.appWide {
 			recordScope = RecordScopeAppWide
 		}
+		whereJSON, err := whereArg(where)
+		if err != nil {
+			return nil, nil, err
+		}
+		order, err := orderByArg(orderBy)
+		if err != nil {
+			return nil, nil, err
+		}
+		if count {
+			if order != nil {
+				return nil, nil, fmt.Errorf("--count takes no --order-by")
+			}
+			var counted *RecordsCountResponse
+			err := s.call(ctx, scope, func(client graphql.Client) (err error) {
+				counted, err = RecordsCount(ctx, client, target.entityID, PageInput{Page: 0, PageSize: 1}, reference, recordScope, whereJSON)
+				return err
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			total := counted.Records.TotalCount
+			return map[string]int{"count": total}, func(out io.Writer) { fmt.Fprintln(out, total) }, nil
+		}
 		list, err := pages(func(page PageInput) ([]RecordParts, bool, error) {
 			var listed *RecordsResponse
 			err := s.call(ctx, scope, func(client graphql.Client) (err error) {
-				listed, err = Records(ctx, client, target.entityID, page, reference, recordScope)
+				listed, err = Records(ctx, client, target.entityID, page, reference, recordScope, whereJSON, order)
 				return err
 			})
 			if err != nil {
@@ -66,7 +91,41 @@ func recordsList(command commandFunc) *cobra.Command {
 	recordFlags(cmd, &target)
 	cmd.Flags().StringVar(&parentField, "parent-field", "", "keep the records whose parent reference field has this id (from model show), with --parent-record")
 	cmd.Flags().StringVar(&parentRecord, "parent-record", "", "the parent record's id, with --parent-field")
+	cmd.Flags().StringVar(&where, "where", "", `keep the records meeting every condition, as JSON keyed by field id or id, createdAt or updatedAt, like '{"FIELD_ID": {"lte": 5}}'`)
+	cmd.Flags().StringVar(&orderBy, "order-by", "", "order by createdAt, updatedAt or a field id, ascending unless it ends :desc; a reference or related field, or an enum field whose enum no longer exists, is refused")
+	cmd.Flags().BoolVar(&count, "count", false, "print how many records match instead of listing them")
 	return cmd
+}
+
+// whereArg is --where as the JSON the API takes, or nil when it is not given.
+func whereArg(where string) (json.RawMessage, error) {
+	if where == "" {
+		return nil, nil
+	}
+	var object map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(where), &object); err != nil || object == nil {
+		return nil, fmt.Errorf(`--where must be a JSON object, like '{"FIELD_ID": {"eq": "value"}}'`)
+	}
+	return json.RawMessage(where), nil
+}
+
+// orderByArg is --order-by as FIELD, FIELD:asc or FIELD:desc, or nil when it is not given.
+func orderByArg(orderBy string) (*RecordOrderInput, error) {
+	if orderBy == "" {
+		return nil, nil
+	}
+	field, direction, hasDirection := strings.Cut(orderBy, ":")
+	order := &RecordOrderInput{Field: field, Direction: SortDirectionAsc}
+	switch {
+	case field == "":
+		return nil, fmt.Errorf("--order-by needs a field id, createdAt or updatedAt")
+	case !hasDirection || direction == "asc":
+	case direction == "desc":
+		order.Direction = SortDirectionDesc
+	default:
+		return nil, fmt.Errorf("--order-by takes FIELD, FIELD:asc or FIELD:desc, not %q", orderBy)
+	}
+	return order, nil
 }
 
 func recordGet(command commandFunc) *cobra.Command {

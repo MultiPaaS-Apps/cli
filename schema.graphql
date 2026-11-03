@@ -1188,12 +1188,20 @@ type Query {
 	): RecordVersionPage!
 	records(
 		entityId: ID!
+"""
+One field to order by. Defaults to newest first.
+"""
+		orderBy: RecordOrderInput
 		page: PageInput!
 		reference: RecordReferenceInput
 """
 Narrow the list to app-tenant records or app-wide records. Defaults to both.
 """
 		scope: RecordScope
+"""
+Conditions every record must meet, keyed by field id or id, createdAt or updatedAt, like {"<field id>": {"lte": 5}}.
+"""
+		where: JSON
 	): RecordPage!
 	referencingFields(
 		entityId: ID!
@@ -1282,9 +1290,21 @@ enum RecordAccessSourceKind {
 	share_user
 }
 
+input RecordOrderInput {
+	direction: SortDirection!
+"""
+A field id, or createdAt or updatedAt.
+"""
+	field: String!
+}
+
 type RecordPage {
 	items: [Record!]!
 	pageInfo: PageInfo!
+"""
+How many records match, ignoring paging. Counted only when selected.
+"""
+	totalCount: Int!
 }
 
 input RecordReferenceInput {
@@ -1410,6 +1430,11 @@ type ShareTarget {
 
 input SignInInput {
 	token: String!
+}
+
+enum SortDirection {
+	ASC
+	DESC
 }
 
 input StartConversationInput {

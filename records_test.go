@@ -267,6 +267,100 @@ func TestRecordsListByParentKeepsTheParentsChildren(t *testing.T) {
 	}
 }
 
+func TestRecordsListSendsWhereAndOrderBy(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1",
+		"--where", `{"f1": {"lte": 2}}`, "--order-by", "f1:desc", "--json")
+	if got.exit != exitOK || len(fake.recordReads) != 1 {
+		t.Fatalf("exit %d after %d reads: %s", got.exit, len(fake.recordReads), got.stdout)
+	}
+	sent := fake.recordReads[0].variables
+	if !reflect.DeepEqual(sent["where"], map[string]any{"f1": map[string]any{"lte": 2.0}}) {
+		t.Fatalf("sent where %v", sent["where"])
+	}
+	if !reflect.DeepEqual(sent["orderBy"], map[string]any{"field": "f1", "direction": "DESC"}) {
+		t.Fatalf("sent orderBy %v", sent["orderBy"])
+	}
+	fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--order-by", "createdAt", "--json")
+	if got := fake.recordReads[1].variables["orderBy"]; !reflect.DeepEqual(got, map[string]any{"field": "createdAt", "direction": "ASC"}) {
+		t.Fatalf("sent orderBy %v without a direction", got)
+	}
+}
+
+func TestRecordsListSendsNoWhereByDefault(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json")
+	if got.exit != exitOK || len(fake.recordReads) != 1 {
+		t.Fatalf("exit %d after %d reads: %s", got.exit, len(fake.recordReads), got.stdout)
+	}
+	sent := fake.recordReads[0].variables
+	if sent["where"] != nil || sent["orderBy"] != nil {
+		t.Fatalf("sent where %v, orderBy %v", sent["where"], sent["orderBy"])
+	}
+}
+
+func TestRecordsListCountPrintsOnlyTheNumber(t *testing.T) {
+	fake := projectFake(t)
+	for i := range 3 {
+		fake.records["entity-1"] = append(fake.records["entity-1"], map[string]any{"id": fmt.Sprintf("record-%d", i), "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"})
+	}
+	args := []string{"records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--count"}
+	got := fake.run(t, args...)
+	if got.exit != exitOK || got.stdout != "3\n" {
+		t.Fatalf("exit %d, printed %q", got.exit, got.stdout)
+	}
+	if len(fake.recordReads) != 1 || fake.recordReads[0].operation != "RecordsCount" {
+		t.Fatalf("sent %v", fake.recordReads)
+	}
+	if query := fake.recordReads[0].query; !strings.Contains(query, "totalCount") || strings.Contains(query, "items") {
+		t.Fatalf("query %s", query)
+	}
+	got = fake.run(t, append(args, "--json")...)
+	if compact(got.stdout) != `{"count":3}` {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsListRefusesBadFlags(t *testing.T) {
+	fake := projectFake(t)
+	for _, refused := range []struct {
+		name    string
+		flags   []string
+		message string
+	}{
+		{"where_array", []string{"--where", `[1]`}, "--where must be a JSON object"},
+		{"where_null", []string{"--where", `null`}, "--where must be a JSON object"},
+		{"where_unterminated", []string{"--where", `{`}, "--where must be a JSON object"},
+		{"order_by_unknown_direction", []string{"--order-by", "f1:sideways"}, "--order-by takes FIELD, FIELD:asc or FIELD:desc"},
+		{"order_by_no_field", []string{"--order-by", ":desc"}, "--order-by needs a field id"},
+		{"count_with_order_by", []string{"--count", "--order-by", "f1"}, "--count takes no --order-by"},
+	} {
+		t.Run(refused.name, func(t *testing.T) {
+			got := fake.run(t, append([]string{"records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json"}, refused.flags...)...)
+			assertFailure(t, got, exitRefused, "CLI_ERROR")
+			if !strings.Contains(got.stdout, refused.message) {
+				t.Fatalf("%v printed %s, want %q", refused.flags, got.stdout, refused.message)
+			}
+		})
+	}
+	if len(fake.recordReads) != 0 {
+		t.Fatalf("sent %v", fake.recordReads)
+	}
+}
+
+func TestRecordsListShowsTheFieldAValidationRefusalNames(t *testing.T) {
+	fake := projectFake(t)
+	fake.refuseRecords = []map[string]any{{"field": "f1", "rule": "unknown", "message": "f1 is not a field of this entity"}}
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--where", `{"f1": {"eq": 1}}`, "--json")
+	assertFailure(t, got, exitRefused, "VALIDATION")
+	var failure struct{ Error cliError }
+	decode(t, got.stdout, &failure)
+	want := []fieldError{{Field: "f1", Rule: "unknown", Message: "f1 is not a field of this entity"}}
+	if !reflect.DeepEqual(failure.Error.FieldErrors, want) {
+		t.Fatalf("fieldErrors %v, want %v", failure.Error.FieldErrors, want)
+	}
+}
+
 func TestRecordsListByParentNeedsBothFlags(t *testing.T) {
 	fake := projectFake(t)
 	for _, flags := range [][]string{{"--parent-field", "owner"}, {"--parent-record", "parent-1"}} {

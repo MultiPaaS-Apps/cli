@@ -59,6 +59,9 @@ type fakeMultiPaaS struct {
 	failVersion   bool                        // LatestModelRevision answers HTTP 500
 	records       map[string][]map[string]any // entity id -> its live records, newest first; appWide marks the application's own
 	recordScopes  []string                    // the scope variable of every Records read ("" when absent)
+	recordReads   []recordRead                // every Records and RecordsCount request received
+	refuseRecords []map[string]any            // when set, every records read is refused as VALIDATION with these fieldErrors
+	lastQuery     string                      // the query text of the GraphQL request being answered
 	oauthClients  []map[string]any            // the application's sign-in clients
 	appIdentities []map[string]any            // the application's app identities
 	identitySeq   int                         // app identities created so far; ids are never reused
@@ -272,8 +275,15 @@ func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 	case request.OperationName == "" && len(f.rawAnswers) > 0:
 		f.answerRaw(w, request.Query, request.Variables)
 	default:
+		f.lastQuery = request.Query
 		f.answer(w, request.OperationName, scope, request.Variables)
 	}
+}
+
+// recordRead is one Records or RecordsCount request: its operation, query text and variables.
+type recordRead struct {
+	operation, query string
+	variables        map[string]any
 }
 
 // answerRaw answers an api command document: each gets the next of rawAnswers, as the server would send it, and is
@@ -392,9 +402,14 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			}
 			writeData(w, map[string]any{"apiSchemaDiff": map[string]any{"breaking": change("FIELD_REMOVED"), "dangerous": []map[string]any{}, "added": change("FIELD_ADDED")}})
 		}
-	case "Records":
+	case "Records", "RecordsCount":
 		scope, _ := variables["scope"].(string)
 		f.recordScopes = append(f.recordScopes, scope)
+		f.recordReads = append(f.recordReads, recordRead{operation: operation, query: f.lastQuery, variables: variables})
+		if f.refuseRecords != nil {
+			graphQLValidation(w, "where is invalid", f.refuseRecords)
+			return
+		}
 		rows := slices.DeleteFunc(slices.Clone(f.records[variables["entityId"].(string)]), func(r map[string]any) bool {
 			appWide := r["appWide"] == true
 			return (scope == "APP_WIDE" && !appWide) || (scope == "TENANT" && appWide)
@@ -403,6 +418,10 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			rows = slices.DeleteFunc(slices.Clone(rows), func(r map[string]any) bool {
 				return r["data"].(map[string]any)[reference["fieldId"].(string)] != reference["recordId"]
 			})
+		}
+		if operation == "RecordsCount" {
+			writeData(w, map[string]any{"records": map[string]any{"totalCount": len(rows)}})
+			return
 		}
 		writeData(w, map[string]any{"records": pageOf(rows, variables)})
 	case "Record":

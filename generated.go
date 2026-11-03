@@ -3877,6 +3877,18 @@ func (v *PermissionCatalogResponse) GetPermissionCatalog() []PermissionCatalogPe
 	return v.PermissionCatalog
 }
 
+type RecordOrderInput struct {
+	Direction SortDirection `json:"direction"`
+	// A field id, or createdAt or updatedAt.
+	Field string `json:"field"`
+}
+
+// GetDirection returns RecordOrderInput.Direction, and is useful for accessing the field via an interface.
+func (v *RecordOrderInput) GetDirection() SortDirection { return v.Direction }
+
+// GetField returns RecordOrderInput.Field, and is useful for accessing the field via an interface.
+func (v *RecordOrderInput) GetField() string { return v.Field }
+
 // RecordParts includes the GraphQL fields of Record requested by the fragment RecordParts.
 type RecordParts struct {
 	Id string `json:"id"`
@@ -4011,6 +4023,23 @@ var AllRecordScope = []RecordScope{
 	RecordScopeAppWide,
 	RecordScopeTenant,
 }
+
+// RecordsCountRecordsRecordPage includes the requested fields of the GraphQL type RecordPage.
+type RecordsCountRecordsRecordPage struct {
+	// How many records match, ignoring paging. Counted only when selected.
+	TotalCount int `json:"totalCount"`
+}
+
+// GetTotalCount returns RecordsCountRecordsRecordPage.TotalCount, and is useful for accessing the field via an interface.
+func (v *RecordsCountRecordsRecordPage) GetTotalCount() int { return v.TotalCount }
+
+// RecordsCountResponse is returned by RecordsCount on success.
+type RecordsCountResponse struct {
+	Records RecordsCountRecordsRecordPage `json:"records"`
+}
+
+// GetRecords returns RecordsCountResponse.Records, and is useful for accessing the field via an interface.
+func (v *RecordsCountResponse) GetRecords() RecordsCountRecordsRecordPage { return v.Records }
 
 // RecordsRecordsRecordPage includes the requested fields of the GraphQL type RecordPage.
 type RecordsRecordsRecordPage struct {
@@ -5409,6 +5438,18 @@ type SetFeedbackSettingSetFeedbackSetting struct {
 // GetAutoSend returns SetFeedbackSettingSetFeedbackSetting.AutoSend, and is useful for accessing the field via an interface.
 func (v *SetFeedbackSettingSetFeedbackSetting) GetAutoSend() bool { return v.AutoSend }
 
+type SortDirection string
+
+const (
+	SortDirectionAsc  SortDirection = "ASC"
+	SortDirectionDesc SortDirection = "DESC"
+)
+
+var AllSortDirection = []SortDirection{
+	SortDirectionAsc,
+	SortDirectionDesc,
+}
+
 // SubmitFeedbackResponse is returned by SubmitFeedback on success.
 type SubmitFeedbackResponse struct {
 	SubmitFeedback SubmitFeedbackSubmitFeedback `json:"submitFeedback"`
@@ -6401,12 +6442,38 @@ func (v *__RecordInput) GetEntityId() string { return v.EntityId }
 // GetId returns __RecordInput.Id, and is useful for accessing the field via an interface.
 func (v *__RecordInput) GetId() string { return v.Id }
 
+// __RecordsCountInput is used internally by genqlient
+type __RecordsCountInput struct {
+	EntityId  string                `json:"entityId"`
+	Page      PageInput             `json:"page"`
+	Reference *RecordReferenceInput `json:"reference"`
+	Scope     RecordScope           `json:"scope"`
+	Where     json.RawMessage       `json:"where"`
+}
+
+// GetEntityId returns __RecordsCountInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__RecordsCountInput) GetEntityId() string { return v.EntityId }
+
+// GetPage returns __RecordsCountInput.Page, and is useful for accessing the field via an interface.
+func (v *__RecordsCountInput) GetPage() PageInput { return v.Page }
+
+// GetReference returns __RecordsCountInput.Reference, and is useful for accessing the field via an interface.
+func (v *__RecordsCountInput) GetReference() *RecordReferenceInput { return v.Reference }
+
+// GetScope returns __RecordsCountInput.Scope, and is useful for accessing the field via an interface.
+func (v *__RecordsCountInput) GetScope() RecordScope { return v.Scope }
+
+// GetWhere returns __RecordsCountInput.Where, and is useful for accessing the field via an interface.
+func (v *__RecordsCountInput) GetWhere() json.RawMessage { return v.Where }
+
 // __RecordsInput is used internally by genqlient
 type __RecordsInput struct {
 	EntityId  string                `json:"entityId"`
 	Page      PageInput             `json:"page"`
 	Reference *RecordReferenceInput `json:"reference"`
 	Scope     RecordScope           `json:"scope"`
+	Where     json.RawMessage       `json:"where"`
+	OrderBy   *RecordOrderInput     `json:"orderBy"`
 }
 
 // GetEntityId returns __RecordsInput.EntityId, and is useful for accessing the field via an interface.
@@ -6420,6 +6487,12 @@ func (v *__RecordsInput) GetReference() *RecordReferenceInput { return v.Referen
 
 // GetScope returns __RecordsInput.Scope, and is useful for accessing the field via an interface.
 func (v *__RecordsInput) GetScope() RecordScope { return v.Scope }
+
+// GetWhere returns __RecordsInput.Where, and is useful for accessing the field via an interface.
+func (v *__RecordsInput) GetWhere() json.RawMessage { return v.Where }
+
+// GetOrderBy returns __RecordsInput.OrderBy, and is useful for accessing the field via an interface.
+func (v *__RecordsInput) GetOrderBy() *RecordOrderInput { return v.OrderBy }
 
 // __RemoveDataImportFileInput is used internally by genqlient
 type __RemoveDataImportFileInput struct {
@@ -8391,8 +8464,8 @@ func Record(
 
 // The query executed by Records.
 const Records_Operation = `
-query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput, $scope: RecordScope) {
-	records(entityId: $entityId, page: $page, reference: $reference, scope: $scope) {
+query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput, $scope: RecordScope, $where: JSON, $orderBy: RecordOrderInput) {
+	records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where, orderBy: $orderBy) {
 		items {
 			... RecordParts
 		}
@@ -8417,6 +8490,8 @@ func Records(
 	page PageInput,
 	reference *RecordReferenceInput,
 	scope RecordScope,
+	where json.RawMessage,
+	orderBy *RecordOrderInput,
 ) (data_ *RecordsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "Records",
@@ -8426,10 +8501,54 @@ func Records(
 			Page:      page,
 			Reference: reference,
 			Scope:     scope,
+			Where:     where,
+			OrderBy:   orderBy,
 		},
 	}
 
 	data_ = &RecordsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by RecordsCount.
+const RecordsCount_Operation = `
+query RecordsCount ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput, $scope: RecordScope, $where: JSON) {
+	records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where) {
+		totalCount
+	}
+}
+`
+
+func RecordsCount(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+	page PageInput,
+	reference *RecordReferenceInput,
+	scope RecordScope,
+	where json.RawMessage,
+) (data_ *RecordsCountResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RecordsCount",
+		Query:  RecordsCount_Operation,
+		Variables: &__RecordsCountInput{
+			EntityId:  entityId,
+			Page:      page,
+			Reference: reference,
+			Scope:     scope,
+			Where:     where,
+		},
+	}
+
+	data_ = &RecordsCountResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

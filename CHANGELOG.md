@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.13.0...v1.0.0) (2026-11-03)
+
+
+### Miscellaneous Chores
+
+* [MP-257] release 1.0.0 ([#42](https://github.com/MultiPaaS-Apps/cli/issues/42)) ([2627c3b](https://github.com/MultiPaaS-Apps/cli/commit/2627c3b58bc050fb2461724adefe381d5bf09543))
+
 ## [0.13.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.12.0...v0.13.0) (2026-11-02)
 
 

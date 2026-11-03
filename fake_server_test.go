@@ -420,7 +420,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageOAuth(w, operation, parts, variables)
 	case "AppIdentities", "CreateAppIdentity", "CreateAppIdentitySecret", "RevokeAppIdentitySecret", "RetireAppIdentity":
 		f.manageAppIdentity(w, operation, parts, variables)
-	case "Roles", "PermissionCatalog", "CreateRole", "RoleAssignments", "AssignRole", "UnassignRole":
+	case "Roles", "PermissionCatalog", "CreateRole", "UpdateRole", "RoleAssignments", "AssignRole", "UnassignRole":
 		f.manageRoles(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
@@ -827,7 +827,7 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 // belongs to that app-tenant, and one made in the application's scope belongs to the application. A read in an
 // app-tenant's scope sees both, so the CLI must do its own filtering by scope.
 func (f *fakeMultiPaaS) manageRoles(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
-	write := operation == "CreateRole" || operation == "AssignRole" || operation == "UnassignRole"
+	write := operation == "CreateRole" || operation == "UpdateRole" || operation == "AssignRole" || operation == "UnassignRole"
 	if write {
 		f.mutations = append(f.mutations, variables)
 	}
@@ -870,15 +870,25 @@ func (f *fakeMultiPaaS) manageRoles(w http.ResponseWriter, operation string, par
 			graphQLRefusal(w, "DUPLICATE_ROLE_KEY", "a role with this key already exists")
 			return
 		}
-		permissions := []map[string]any{}
-		for _, given := range input["permissions"].([]any) {
-			p := given.(map[string]any)
-			permissions = append(permissions, map[string]any{"permission": p["permission"], "entityId": p["entityId"]})
-		}
+		permissions := rolePermissionRows(input["permissions"])
 		f.roleSeq++
 		role := map[string]any{"id": fmt.Sprintf("role-%d", f.roleSeq), "key": input["key"], "name": input["name"], "appTenant": tenant, "permissions": permissions}
 		f.roles = append(f.roles, role)
 		writeData(w, map[string]any{"createRole": role})
+	case "UpdateRole":
+		input, _ := variables["input"].(map[string]any)
+		role := roleByID(input["id"])
+		if role == nil || !sameScope(role) {
+			graphQLRefusal(w, "NOT_FOUND", "role not found")
+			return
+		}
+		if name, ok := input["name"].(string); ok {
+			role["name"] = name
+		}
+		if input["permissions"] != nil {
+			role["permissions"] = rolePermissionRows(input["permissions"])
+		}
+		writeData(w, map[string]any{"updateRole": role})
 	case "RoleAssignments":
 		listed := []map[string]any{}
 		for _, a := range f.assignments {
@@ -917,6 +927,17 @@ func (f *fakeMultiPaaS) manageRoles(w http.ResponseWriter, operation string, par
 		f.assignments = slices.Delete(f.assignments, i, i+1)
 		writeData(w, map[string]any{"unassignRole": removed})
 	}
+}
+
+// rolePermissionRows is a role's permissions as the server returns them, from the permissions an input sent.
+func rolePermissionRows(sent any) []map[string]any {
+	rows := []map[string]any{}
+	given, _ := sent.([]any)
+	for _, item := range given {
+		p := item.(map[string]any)
+		rows = append(rows, map[string]any{"permission": p["permission"], "entityId": p["entityId"]})
+	}
+	return rows
 }
 
 // submitFeedback files a report as the server does: details "too-long" is refused as VALIDATION and "throttle"

@@ -43,6 +43,120 @@ func TestRolesCreateRefusesAPermissionWithNoName(t *testing.T) {
 	}
 }
 
+func TestRolesUpdateAddsAndRemovesPermissionsInTheApplicationScope(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "member", "--name", "Member",
+		"--permission", "record.create", "--permission", "record.view_all=entity-1", "--json")
+	fake.mutations = nil
+	got := fake.run(t, "roles", "update", "--app", "app-a-000", "--role", "member",
+		"--add-permission", "record.edit_all=entity-1", "--add-permission", "record.create",
+		"--remove-permission", "record.view_all=entity-1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	wantSent := []map[string]any{{"input": map[string]any{"id": "role-1", "name": nil, "permissions": []any{
+		map[string]any{"permission": "record.create"},
+		map[string]any{"permission": "record.edit_all", "entityId": "entity-1"},
+	}}}}
+	if !reflect.DeepEqual(fake.mutations, wantSent) {
+		t.Fatalf("sent %v, want %v", fake.mutations, wantSent)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000" {
+		t.Fatalf("scope %q", last)
+	}
+	if want := `{"role":{"id":"role-1","key":"member","name":"Member","appTenant":null,"permissions":[{"permission":"record.create","entityId":null},{"permission":"record.edit_all","entityId":"entity-1"}]}}`; compact(got.stdout) != want {
+		t.Fatalf("printed %s, want %s", compact(got.stdout), want)
+	}
+	listed := fake.run(t, "roles", "list", "--app", "app-a-000")
+	if !strings.Contains(listed.stdout, "record.create,record.edit_all=entity-1") {
+		t.Fatalf("roles list: %s", listed.stdout)
+	}
+}
+
+func TestRolesUpdateRemovingTheLastPermissionSendsAnEmptySet(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--permission", "record.view_all", "--json")
+	fake.mutations = nil
+	got := fake.run(t, "roles", "update", "--app", "app-a-000", "--role", "sync", "--remove-permission", "record.view_all")
+	if want := "Updated role sync (role-1)\n"; got.exit != exitOK || got.stdout != want {
+		t.Fatalf("exit %d, printed %q, want %q", got.exit, got.stdout, want)
+	}
+	wantSent := []map[string]any{{"input": map[string]any{"id": "role-1", "name": nil, "permissions": []any{}}}}
+	if !reflect.DeepEqual(fake.mutations, wantSent) {
+		t.Fatalf("sent %v, want %v", fake.mutations, wantSent)
+	}
+}
+
+func TestRolesUpdateNameOnlyLeavesThePermissions(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--permission", "record.view_all", "--json")
+	fake.mutations = nil
+	got := fake.run(t, "roles", "update", "--app", "app-a-000", "--role", "role-1", "--name", "Nightly sync", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	wantSent := []map[string]any{{"input": map[string]any{"id": "role-1", "name": "Nightly sync", "permissions": nil}}}
+	if !reflect.DeepEqual(fake.mutations, wantSent) {
+		t.Fatalf("sent %v, want %v", fake.mutations, wantSent)
+	}
+	if want := `{"role":{"id":"role-1","key":"sync","name":"Nightly sync","appTenant":null,"permissions":[{"permission":"record.view_all","entityId":null}]}}`; compact(got.stdout) != want {
+		t.Fatalf("printed %s, want %s", compact(got.stdout), want)
+	}
+}
+
+func TestRolesUpdateMatchesEntityIdsWithoutCase(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "reader", "--name", "Reader", "--permission", "record.view_all=entity-a", "--json")
+	fake.mutations = nil
+	got := fake.run(t, "roles", "update", "--app", "app-a-000", "--role", "reader",
+		"--add-permission", "record.view_all=ENTITY-A", "--add-permission", "record.create", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	wantSent := []map[string]any{{"input": map[string]any{"id": "role-1", "name": nil, "permissions": []any{
+		map[string]any{"permission": "record.view_all", "entityId": "entity-a"},
+		map[string]any{"permission": "record.create"},
+	}}}}
+	if !reflect.DeepEqual(fake.mutations, wantSent) {
+		t.Fatalf("sent %v, want %v", fake.mutations, wantSent)
+	}
+	removed := fake.run(t, "roles", "update", "--app", "app-a-000", "--role", "reader", "--remove-permission", "record.view_all=ENTITY-A")
+	if removed.exit != exitOK {
+		t.Fatalf("remove: exit %d: %s %s", removed.exit, removed.stdout, removed.stderr)
+	}
+}
+
+func TestRolesUpdateRefusals(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "member", "--name", "Member", "--permission", "record.create", "--json")
+	fake.roles = append(fake.roles, map[string]any{"id": "role-tenant", "key": "member", "name": "Tenant member", "appTenant": map[string]any{"id": "tenant-a"}, "permissions": []map[string]any{}})
+	fake.mutations = nil
+	for _, c := range []struct {
+		name  string
+		args  []string
+		want  string
+		exact string
+	}{
+		{"no change", []string{"--role", "member"}, "give --add-permission, --remove-permission or --name", ""},
+		{"add names no permission", []string{"--role", "member", "--add-permission", "=entity-1"}, `--add-permission "=entity-1" names no permission`, ""},
+		{"remove names no permission", []string{"--role", "member", "--remove-permission", ""}, `--remove-permission "" names no permission`, ""},
+		{"remove not carried", []string{"--role", "member", "--remove-permission", "record.view_all=entity-1"}, "role member doesn't carry record.view_all=entity-1", "multipaas: role member doesn't carry record.view_all=entity-1 (NOT_FOUND)\n"},
+		{"unknown role", []string{"--role", "nope", "--add-permission", "record.view_all"}, "no role nope in application app-a-000", "multipaas: no role nope in application app-a-000 (NOT_FOUND)\n"},
+		{"app-tenant role", []string{"--role", "role-tenant", "--add-permission", "record.view_all"}, "no role role-tenant in application app-a-000", "multipaas: no role role-tenant in application app-a-000 (NOT_FOUND)\n"},
+		{"empty name", []string{"--role", "member", "--name", ""}, "--name is empty", ""},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			got := fake.run(t, append([]string{"roles", "update", "--app", "app-a-000"}, c.args...)...)
+			if got.exit == exitOK || !strings.Contains(got.stdout+got.stderr, c.want) || (c.exact != "" && got.stderr != c.exact) {
+				t.Fatalf("exit %d, stdout %q, stderr %q, want %q (whole stderr %q)", got.exit, got.stdout, got.stderr, c.want, c.exact)
+			}
+		})
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
 func TestRolesPermissionsListsTheCatalog(t *testing.T) {
 	fake := projectFake(t)
 	got := fake.run(t, "roles", "permissions", "--app", "app-a-000", "--json")

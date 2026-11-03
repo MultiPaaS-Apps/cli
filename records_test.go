@@ -321,6 +321,18 @@ func TestRecordsListCountPrintsOnlyTheNumber(t *testing.T) {
 	}
 }
 
+func TestRecordsListCountSendsWhere(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1",
+		"--where", `{"f1": {"lte": 2}}`, "--count")
+	if got.exit != exitOK || len(fake.recordReads) != 1 || fake.recordReads[0].operation != "RecordsCount" {
+		t.Fatalf("exit %d after reads %v: %s", got.exit, fake.recordReads, got.stdout)
+	}
+	if sent := fake.recordReads[0].variables["where"]; !reflect.DeepEqual(sent, map[string]any{"f1": map[string]any{"lte": 2.0}}) {
+		t.Fatalf("count sent where %v", sent)
+	}
+}
+
 func TestRecordsListRefusesBadFlags(t *testing.T) {
 	fake := projectFake(t)
 	for _, refused := range []struct {
@@ -334,6 +346,9 @@ func TestRecordsListRefusesBadFlags(t *testing.T) {
 		{"order_by_unknown_direction", []string{"--order-by", "f1:sideways"}, "--order-by takes FIELD, FIELD:asc or FIELD:desc"},
 		{"order_by_no_field", []string{"--order-by", ":desc"}, "--order-by needs a field id"},
 		{"count_with_order_by", []string{"--count", "--order-by", "f1"}, "--count takes no --order-by"},
+		{"where_empty", []string{"--where", ""}, "--where is empty"},
+		{"order_by_empty", []string{"--order-by", ""}, "--order-by is empty"},
+		{"count_with_empty_order_by", []string{"--count", "--order-by", ""}, "--order-by is empty"},
 	} {
 		t.Run(refused.name, func(t *testing.T) {
 			got := fake.run(t, append([]string{"records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json"}, refused.flags...)...)

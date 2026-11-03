@@ -89,6 +89,21 @@ func recordsList(command commandFunc) *cobra.Command {
 		}, err
 	})
 	recordFlags(cmd, &target)
+	previous := cmd.PreRunE
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if previous != nil {
+			if err := previous(cmd, args); err != nil {
+				return err
+			}
+		}
+		switch {
+		case cmd.Flags().Changed("where") && where == "":
+			return fmt.Errorf(`--where is empty: give a JSON object of conditions, like '{"FIELD_ID": {"eq": "value"}}', or leave --where off`)
+		case cmd.Flags().Changed("order-by") && orderBy == "":
+			return fmt.Errorf("--order-by is empty: give createdAt, updatedAt or a field id, or leave --order-by off for newest first")
+		}
+		return nil
+	}
 	cmd.Flags().StringVar(&parentField, "parent-field", "", "keep the records whose parent reference field has this id (from model show), with --parent-record")
 	cmd.Flags().StringVar(&parentRecord, "parent-record", "", "the parent record's id, with --parent-field")
 	cmd.Flags().StringVar(&where, "where", "", `keep the records meeting every condition, as JSON keyed by field id or id, createdAt or updatedAt, like '{"FIELD_ID": {"lte": 5}}'`)

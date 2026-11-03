@@ -1540,6 +1540,9 @@ func (v *CreateFieldCreateField) GetGraphqlFieldName() string { return v.FieldPa
 // GetType returns CreateFieldCreateField.Type, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetType() string { return v.FieldParts.Type }
 
+// GetMaxFileBytes returns CreateFieldCreateField.MaxFileBytes, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetMaxFileBytes() *float64 { return v.FieldParts.MaxFileBytes }
+
 // GetRequired returns CreateFieldCreateField.Required, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetRequired() bool { return v.FieldParts.Required }
 
@@ -1601,6 +1604,8 @@ type __premarshalCreateFieldCreateField struct {
 
 	Type string `json:"type"`
 
+	MaxFileBytes *float64 `json:"maxFileBytes"`
+
 	Required bool `json:"required"`
 
 	EnumValues []string `json:"enumValues"`
@@ -1632,6 +1637,7 @@ func (v *CreateFieldCreateField) __premarshalJSON() (*__premarshalCreateFieldCre
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
 	retval.Type = v.FieldParts.Type
+	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -2974,6 +2980,7 @@ type FieldParts struct {
 	Name             *string                     `json:"name"`
 	GraphqlFieldName string                      `json:"graphqlFieldName"`
 	Type             string                      `json:"type"`
+	MaxFileBytes     *float64                    `json:"maxFileBytes"`
 	Required         bool                        `json:"required"`
 	EnumValues       []string                    `json:"enumValues"`
 	EnumType         *FieldPartsEnumType         `json:"enumType"`
@@ -2997,6 +3004,9 @@ func (v *FieldParts) GetGraphqlFieldName() string { return v.GraphqlFieldName }
 
 // GetType returns FieldParts.Type, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetType() string { return v.Type }
+
+// GetMaxFileBytes returns FieldParts.MaxFileBytes, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetMaxFileBytes() *float64 { return v.MaxFileBytes }
 
 // GetRequired returns FieldParts.Required, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetRequired() bool { return v.Required }
@@ -3089,6 +3099,11 @@ func (v *FieldsFieldsFieldPageItemsField) GetGraphqlFieldName() string {
 // GetType returns FieldsFieldsFieldPageItemsField.Type, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetType() string { return v.FieldParts.Type }
 
+// GetMaxFileBytes returns FieldsFieldsFieldPageItemsField.MaxFileBytes, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetMaxFileBytes() *float64 {
+	return v.FieldParts.MaxFileBytes
+}
+
 // GetRequired returns FieldsFieldsFieldPageItemsField.Required, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetRequired() bool { return v.FieldParts.Required }
 
@@ -3152,6 +3167,8 @@ type __premarshalFieldsFieldsFieldPageItemsField struct {
 
 	Type string `json:"type"`
 
+	MaxFileBytes *float64 `json:"maxFileBytes"`
+
 	Required bool `json:"required"`
 
 	EnumValues []string `json:"enumValues"`
@@ -3183,6 +3200,7 @@ func (v *FieldsFieldsFieldPageItemsField) __premarshalJSON() (*__premarshalField
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
 	retval.Type = v.FieldParts.Type
+	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -4604,6 +4622,9 @@ func (v *RetireFieldRetireField) GetGraphqlFieldName() string { return v.FieldPa
 // GetType returns RetireFieldRetireField.Type, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetType() string { return v.FieldParts.Type }
 
+// GetMaxFileBytes returns RetireFieldRetireField.MaxFileBytes, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetMaxFileBytes() *float64 { return v.FieldParts.MaxFileBytes }
+
 // GetRequired returns RetireFieldRetireField.Required, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetRequired() bool { return v.FieldParts.Required }
 
@@ -4665,6 +4686,8 @@ type __premarshalRetireFieldRetireField struct {
 
 	Type string `json:"type"`
 
+	MaxFileBytes *float64 `json:"maxFileBytes"`
+
 	Required bool `json:"required"`
 
 	EnumValues []string `json:"enumValues"`
@@ -4696,6 +4719,7 @@ func (v *RetireFieldRetireField) __premarshalJSON() (*__premarshalRetireFieldRet
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
 	retval.Type = v.FieldParts.Type
+	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -5833,6 +5857,9 @@ func (v *UpdateFieldUpdateField) GetGraphqlFieldName() string { return v.FieldPa
 // GetType returns UpdateFieldUpdateField.Type, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetType() string { return v.FieldParts.Type }
 
+// GetMaxFileBytes returns UpdateFieldUpdateField.MaxFileBytes, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetMaxFileBytes() *float64 { return v.FieldParts.MaxFileBytes }
+
 // GetRequired returns UpdateFieldUpdateField.Required, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetRequired() bool { return v.FieldParts.Required }
 
@@ -5894,6 +5921,8 @@ type __premarshalUpdateFieldUpdateField struct {
 
 	Type string `json:"type"`
 
+	MaxFileBytes *float64 `json:"maxFileBytes"`
+
 	Required bool `json:"required"`
 
 	EnumValues []string `json:"enumValues"`
@@ -5925,6 +5954,7 @@ func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpd
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
 	retval.Type = v.FieldParts.Type
+	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -7474,6 +7504,7 @@ fragment FieldParts on Field {
 	name
 	graphqlFieldName
 	type
+	maxFileBytes
 	required
 	enumValues
 	enumType {
@@ -7973,6 +8004,7 @@ fragment FieldParts on Field {
 	name
 	graphqlFieldName
 	type
+	maxFileBytes
 	required
 	enumValues
 	enumType {
@@ -8710,6 +8742,7 @@ fragment FieldParts on Field {
 	name
 	graphqlFieldName
 	type
+	maxFileBytes
 	required
 	enumValues
 	enumType {
@@ -9291,6 +9324,7 @@ fragment FieldParts on Field {
 	name
 	graphqlFieldName
 	type
+	maxFileBytes
 	required
 	enumValues
 	enumType {

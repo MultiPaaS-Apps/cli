@@ -12,10 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// roleCommands declare the application's roles. Creating one needs access.manage.application.
+// roleCommands declare, change and list the application's roles. Creating or changing one needs access.manage.application.
 func roleCommands(command commandFunc) *cobra.Command {
-	return group("roles", "Declare and list the application's roles",
-		roleList(command), rolePermissions(command), roleCreate(command))
+	return group("roles", "Declare, change and list the application's roles",
+		roleList(command), rolePermissions(command), roleCreate(command), roleUpdate(command))
 }
 
 func roleList(command commandFunc) *cobra.Command {
@@ -76,14 +76,11 @@ func roleCreate(command commandFunc) *cobra.Command {
 	var appID, key, name string
 	var permissions []string
 	cmd := command("create", "Declare a role across the application", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		input := CreateRoleInput{Key: key, Name: name, Permissions: []RolePermissionInput{}}
-		for _, given := range permissions {
-			permission, entityID, _ := strings.Cut(given, "=")
-			if permission == "" {
-				return nil, nil, fmt.Errorf("--permission %q names no permission", given)
-			}
-			input.Permissions = append(input.Permissions, RolePermissionInput{Permission: permission, EntityId: entityID})
+		parsed, err := parsePermissions("--permission", permissions)
+		if err != nil {
+			return nil, nil, err
 		}
+		input := CreateRoleInput{Key: key, Name: name, Permissions: parsed}
 		scope, err := s.recordScope(ctx, recordTarget{appID: appID, appWide: true})
 		if err != nil {
 			return nil, nil, err
@@ -107,6 +104,70 @@ func roleCreate(command commandFunc) *cobra.Command {
 	return cmd
 }
 
+func roleUpdate(command commandFunc) *cobra.Command {
+	var appID, roleKey, name string
+	var added, removed []string
+	var cmd *cobra.Command
+	cmd = command("update", "Change an application role's permissions or name; what is not given is kept", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		renamed := cmd.Flags().Changed("name")
+		if len(added) == 0 && len(removed) == 0 && !renamed {
+			return nil, nil, fmt.Errorf("give --add-permission, --remove-permission or --name")
+		}
+		if renamed && name == "" {
+			return nil, nil, fmt.Errorf("--name is empty")
+		}
+		adds, err := parsePermissions("--add-permission", added)
+		if err != nil {
+			return nil, nil, err
+		}
+		removes, err := parsePermissions("--remove-permission", removed)
+		if err != nil {
+			return nil, nil, err
+		}
+		target := recordTarget{appID: appID, appWide: true}
+		scope, err := s.recordScope(ctx, target)
+		if err != nil {
+			return nil, nil, err
+		}
+		var updated RoleParts
+		err = s.call(ctx, scope, func(client graphql.Client) error {
+			listed, err := roles(ctx, client)
+			if err != nil {
+				return err
+			}
+			role, err := roleByKey(listed, roleKey, target)
+			if err != nil {
+				if refusal, ok := err.(*cliError); ok && refusal.Code == "NOT_FOUND" {
+					return &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no role " + roleKey + " in application " + appID}
+				}
+				return err
+			}
+			input := UpdateRoleInput{Id: role.Id}
+			if renamed {
+				input.Name = &name
+			}
+			if len(adds) > 0 || len(removes) > 0 {
+				if input.Permissions, err = nextPermissions(role, adds, removes); err != nil {
+					return err
+				}
+			}
+			response, err := UpdateRole(ctx, client, input)
+			if err == nil {
+				updated = response.UpdateRole.RoleParts
+			}
+			return err
+		})
+		return map[string]any{"role": updated}, func(out io.Writer) { fmt.Fprintf(out, "Updated role %s (%s)\n", updated.Key, updated.Id) }, err
+	})
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&roleKey, "role", "", "the role's key or id (from roles list); an application role")
+	cmd.Flags().StringArrayVar(&added, "add-permission", nil, "a permission to add, as PERMISSION or PERMISSION=ENTITY_ID; repeat for each (from roles permissions)")
+	cmd.Flags().StringArrayVar(&removed, "remove-permission", nil, "a permission to remove, written as roles list shows it; repeat for each")
+	cmd.Flags().StringVar(&name, "name", "", "the role's new name, which memberships.jsonl names it by")
+	_ = cmd.MarkFlagRequired("role")
+	return cmd
+}
+
 func roles(ctx context.Context, client graphql.Client) ([]RoleParts, error) {
 	response, err := Roles(ctx, client)
 	if err != nil {
@@ -117,6 +178,60 @@ func roles(ctx context.Context, client graphql.Client) ([]RoleParts, error) {
 		listed = append(listed, item.RoleParts)
 	}
 	return listed, nil
+}
+
+// parsePermissions reads each PERMISSION or PERMISSION=ENTITY_ID given to flag, the form roles list prints.
+func parsePermissions(flag string, given []string) ([]RolePermissionInput, error) {
+	parsed := []RolePermissionInput{}
+	for _, value := range given {
+		permission, entityID, targeted := strings.Cut(value, "=")
+		if permission == "" {
+			return nil, fmt.Errorf("%s %q names no permission", flag, value)
+		}
+		if targeted && entityID == "" {
+			return nil, fmt.Errorf("%s %q names no entity id", flag, value)
+		}
+		parsed = append(parsed, RolePermissionInput{Permission: permission, EntityId: entityID})
+	}
+	return parsed, nil
+}
+
+// nextPermissions is the role's permission set with removes taken out, then adds put in. Removing a permission
+// the role doesn't carry is refused, so a typo isn't a silent no-op. Adding one it already carries changes nothing.
+func nextPermissions(role RoleParts, adds, removes []RolePermissionInput) ([]RolePermissionInput, error) {
+	next := []RolePermissionInput{}
+	for _, p := range role.Permissions {
+		carried := RolePermissionInput{Permission: p.Permission}
+		if p.EntityId != nil {
+			carried.EntityId = *p.EntityId
+		}
+		next = append(next, carried)
+	}
+	for _, p := range removes {
+		i := slices.IndexFunc(next, func(c RolePermissionInput) bool { return samePermission(c, p) })
+		if i < 0 {
+			return nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "role " + role.Key + " doesn't carry " + permissionText(p)}
+		}
+		next = slices.Delete(next, i, i+1)
+	}
+	for _, p := range adds {
+		if !slices.ContainsFunc(next, func(c RolePermissionInput) bool { return samePermission(c, p) }) {
+			next = append(next, p)
+		}
+	}
+	return next, nil
+}
+
+// samePermission is whether a and b name the same permission; entity ids are uuids, which compare without case.
+func samePermission(a, b RolePermissionInput) bool {
+	return a.Permission == b.Permission && strings.EqualFold(a.EntityId, b.EntityId)
+}
+
+func permissionText(p RolePermissionInput) string {
+	if p.EntityId == "" {
+		return p.Permission
+	}
+	return p.Permission + "=" + p.EntityId
 }
 
 // permissionList is a role's permissions as PERMISSION or PERMISSION=ENTITY_ID, the form --permission takes.

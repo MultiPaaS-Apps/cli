@@ -6137,6 +6137,107 @@ func (v *UpdateRecordUpdateRecord) __premarshalJSON() (*__premarshalUpdateRecord
 	return &retval, nil
 }
 
+type UpdateRoleInput struct {
+	Id          string                `json:"id"`
+	Name        *string               `json:"name"`
+	Permissions []RolePermissionInput `json:"permissions"`
+}
+
+// GetId returns UpdateRoleInput.Id, and is useful for accessing the field via an interface.
+func (v *UpdateRoleInput) GetId() string { return v.Id }
+
+// GetName returns UpdateRoleInput.Name, and is useful for accessing the field via an interface.
+func (v *UpdateRoleInput) GetName() *string { return v.Name }
+
+// GetPermissions returns UpdateRoleInput.Permissions, and is useful for accessing the field via an interface.
+func (v *UpdateRoleInput) GetPermissions() []RolePermissionInput { return v.Permissions }
+
+// UpdateRoleResponse is returned by UpdateRole on success.
+type UpdateRoleResponse struct {
+	UpdateRole UpdateRoleUpdateRole `json:"updateRole"`
+}
+
+// GetUpdateRole returns UpdateRoleResponse.UpdateRole, and is useful for accessing the field via an interface.
+func (v *UpdateRoleResponse) GetUpdateRole() UpdateRoleUpdateRole { return v.UpdateRole }
+
+// UpdateRoleUpdateRole includes the requested fields of the GraphQL type Role.
+type UpdateRoleUpdateRole struct {
+	RoleParts `json:"-"`
+}
+
+// GetId returns UpdateRoleUpdateRole.Id, and is useful for accessing the field via an interface.
+func (v *UpdateRoleUpdateRole) GetId() string { return v.RoleParts.Id }
+
+// GetKey returns UpdateRoleUpdateRole.Key, and is useful for accessing the field via an interface.
+func (v *UpdateRoleUpdateRole) GetKey() string { return v.RoleParts.Key }
+
+// GetName returns UpdateRoleUpdateRole.Name, and is useful for accessing the field via an interface.
+func (v *UpdateRoleUpdateRole) GetName() string { return v.RoleParts.Name }
+
+// GetAppTenant returns UpdateRoleUpdateRole.AppTenant, and is useful for accessing the field via an interface.
+func (v *UpdateRoleUpdateRole) GetAppTenant() *RolePartsAppTenant { return v.RoleParts.AppTenant }
+
+// GetPermissions returns UpdateRoleUpdateRole.Permissions, and is useful for accessing the field via an interface.
+func (v *UpdateRoleUpdateRole) GetPermissions() []RolePartsPermissionsRolePermission {
+	return v.RoleParts.Permissions
+}
+
+func (v *UpdateRoleUpdateRole) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateRoleUpdateRole
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateRoleUpdateRole = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RoleParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateRoleUpdateRole struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	AppTenant *RolePartsAppTenant `json:"appTenant"`
+
+	Permissions []RolePartsPermissionsRolePermission `json:"permissions"`
+}
+
+func (v *UpdateRoleUpdateRole) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateRoleUpdateRole) __premarshalJSON() (*__premarshalUpdateRoleUpdateRole, error) {
+	var retval __premarshalUpdateRoleUpdateRole
+
+	retval.Id = v.RoleParts.Id
+	retval.Key = v.RoleParts.Key
+	retval.Name = v.RoleParts.Name
+	retval.AppTenant = v.RoleParts.AppTenant
+	retval.Permissions = v.RoleParts.Permissions
+	return &retval, nil
+}
+
 // __AddDataImportFileInput is used internally by genqlient
 type __AddDataImportFileInput struct {
 	Input map[string]any `json:"input"`
@@ -6576,6 +6677,14 @@ type __UpdateRecordInput struct {
 
 // GetInput returns __UpdateRecordInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateRecordInput) GetInput() UpdateRecordInput { return v.Input }
+
+// __UpdateRoleInput is used internally by genqlient
+type __UpdateRoleInput struct {
+	Input UpdateRoleInput `json:"input"`
+}
+
+// GetInput returns __UpdateRoleInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateRoleInput) GetInput() UpdateRoleInput { return v.Input }
 
 // schemaChange includes the requested fields of the GraphQL type SchemaChange.
 type schemaChange struct {
@@ -9403,6 +9512,52 @@ func UpdateRecord(
 	}
 
 	data_ = &UpdateRecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateRole.
+const UpdateRole_Operation = `
+mutation UpdateRole ($input: UpdateRoleInput!) {
+	updateRole(input: $input) {
+		... RoleParts
+	}
+}
+fragment RoleParts on Role {
+	id
+	key
+	name
+	appTenant {
+		id
+	}
+	permissions {
+		permission
+		entityId
+	}
+}
+`
+
+func UpdateRole(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input UpdateRoleInput,
+) (data_ *UpdateRoleResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateRole",
+		Query:  UpdateRole_Operation,
+		Variables: &__UpdateRoleInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateRoleResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

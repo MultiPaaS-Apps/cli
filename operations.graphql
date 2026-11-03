@@ -630,6 +630,16 @@ mutation CreateRole(
   }
 }
 
+# @genqlient(for: "RolePermissionInput.entityId", omitempty: true)
+# @genqlient(for: "UpdateRoleInput.name", pointer: true)
+mutation UpdateRole(
+  $input: UpdateRoleInput!
+) {
+  updateRole(input: $input) {
+    ...RoleParts
+  }
+}
+
 query RoleAssignments($userId: ID) {
   roleAssignments(userId: $userId) {
     ...RoleAssignmentParts

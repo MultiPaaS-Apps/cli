@@ -86,6 +86,8 @@ fragment FieldParts on Field {
   name
   graphqlFieldName
   type
+  # @genqlient(pointer: true)
+  maxFileBytes
   required
   enumValues
   # @genqlient(pointer: true)

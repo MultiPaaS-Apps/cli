@@ -43,6 +43,49 @@ func TestFieldAddSendsAnEnumTypeIdAndBooleansAsTheirTypes(t *testing.T) {
 	}
 }
 
+func TestFieldAddSendsAFileTypeWithItsMaximumSizeAsANumber(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "file", "--max-file-bytes", "1048576", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"entityId": "entity-1", "type": "file", "maxFileBytes": float64(1048576)}}
+	if !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations[0], want)
+	}
+}
+
+func TestFieldUpdateSendsOnlyTheMaximumSize(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--max-file-bytes", "2048", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"fieldId": "field-1", "maxFileBytes": float64(2048)}}
+	if !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations[0], want)
+	}
+}
+
+func TestModelShowPrintsAFileFieldsMaximumSize(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entities["app-a-000"] = append(fake.entities["app-a-000"], map[string]any{"id": "entity-1", "name": "Order"})
+	fake.fields["entity-1"] = []map[string]any{
+		{"id": "field-1", "graphqlFieldName": "receipt", "type": "file", "maxFileBytes": 1048576},
+		{"id": "field-2", "graphqlFieldName": "note", "type": "text"},
+	}
+	got := fake.run(t, "model", "show", "--app", "app-a-000")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if !strings.Contains(got.stdout, "file (max 1048576 bytes)") {
+		t.Fatalf("shown %q", got.stdout)
+	}
+	if strings.Contains(got.stdout, "text (max") {
+		t.Fatalf("a field without a maximum printed one: %q", got.stdout)
+	}
+}
+
 func TestEnumCreateSendsItsValuesWithAnOptionalGraphQLName(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	got := fake.run(t, "enum", "create", "--app", "app-a-000", "--name", "Status", "--values", "In progress,N/A=NOT_APPLICABLE", "--json")

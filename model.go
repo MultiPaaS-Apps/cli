@@ -16,7 +16,7 @@ import (
 type commandFunc func(use, short string, do func(context.Context, *session) (any, func(io.Writer), error)) *cobra.Command
 
 // option is one input a model command takes: its flag, the input field it sets, its help, and its kind
-// ("string", "bool", "list", or "values" for an enum's VALUE or VALUE=GRAPHQL_NAME entries).
+// ("string", "bool", "int", "list", or "values" for an enum's VALUE or VALUE=GRAPHQL_NAME entries).
 type option struct {
 	flag, field, usage, kind string
 	required                 bool
@@ -43,8 +43,9 @@ func modelCommands(command commandFunc) []*cobra.Command {
 		{flag: "references", field: "referencesEntityId", usage: "a reference field's target entity id"},
 		{flag: "related", field: "relatedFieldId", usage: "a related field's reference field id"},
 		{flag: "parent", field: "isParent", usage: "a reference to the record's parent", kind: "bool"},
+		{flag: "max-file-bytes", field: "maxFileBytes", usage: "a file field's maximum size in bytes (default: 512 MiB)", kind: "int"},
 	}
-	fieldType := option{flag: "type", field: "type", usage: "text, number, boolean, timestamp, enum (needs --enum-type), reference or related"}
+	fieldType := option{flag: "type", field: "type", usage: "text, number, boolean, timestamp, enum (needs --enum-type), reference, related or file"}
 	return []*cobra.Command{
 		group("model", "An application's model", modelShow(command)),
 		group("entity", "Declare, change and retire entities",
@@ -127,6 +128,8 @@ func change(command commandFunc, use, short, noun string, mutate mutation, optio
 		switch o.kind {
 		case "bool":
 			cmd.Flags().Bool(o.flag, false, o.usage)
+		case "int":
+			cmd.Flags().Int64(o.flag, 0, o.usage)
 		case "list", "values":
 			cmd.Flags().StringSlice(o.flag, nil, o.usage)
 		default:
@@ -149,6 +152,8 @@ func readInput(cmd *cobra.Command, options []option) map[string]any {
 		switch o.kind {
 		case "bool":
 			input[o.field], _ = cmd.Flags().GetBool(o.flag)
+		case "int":
+			input[o.field], _ = cmd.Flags().GetInt64(o.flag)
 		case "list":
 			input[o.field], _ = cmd.Flags().GetStringSlice(o.flag)
 		case "values":
@@ -503,6 +508,9 @@ func printModel(out io.Writer, shown shownModel) {
 			kind := f.Type
 			if f.EnumType != nil {
 				kind += " " + f.EnumType.Name
+			}
+			if f.MaxFileBytes != nil {
+				kind += fmt.Sprintf(" (max %d bytes)", int64(*f.MaxFileBytes))
 			}
 			return "  " + f.GraphqlFieldName + "\t" + kind + "\t" + strconv.FormatBool(f.Required) + "\t" + f.Id
 		})

@@ -68,6 +68,9 @@ func initProject(command commandFunc) *cobra.Command {
 		if chosen < 0 {
 			return nil, nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no app-tenant " + tenantID + " of application " + appID + " that you can reach"}
 		}
+		if tenants[chosen].EnvironmentID == "" {
+			return nil, nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "app-tenant " + tenantID + " has no environment that you can reach, so multipaas.json cannot name the environment it signs in to"}
+		}
 		pinned, err := s.pinnable(ctx, appID, wanted)
 		if err != nil {
 			return nil, nil, err

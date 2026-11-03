@@ -35,7 +35,10 @@ query AppTenants($page: PageInput!) {
     items {
       id
       name
-      environmentId
+      # @genqlient(pointer: true)
+      environment {
+        id
+      }
     }
     pageInfo {
       hasMore
@@ -66,7 +69,10 @@ query ScopedAppTenant {
     appTenant {
       id
       name
-      environmentId
+      # @genqlient(pointer: true)
+      environment {
+        id
+      }
     }
   }
 }
@@ -381,7 +387,10 @@ mutation UpdateOAuthClient($input: UpdateOAuthClientInput!) {
 fragment AppIdentityParts on AppIdentity {
   id
   name
-  environmentId
+  # @genqlient(pointer: true)
+  environment {
+    id
+  }
   # @genqlient(pointer: true)
   user {
     id

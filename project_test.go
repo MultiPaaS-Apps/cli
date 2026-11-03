@@ -63,6 +63,15 @@ func TestInitRefusesATenantOfAnotherEnvironmentThanTheNamedOne(t *testing.T) {
 	}
 }
 
+func TestInitRefusesATestTenantWhoseEnvironmentTheServerDoesNotReturn(t *testing.T) {
+	fake := projectFake(t)
+	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-n", name: "No env", env: noEnvironment})
+	assertFailure(t, fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-n", "--json"), exitRefused, "NOT_FOUND")
+	if _, err := os.Stat(projectFile); err == nil {
+		t.Fatal("multipaas.json was written for an app-tenant with no environment")
+	}
+}
+
 func TestInitWithEnvWritesTheEnvironment(t *testing.T) {
 	fake := projectFake(t)
 	got := fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-e", "--json")

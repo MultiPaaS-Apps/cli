@@ -358,7 +358,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		}
 		writeData(w, map[string]any{"me": map[string]any{
 			"application": map[string]any{"id": scopedApp.id, "name": scopedApp.name},
-			"appTenant":   map[string]any{"id": tenant.id, "name": tenant.name, "environmentId": cmp.Or(tenant.env, "env-default")},
+			"appTenant":   map[string]any{"id": tenant.id, "name": tenant.name, "environment": fakeEnvironment(cmp.Or(tenant.env, "env-default"))},
 		}})
 	case "Entities":
 		writeData(w, map[string]any{"entities": pageOf(f.entities[appOf(parts)], variables)})
@@ -553,12 +553,23 @@ func page(rows []fakeRow, variables map[string]any) map[string]any {
 	for _, row := range rows[start:end] {
 		item := map[string]any{"id": row.id, "name": row.name}
 		if row.env != "" {
-			item["environmentId"] = row.env
+			item["environment"] = fakeEnvironment(row.env)
 		}
 		items = append(items, item)
 	}
 	return map[string]any{"items": items, "pageInfo": map[string]any{"hasMore": end < len(rows)}}
 }
+
+// fakeEnvironment is an app-tenant's environment as the server prints it: null outside the caller's scope,
+// which a row's env of noEnvironment stands for.
+func fakeEnvironment(id string) any {
+	if id == noEnvironment {
+		return nil
+	}
+	return map[string]any{"id": id}
+}
+
+const noEnvironment = "none"
 
 func nullable(value string) any {
 	if value == "" {
@@ -812,7 +823,10 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		return
 	}
 	scopeEnv := f.scopeEnvironment(parts)
-	inScope := func(identity map[string]any) bool { return identity["environmentId"] == scopeEnv }
+	inScope := func(identity map[string]any) bool {
+		environment, placed := identity["environment"].(map[string]any)
+		return !placed || environment["id"] == scopeEnv
+	}
 	secretsOf := func(identity map[string]any) []map[string]any { return identity["secrets"].([]map[string]any) }
 	addSecret := func(i int) string {
 		f.secretSeq++
@@ -839,7 +853,7 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		input, _ := variables["input"].(map[string]any)
 		f.identitySeq++
 		n := f.identitySeq
-		f.appIdentities = append(f.appIdentities, map[string]any{"id": fmt.Sprintf("app-identity-%d", n), "name": input["name"], "environmentId": scopeEnv,
+		f.appIdentities = append(f.appIdentities, map[string]any{"id": fmt.Sprintf("app-identity-%d", n), "name": input["name"], "environment": map[string]any{"id": scopeEnv},
 			"user": map[string]any{"id": fmt.Sprintf("service-user-%d", n)}, "createdAt": "2026-10-27T00:00:00.000Z", "secrets": []map[string]any{}})
 		last := len(f.appIdentities) - 1
 		secret := addSecret(last)

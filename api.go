@@ -169,7 +169,11 @@ func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsT
 			return nil, false, nil
 		}
 		scoped, err := s.scopedAppTenant(ctx, entitlement)
-		return []appTenant{{ID: scoped.AppTenant.Id, Name: scoped.AppTenant.Name, EnvironmentID: scoped.AppTenant.EnvironmentId}}, true, err
+		environment := ""
+		if scoped.AppTenant.Environment != nil {
+			environment = scoped.AppTenant.Environment.Id
+		}
+		return []appTenant{{ID: scoped.AppTenant.Id, Name: scoped.AppTenant.Name, EnvironmentID: environment}}, true, err
 	}
 	apps, err := s.appsIn(ctx, entitlement)
 	if err != nil || !slices.ContainsFunc(apps, func(candidate app) bool { return candidate.ID == appID }) {
@@ -192,7 +196,11 @@ func (s *session) tenantsAt(ctx context.Context, scope string) ([]appTenant, err
 		}
 		reached := []appTenant{}
 		for _, item := range listed.AppTenants.Items {
-			reached = append(reached, appTenant{ID: item.Id, Name: item.Name, EnvironmentID: item.EnvironmentId})
+			environment := ""
+			if item.Environment != nil {
+				environment = item.Environment.Id
+			}
+			reached = append(reached, appTenant{ID: item.Id, Name: item.Name, EnvironmentID: environment})
 		}
 		return reached, listed.AppTenants.PageInfo.HasMore, nil
 	})

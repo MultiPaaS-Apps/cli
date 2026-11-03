@@ -28,7 +28,11 @@ func appIdentityList(command commandFunc) *cobra.Command {
 		})
 		return map[string]any{"appIdentities": listed}, func(out io.Writer) {
 			table(out, "NAME\tENVIRONMENT\tCLIENT ID\tSECRETS\tCREATED", listed, func(a AppIdentityParts) string {
-				return fmt.Sprintf("%s\t%s\t%s\t%d\t%s", a.Name, a.EnvironmentId, a.Id, len(a.Secrets), a.CreatedAt)
+				environment := ""
+				if a.Environment != nil {
+					environment = a.Environment.Id
+				}
+				return fmt.Sprintf("%s\t%s\t%s\t%d\t%s", a.Name, environment, a.Id, len(a.Secrets), a.CreatedAt)
 			})
 		}, err
 	})

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.0.0...v1.1.0) (2026-11-03)
+
+
+### Features
+
+* [MP-249] declare file fields with a maximum size ([#44](https://github.com/MultiPaaS-Apps/cli/issues/44)) ([6d560bb](https://github.com/MultiPaaS-Apps/cli/commit/6d560bb098941e3f9527948413c7f7ab1ef662ea))
+* [MP-255] filter, sort and count records list with --where, --order-by and --count ([#46](https://github.com/MultiPaaS-Apps/cli/issues/46)) ([679f8a8](https://github.com/MultiPaaS-Apps/cli/commit/679f8a8ecbaa52ac46326cb7901642592affd4f9))
+* [MP-265] roles update changes an application role's permissions ([#47](https://github.com/MultiPaaS-Apps/cli/issues/47)) ([f4712b8](https://github.com/MultiPaaS-Apps/cli/commit/f4712b89c598529b45f062bf1fa0eb05ab21a3c6))
+
 ## [1.0.0](https://github.com/MultiPaaS-Apps/cli/compare/v0.13.0...v1.0.0) (2026-11-03)
 
 

@@ -184,9 +184,12 @@ func roles(ctx context.Context, client graphql.Client) ([]RoleParts, error) {
 func parsePermissions(flag string, given []string) ([]RolePermissionInput, error) {
 	parsed := []RolePermissionInput{}
 	for _, value := range given {
-		permission, entityID, _ := strings.Cut(value, "=")
+		permission, entityID, targeted := strings.Cut(value, "=")
 		if permission == "" {
 			return nil, fmt.Errorf("%s %q names no permission", flag, value)
+		}
+		if targeted && entityID == "" {
+			return nil, fmt.Errorf("%s %q names no entity id", flag, value)
 		}
 		parsed = append(parsed, RolePermissionInput{Permission: permission, EntityId: entityID})
 	}

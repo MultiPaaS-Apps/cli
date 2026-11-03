@@ -139,6 +139,8 @@ func TestRolesUpdateRefusals(t *testing.T) {
 	}{
 		{"no change", []string{"--role", "member"}, "give --add-permission, --remove-permission or --name", ""},
 		{"add names no permission", []string{"--role", "member", "--add-permission", "=entity-1"}, `--add-permission "=entity-1" names no permission`, ""},
+		{"add names no entity id", []string{"--role", "member", "--add-permission", "record.view_all="}, `--add-permission "record.view_all=" names no entity id`, ""},
+		{"remove names no entity id", []string{"--role", "member", "--remove-permission", "record.view_all="}, `--remove-permission "record.view_all=" names no entity id`, ""},
 		{"remove names no permission", []string{"--role", "member", "--remove-permission", ""}, `--remove-permission "" names no permission`, ""},
 		{"remove not carried", []string{"--role", "member", "--remove-permission", "record.view_all=entity-1"}, "role member doesn't carry record.view_all=entity-1", "multipaas: role member doesn't carry record.view_all=entity-1 (NOT_FOUND)\n"},
 		{"unknown role", []string{"--role", "nope", "--add-permission", "record.view_all"}, "no role nope in application app-a-000", "multipaas: no role nope in application app-a-000 (NOT_FOUND)\n"},
@@ -154,6 +156,14 @@ func TestRolesUpdateRefusals(t *testing.T) {
 	}
 	if len(fake.mutations) != 0 {
 		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestRolesCreateRefusesAPermissionWithNoEntityId(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--permission", "record.view_all=")
+	if got.exit == exitOK || len(fake.mutations) != 0 || !strings.Contains(got.stderr, `--permission "record.view_all=" names no entity id`) {
+		t.Fatalf("exit %d, sent %v, stderr %q", got.exit, fake.mutations, got.stderr)
 	}
 }
 

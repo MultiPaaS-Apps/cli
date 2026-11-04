@@ -1,8 +1,12 @@
 name: schema-update
 
 # Keeps schema.graphql and generated.go current with the live webapp-api schema at the SCHEMA_ENDPOINT secret, as one PR authored by the
-# multipaas-bot GitHub App. The App's token, unlike GITHUB_TOKEN, starts CI on the branch it pushes.
+# multipaas-bot GitHub App. The App's token, unlike GITHUB_TOKEN, starts CI on the branch it pushes. A deploy of the webapp-api at
+# SCHEMA_ENDPOINT announces itself to every repo in this organization that has the webapp-api-schema-subscriber topic and the App
+# installed; the event only says when to run, and the schema always comes from SCHEMA_ENDPOINT.
 on:
+  repository_dispatch:
+    types: [webapp-api-schema-deployed]
   schedule:
     - cron: "17 6 * * *"
   workflow_dispatch:

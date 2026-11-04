@@ -334,31 +334,21 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.createAppTenant(w, parts, variables)
 	case "AppTenants":
 		apps := []fakeRow{}
-		inEnv, scoped := strings.CutPrefix(scope, "env:")
-		if scoped {
-			apps = f.envTenants[inEnv]
-		} else if inEnv = ""; len(parts) >= 2 {
-			apps = slices.DeleteFunc(slices.Clone(f.tenants[parts[1]]), func(row fakeRow) bool {
-				return row.env != "" && row.env != f.defaultEnvironment(parts[1])
-			})
-		}
-		apps = slices.Clone(apps)
-		for i := range apps {
-			if apps[i].env == "" {
-				apps[i].env = cmp.Or(inEnv, f.defaultEnvironment(appOf(parts)))
+		if inEnv, scoped := strings.CutPrefix(scope, "env:"); scoped {
+			for app, envs := range f.environments {
+				if slices.ContainsFunc(envs, func(e fakeEnv) bool { return e.id == inEnv }) {
+					apps = f.tenantsInEnvironment(app, inEnv)
+				}
 			}
+		} else if len(parts) >= 2 {
+			apps = f.tenantsInEnvironment(parts[1], f.defaultEnvironment(parts[1]))
 		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
 	case "Environments", "CreateEnvironment", "RenameEnvironment":
 		f.manageEnvironments(w, operation, appOf(parts), variables)
 	case "ScopedAppTenant":
 		scopedApp := f.scopedApps[parts[len(parts)-1]]
-		var tenant fakeRow
-		for _, row := range f.tenants[scopedApp.id] {
-			if row.id == parts[len(parts)-1] {
-				tenant = row
-			}
-		}
+		tenant, _ := f.tenantRow(scopedApp.id, parts[len(parts)-1])
 		if f.scopedEnvNull {
 			tenant.env = noEnvironment
 		}
@@ -763,7 +753,7 @@ func (f *fakeMultiPaaS) createAppTenant(w http.ResponseWriter, parts []string, v
 	}
 	name, _ := variables["input"].(map[string]any)["name"].(string)
 	if inEnv {
-		created := fakeRow{id: fmt.Sprintf("tenant-env-%d", len(f.envTenants[env])+1), name: name}
+		created := fakeRow{id: fmt.Sprintf("tenant-env-%d", f.envTenantCount()+1), name: name}
 		f.envTenants[env] = append(f.envTenants[env], created)
 		writeData(w, map[string]any{"createAppTenant": map[string]any{"id": created.id, "name": created.name}})
 		return
@@ -812,13 +802,51 @@ func (f *fakeMultiPaaS) scopeEnvironment(parts []string) string {
 		return env
 	}
 	if len(parts) > 2 {
-		for _, row := range f.tenants[parts[1]] {
-			if row.id == parts[2] {
-				return cmp.Or(row.env, f.defaultEnvironment(parts[1]))
-			}
+		if row, found := f.tenantRow(parts[1], parts[2]); found {
+			return cmp.Or(row.env, f.defaultEnvironment(parts[1]))
 		}
 	}
 	return f.defaultEnvironment(appOf(parts))
+}
+
+// envTenantCount is the app-tenants held in f.envTenants across every environment, so a new id never repeats.
+func (f *fakeMultiPaaS) envTenantCount() int {
+	count := 0
+	for _, held := range f.envTenants {
+		count += len(held)
+	}
+	return count
+}
+
+// tenantRows is every app-tenant of app with the environment it lives in: those in f.tenants, where an empty
+// env is the default, and those in f.envTenants under an environment that app lists.
+func (f *fakeMultiPaaS) tenantRows(app string) []fakeRow {
+	rows := slices.Clone(f.tenants[app])
+	for i := range rows {
+		rows[i].env = cmp.Or(rows[i].env, f.defaultEnvironment(app))
+	}
+	for _, e := range f.environments[app] {
+		for _, row := range f.envTenants[e.id] {
+			row.env = e.id
+			rows = append(rows, row)
+		}
+	}
+	return rows
+}
+
+// tenantRow is the app-tenant id of app, with its environment.
+func (f *fakeMultiPaaS) tenantRow(app, id string) (fakeRow, bool) {
+	rows := f.tenantRows(app)
+	at := slices.IndexFunc(rows, func(row fakeRow) bool { return row.id == id })
+	if at < 0 {
+		return fakeRow{}, false
+	}
+	return rows[at], true
+}
+
+// tenantsInEnvironment is the app-tenants of app that live in env.
+func (f *fakeMultiPaaS) tenantsInEnvironment(app, env string) []fakeRow {
+	return slices.DeleteFunc(f.tenantRows(app), func(row fakeRow) bool { return row.env != env })
 }
 
 // defaultEnvironment is the application's default environment, env-default when it has none seeded.

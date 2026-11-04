@@ -38,18 +38,20 @@ func TestInitWritesTheProjectAndPinsTheNewestAPIVersion(t *testing.T) {
 
 func TestInitTakesATestAppTenantFromTheNamedEnvironment(t *testing.T) {
 	fake := projectFake(t)
-	assertFailure(t, fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-e", "--json"), exitRefused, "NOT_FOUND")
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-two", name: "Staging"})
+	fake.envTenants["env-two"] = []fakeRow{{id: "tenant-t", name: "Staging tenant"}}
+	assertFailure(t, fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-t", "--json"), exitRefused, "NOT_FOUND")
 	if _, err := os.Stat(projectFile); err == nil {
 		t.Fatal("multipaas.json was written for an app-tenant of another environment")
 	}
-	got := fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-e", "--json")
+	got := fake.run(t, "init", "--app", "app-a-000", "--env", "env-two", "--tenant", "tenant-t", "--json")
 	if got.exit != exitOK {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
-	if saved := readProjectForTest(t); saved.ApplicationID != "app-a-000" || saved.TestAppTenantID != "tenant-e" {
+	if saved := readProjectForTest(t); saved.ApplicationID != "app-a-000" || saved.TestAppTenantID != "tenant-t" {
 		t.Fatalf("multipaas.json %+v", saved)
 	}
-	if !slices.Contains(fake.scopes, "env:env-default") {
+	if !slices.Contains(fake.scopes, "env:env-two") {
 		t.Fatalf("scopes %v", fake.scopes)
 	}
 }

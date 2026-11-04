@@ -254,6 +254,41 @@ func TestAppIdentityRoleAddAtATenantOfAnotherEnvironmentFindsTheIdentityThere(t 
 	}
 }
 
+func TestAppIdentityRoleAddAtATenantCreatedInAnEnvironmentFindsTheIdentityThere(t *testing.T) {
+	fake := projectFake(t)
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-two", name: "Staging"})
+	var created struct{ AppTenant struct{ Id string } }
+	decode(t, fake.run(t, "tenants", "create", "--app", "app-a-000", "--env", "env-two", "--name", "Second", "--json").stdout, &created)
+	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--env", "env-two", "--name", "staging sync", "--json")
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--json")
+
+	got := fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--tenant", created.AppTenant.Id, "--role", "sync", "--json")
+	if created.AppTenant.Id == "" || got.exit != exitOK {
+		t.Fatalf("tenant %q, exit %d: %s", created.AppTenant.Id, got.exit, got.stdout)
+	}
+}
+
+func TestAppTenantsCreatedInTwoEnvironmentsHaveOwnIdsAndTheirOwnEnvironments(t *testing.T) {
+	fake := projectFake(t)
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-two", name: "Staging"}, fakeEnv{id: "env-three", name: "Preview"})
+	createdIn := func(env string) string {
+		var created struct{ AppTenant struct{ Id string } }
+		decode(t, fake.run(t, "tenants", "create", "--app", "app-a-000", "--env", env, "--name", env, "--json").stdout, &created)
+		return created.AppTenant.Id
+	}
+	inTwo, inThree := createdIn("env-two"), createdIn("env-three")
+	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--env", "env-two", "--name", "staging sync", "--json")
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--json")
+
+	if inTwo == "" || inTwo == inThree {
+		t.Fatalf("app-tenants created in two environments got ids %q and %q", inTwo, inThree)
+	}
+	got := fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--tenant", inTwo, "--role", "sync", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+}
+
 func TestAppIdentityRoleAddAtATenantLooksTheIdentityUpInTheTenantScope(t *testing.T) {
 	fake := projectFake(t)
 	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")

@@ -187,7 +187,7 @@ func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsT
 	return tenants, true, err
 }
 
-// tenantsAt lists the app-tenants scope reaches: every one of an application, or one environment's.
+// tenantsAt lists the app-tenants scope reaches: an application's default environment's, or one environment's.
 func (s *session) tenantsAt(ctx context.Context, scope string) ([]appTenant, error) {
 	return pages(func(page PageInput) ([]appTenant, bool, error) {
 		var listed *AppTenantsResponse

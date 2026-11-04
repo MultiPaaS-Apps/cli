@@ -338,7 +338,9 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		if scoped {
 			apps = f.envTenants[inEnv]
 		} else if inEnv = ""; len(parts) >= 2 {
-			apps = f.tenants[parts[1]]
+			apps = slices.DeleteFunc(slices.Clone(f.tenants[parts[1]]), func(row fakeRow) bool {
+				return row.env != "" && row.env != f.defaultEnvironment(parts[1])
+			})
 		}
 		apps = slices.Clone(apps)
 		for i := range apps {

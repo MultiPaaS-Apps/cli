@@ -66,7 +66,13 @@ func TestInitRefusesATenantOfAnotherEnvironmentThanTheNamedOne(t *testing.T) {
 func TestInitRefusesATestTenantWhoseEnvironmentTheServerDoesNotReturn(t *testing.T) {
 	fake := projectFake(t)
 	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-n", name: "No env", env: noEnvironment})
-	assertFailure(t, fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-n", "--json"), exitRefused, "NOT_FOUND")
+	fake.scopedApps["tenant-n"] = fakeRow{id: "app-a-000", name: "Orders"}
+	fake.entitlements = append(fake.entitlements, entitlement{clientID: "client-a", clientName: "Acme", applicationID: "app-a-000", appTenantID: "tenant-n"})
+	got := fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-n", "--json")
+	assertFailure(t, got, exitRefused, "NOT_FOUND")
+	if !strings.Contains(got.stdout, "has no environment") {
+		t.Fatalf("refused for another reason: %s", got.stdout)
+	}
 	if _, err := os.Stat(projectFile); err == nil {
 		t.Fatal("multipaas.json was written for an app-tenant with no environment")
 	}
@@ -105,6 +111,8 @@ func TestInitWithEnvWritesTheEnvironment(t *testing.T) {
 func TestInitWithoutEnvSavesTheTestTenantsEnvironment(t *testing.T) {
 	fake := projectFake(t)
 	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-o", name: "Other env", env: "env-other"})
+	fake.scopedApps["tenant-o"] = fakeRow{id: "app-a-000", name: "Orders"}
+	fake.entitlements = append(fake.entitlements, entitlement{clientID: "client-a", clientName: "Acme", applicationID: "app-a-000", appTenantID: "tenant-o"})
 	fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-e", "--json")
 	got := fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-o", "--json")
 	if got.exit != exitOK {
@@ -125,6 +133,8 @@ func TestInitWithoutEnvSavesTheTestTenantsEnvironment(t *testing.T) {
 func TestInitOnAnotherAppReplacesTheEnvironment(t *testing.T) {
 	fake := projectFake(t)
 	fake.tenants["app-a-001"] = []fakeRow{{id: "tenant-x", name: "Other", env: "env-x"}}
+	fake.scopedApps["tenant-x"] = fakeRow{id: "app-a-001", name: "Other app"}
+	fake.entitlements = append(fake.entitlements, entitlement{clientID: "client-a", clientName: "Acme", applicationID: "app-a-001", appTenantID: "tenant-x"})
 	project := `{"applicationId":"app-a-000","testAppTenantId":"tenant-e","environmentId":"env-default","apiVersion":"rev-1"}`
 	if err := os.WriteFile(projectFile, []byte(project), 0o644); err != nil {
 		t.Fatal(err)

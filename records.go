@@ -106,7 +106,7 @@ func recordsList(command commandFunc) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&parentField, "parent-field", "", "keep the records whose parent reference field has this id (from model show), with --parent-record")
 	cmd.Flags().StringVar(&parentRecord, "parent-record", "", "the parent record's id, with --parent-field")
-	cmd.Flags().StringVar(&where, "where", "", `keep the records meeting every condition, as JSON keyed by field id or id, createdAt or updatedAt, like '{"FIELD_ID": {"lte": 5}}'`)
+	cmd.Flags().StringVar(&where, "where", "", `keep the records meeting every condition, as JSON keyed by field id or id, createdAt or updatedAt, like '{"FIELD_ID": {"lte": 5}}'; a related field takes {"some": {...}} or {"none": {...}} and a reference {"is": {...}}, keyed by the other entity's field ids, with {} for any record and never null`)
 	cmd.Flags().StringVar(&orderBy, "order-by", "", "order by createdAt, updatedAt or a field id, ascending unless it ends :desc; a reference, related or file field, or an enum field whose enum no longer exists, is refused")
 	cmd.Flags().BoolVar(&count, "count", false, "print how many records match instead of listing them")
 	return cmd

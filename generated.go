@@ -3897,8 +3897,7 @@ func (v *PermissionCatalogResponse) GetPermissionCatalog() []PermissionCatalogPe
 
 type RecordOrderInput struct {
 	Direction SortDirection `json:"direction"`
-	// A field id, or createdAt or updatedAt.
-	Field string `json:"field"`
+	Field     string        `json:"field"`
 }
 
 // GetDirection returns RecordOrderInput.Direction, and is useful for accessing the field via an interface.

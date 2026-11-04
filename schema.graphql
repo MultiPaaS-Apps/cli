@@ -208,6 +208,12 @@ type ClientApplicationPage {
 	pageInfo: PageInfo!
 }
 
+type ClientEffectiveRole {
+	direct: Boolean!
+	groups: [ClientGroup!]!
+	role: ClientRole!
+}
+
 type ClientGroup implements AccessGrant{
 	_accessGrant: Boolean!
 	id: ID!
@@ -452,10 +458,21 @@ input DeactivateUserInput {
 	id: ID!
 }
 
+input DeleteInvitationInput {
+	invitationId: ID!
+}
+
 input DenyOAuthAuthorizationInput {
 	clientId: ID!
 	redirectUri: String!
 	state: String
+}
+
+type EffectiveRole {
+	applicationWide: Boolean!
+	direct: Boolean!
+	groups: [AccessGroup!]!
+	role: Role!
 }
 
 type Entity {
@@ -781,6 +798,12 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	deleteDataImport(
 		importId: ID!
 	): DataImport!
+"""
+Marks an open invitation deleted: its link stops working and sign-in no longer accepts it. Nothing is removed.
+"""
+	deleteInvitation(
+		input: DeleteInvitationInput!
+	): ApplicationInvitation!
 	denyOAuthAuthorization(
 		input: DenyOAuthAuthorizationInput!
 	): OAuthRedirect!
@@ -880,6 +903,11 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	setFeedbackSetting(
 		autoSend: Boolean!
 	): FeedbackSetting!
+	setFeedbackStatus(
+		id: ID!
+		note: String
+		status: FeedbackStatus!
+	): OperatorFeedback!
 	shareRecord(
 		input: ShareRecordInput!
 	): RecordShare!
@@ -978,6 +1006,17 @@ type OAuthRedirect implements Receipt{
 	redirectUrl: String!
 }
 
+type OperatorFeedback {
+	feedback: Feedback!
+	id: ID!
+	submitter: User
+}
+
+type OperatorFeedbackPage {
+	items: [OperatorFeedback!]!
+	pageInfo: PageInfo!
+}
+
 input PageContextInput {
 	appTenantId: ID
 	applicationId: ID
@@ -1005,6 +1044,12 @@ type PermissionInfo {
 	entityTargeted: Boolean!
 	key: String!
 	level: String!
+}
+
+type PlatformEffectiveRole {
+	direct: Boolean!
+	groups: [PlatformGroup!]!
+	role: PlatformRole!
 }
 
 type PlatformGroup implements AccessGrant{
@@ -1047,7 +1092,9 @@ type PlatformRolePage {
 }
 
 type Query {
-	accessGroupMembers: [AccessGroupMember!]!
+	accessGroupMembers(
+		userId: ID
+	): [AccessGroupMember!]!
 	accessGroups: [AccessGroup!]!
 	aiTurn(
 		id: ID!
@@ -1082,7 +1129,12 @@ type Query {
 	client(
 		id: ID!
 	): Client
-	clientGroupMembers: [ClientGroupMember!]!
+	clientEffectiveRoles(
+		userId: ID!
+	): [ClientEffectiveRole!]!
+	clientGroupMembers(
+		userId: ID
+	): [ClientGroupMember!]!
 	clientGroupRoleAssignments: [ClientGroupRoleAssignment!]!
 	clientGroups: [ClientGroup!]!
 	clientRoleAssignments(
@@ -1111,6 +1163,9 @@ type Query {
 		includeDeleted: Boolean
 		page: PageInput!
 	): DataImportPage!
+	effectiveRoles(
+		userId: ID!
+	): [EffectiveRole!]!
 	entities(
 		page: PageInput!
 	): EntityPage!
@@ -1123,6 +1178,14 @@ type Query {
 	enumTypes(
 		page: PageInput!
 	): EnumTypePage!
+	feedbackReport(
+		id: ID!
+	): OperatorFeedback
+	feedbackReports(
+		kind: [FeedbackKind!]
+		page: PageInput!
+		status: [FeedbackStatus!]
+	): OperatorFeedbackPage!
 	feedbackSetting: FeedbackSetting!
 	field(
 		id: ID!
@@ -1159,7 +1222,12 @@ type Query {
 	): OAuthAuthorizationRequest!
 	oauthClients: [OAuthClient!]!
 	permissionCatalog: [PermissionInfo!]!
-	platformGroupMembers: [PlatformGroupMember!]!
+	platformEffectiveRoles(
+		userId: ID!
+	): [PlatformEffectiveRole!]!
+	platformGroupMembers(
+		userId: ID
+	): [PlatformGroupMember!]!
 	platformGroupRoleAssignments: [PlatformGroupRoleAssignment!]!
 	platformGroups: [PlatformGroup!]!
 	platformRole(
@@ -1294,9 +1362,6 @@ enum RecordAccessSourceKind {
 
 input RecordOrderInput {
 	direction: SortDirection!
-"""
-A field id, or createdAt or updatedAt.
-"""
 	field: String!
 }
 

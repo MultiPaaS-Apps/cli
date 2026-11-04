@@ -186,11 +186,14 @@ go test ./...
 
 The typed operations are generated from `operations.graphql` and `schema.graphql`, a copy of webapp-api's schema.
 Every CI run regenerates them from the committed `schema.graphql` and fails if `generated.go` is out of date. The
-`schema-update` workflow, which runs nightly and when run by hand from the Actions tab, regenerates both from the
+`schema-update` workflow, which runs when a webapp-api deploy announces itself, nightly, and when run by hand from
+the Actions tab, regenerates both from the
 live webapp-api schema at the repository secret `SCHEMA_ENDPOINT`, with `scripts/regenerate-schema`. When anything changed, it opens or updates one PR,
 `fix: update the webapp-api schema`, authored by the `multipaas-bot` GitHub App. If `genqlient` fails against
 the new schema, that PR carries only `schema.graphql`, so its CI fails. The App needs these repository permissions
-on this repository: Contents, Pull requests and Workflows, each read and write, and Metadata, read. To regenerate by hand:
+on this repository: Contents, Pull requests and Workflows, each read and write, and Metadata, read. A deploy of the webapp-api at `SCHEMA_ENDPOINT` announces itself with a `webapp-api-schema-deployed`
+`repository_dispatch` event to every repository in this organization that has the `webapp-api-schema-subscriber` topic
+and the App installed, as this one does. To regenerate by hand:
 
 ```bash
 go tool gqlfetch --endpoint <your MultiPaaS's webapp-api /graphql> --without-builtins > schema.graphql

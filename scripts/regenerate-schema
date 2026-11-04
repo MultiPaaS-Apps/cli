@@ -7,6 +7,7 @@ set -euo pipefail
 export LC_ALL=C
 
 readonly MAX_DIFF_BYTES=50000
+readonly MAX_BODY_BYTES=65000
 
 main() {
   local endpoint="${1:?usage: regenerate-schema <endpoint> <pr-body-file>}"
@@ -28,7 +29,13 @@ main() {
     echo changed=false
   else
     echo changed=true
-    write_body > "$body_file"
+    write_body > "$work/body.md"
+    if [ "$(wc -c < "$work/body.md")" -gt "$MAX_BODY_BYTES" ]; then
+      cat "$work/body.md" >&2
+      write_short_body > "$body_file"
+    else
+      mv "$work/body.md" "$body_file"
+    fi
   fi
   echo "genqlient=$genqlient"
 }
@@ -64,6 +71,17 @@ write_body() {
   fi
   echo
   echo "</details>"
+}
+
+# The body used when write_body's is too large for GitHub; the full one goes to the run's log.
+write_short_body() {
+  echo "Regenerated from the live webapp-api schema."
+  echo
+  echo "The full description is over $MAX_BODY_BYTES bytes, which is too large for a PR body. It is in this workflow run's log, and the diff is in the PR's Files tab."
+  if [ "$genqlient" = failed ]; then
+    echo
+    echo "**\`go tool genqlient\` failed against this schema**, so \`generated.go\` is unchanged and CI fails on it. Its output is in the log."
+  fi
 }
 
 # The type names declared in $1 and not in $2, as a comma-separated list of code spans, or "none".

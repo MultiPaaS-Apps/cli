@@ -805,10 +805,18 @@ func (f *fakeMultiPaaS) manageOAuth(w http.ResponseWriter, operation string, par
 	}
 }
 
-// scopeEnvironment is the environment a scope acts in: the named one, else its application's default.
+// scopeEnvironment is the environment a scope acts in: the named one, an app-tenant's own, else its
+// application's default.
 func (f *fakeMultiPaaS) scopeEnvironment(parts []string) string {
 	if env, ok := strings.CutPrefix(parts[0], "env:"); ok {
 		return env
+	}
+	if len(parts) > 2 {
+		for _, row := range f.tenants[parts[1]] {
+			if row.id == parts[2] {
+				return cmp.Or(row.env, f.defaultEnvironment(parts[1]))
+			}
+		}
 	}
 	return f.defaultEnvironment(appOf(parts))
 }

@@ -241,6 +241,19 @@ func TestAppIdentityRoleAddWithEnvGrantsInThatEnvironment(t *testing.T) {
 	assertFailure(t, fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--env", "env-two", "--role", "sync", "--json"), exitRefused, "CLI_ERROR")
 }
 
+func TestAppIdentityRoleAddAtATenantOfAnotherEnvironmentFindsTheIdentityThere(t *testing.T) {
+	fake := projectFake(t)
+	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-o", name: "Other env", env: "env-other"})
+	fake.appIdentities = []map[string]any{{"id": "app-identity-1", "name": "nightly sync", "environment": map[string]any{"id": "env-other"}, "user": map[string]any{"id": "service-user-1"},
+		"createdAt": "x", "secrets": []map[string]any{}}}
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--json")
+
+	got := fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--tenant", "tenant-o", "--role", "sync", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+}
+
 func TestAppIdentityRoleAddAtATenantLooksTheIdentityUpInTheTenantScope(t *testing.T) {
 	fake := projectFake(t)
 	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")

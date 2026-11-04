@@ -83,8 +83,12 @@ func (s *session) tenants(ctx context.Context, appID string) ([]appTenant, error
 		}
 		found = found || ok
 		for _, candidate := range reached {
-			if !slices.Contains(tenants, candidate) {
+			at := slices.IndexFunc(tenants, func(t appTenant) bool { return t.ID == candidate.ID })
+			switch {
+			case at < 0:
 				tenants = append(tenants, candidate)
+			case tenants[at].EnvironmentID == "":
+				tenants[at].EnvironmentID = candidate.EnvironmentID
 			}
 		}
 	}

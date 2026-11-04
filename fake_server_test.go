@@ -68,6 +68,7 @@ type fakeMultiPaaS struct {
 	identitySeq   int                         // app identities created so far; ids are never reused
 	secretSeq     int                         // app identity secrets created so far; ids are never reused
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
+	scopedEnvNull bool                        // an app-tenant-level read returns the app-tenant's environment as null
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
 	noCreateApp   bool                        // the signed-in user lacks client.applications.create
 	roles         []map[string]any            // the application's roles; appTenant is nil for an application role
@@ -342,7 +343,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		apps = slices.Clone(apps)
 		for i := range apps {
 			if apps[i].env == "" {
-				apps[i].env = cmp.Or(inEnv, "env-default")
+				apps[i].env = cmp.Or(inEnv, f.defaultEnvironment(appOf(parts)))
 			}
 		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
@@ -356,9 +357,12 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 				tenant = row
 			}
 		}
+		if f.scopedEnvNull {
+			tenant.env = noEnvironment
+		}
 		writeData(w, map[string]any{"me": map[string]any{
 			"application": map[string]any{"id": scopedApp.id, "name": scopedApp.name},
-			"appTenant":   map[string]any{"id": tenant.id, "name": tenant.name, "environment": fakeEnvironment(cmp.Or(tenant.env, "env-default"))},
+			"appTenant":   map[string]any{"id": tenant.id, "name": tenant.name, "environment": fakeEnvironment(cmp.Or(tenant.env, f.defaultEnvironment(scopedApp.id)))},
 		}})
 	case "Entities":
 		writeData(w, map[string]any{"entities": pageOf(f.entities[appOf(parts)], variables)})
@@ -804,12 +808,17 @@ func (f *fakeMultiPaaS) scopeEnvironment(parts []string) string {
 	if env, ok := strings.CutPrefix(parts[0], "env:"); ok {
 		return env
 	}
-	for _, e := range f.environments[appOf(parts)] {
+	return f.defaultEnvironment(appOf(parts))
+}
+
+// defaultEnvironment is the application's default environment, env-default when it has none seeded.
+func (f *fakeMultiPaaS) defaultEnvironment(app string) string {
+	for _, e := range f.environments[app] {
 		if e.isDefault {
 			return e.id
 		}
 	}
-	return ""
+	return "env-default"
 }
 
 // manageAppIdentity takes the same steps as manageOAuth: an application in scope, then

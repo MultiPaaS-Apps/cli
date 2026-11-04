@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strings"
 )
 
 // fakeImport is a data import as the fake keeps it.
@@ -44,7 +45,7 @@ func (f *fakeMultiPaaS) dataImport(w http.ResponseWriter, operation string, part
 	if operation != "DataImport" {
 		f.mutations = append(f.mutations, variables)
 	}
-	if appOf(parts) == "" {
+	if appOf(parts) == "" && !strings.HasPrefix(parts[0], "env:") {
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
 		return
 	}

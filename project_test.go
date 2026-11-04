@@ -72,6 +72,20 @@ func TestInitRefusesATestTenantWhoseEnvironmentTheServerDoesNotReturn(t *testing
 	}
 }
 
+func TestInitUsesTheEnvironmentAnotherEntitlementReturnsForTheSameTenant(t *testing.T) {
+	fake := projectFake(t)
+	fake.scopedApps["tenant-a"] = fakeRow{id: "app-a-000", name: "Orders"}
+	fake.scopedEnvNull = true
+	fake.entitlements = append([]entitlement{{clientID: "client-a", clientName: "Acme", applicationID: "app-a-000", appTenantID: "tenant-a"}}, fake.entitlements...)
+	got := fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if saved := readProjectForTest(t); saved.EnvironmentID != "env-default" {
+		t.Fatalf("multipaas.json %+v", saved)
+	}
+}
+
 func TestInitWithEnvWritesTheEnvironment(t *testing.T) {
 	fake := projectFake(t)
 	got := fake.run(t, "init", "--app", "app-a-000", "--env", "env-default", "--tenant", "tenant-e", "--json")

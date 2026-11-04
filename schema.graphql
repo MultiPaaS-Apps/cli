@@ -96,6 +96,10 @@ An application's own identity for background jobs: its id is the OAuth client_id
 """
 type AppIdentity {
 	createdAt: DateTime!
+"""
+The environment this identity lives in.
+"""
+	environment: Environment
 	id: ID!
 	name: String!
 	secrets: [AppIdentitySecret!]!
@@ -122,6 +126,10 @@ type AppIdentityWithSecret {
 
 type AppTenant {
 	createdAt: DateTime!
+"""
+The environment this app-tenant lives in.
+"""
+	environment: Environment
 	id: ID!
 	name: String!
 	updatedAt: DateTime!
@@ -172,6 +180,7 @@ input ApproveOAuthAuthorizationInput {
 	appTenantId: ID
 	clientId: ID!
 	codeChallenge: String!
+	environment: ID
 	redirectUri: String!
 	state: String
 }
@@ -1218,6 +1227,7 @@ type Query {
 	myTenants: [TenantOption!]!
 	oauthAuthorizationRequest(
 		clientId: ID!
+		environment: ID
 		redirectUri: String!
 	): OAuthAuthorizationRequest!
 	oauthClients: [OAuthClient!]!

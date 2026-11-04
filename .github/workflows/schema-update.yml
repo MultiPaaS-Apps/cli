@@ -1,0 +1,89 @@
+name: schema-update
+
+# Keeps schema.graphql and generated.go current with the live webapp-api schema at the SCHEMA_ENDPOINT secret, as one PR authored by the
+# multipaas-bot GitHub App. The App's token, unlike GITHUB_TOKEN, starts CI on the branch it pushes.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: schema-update
+  cancel-in-progress: false
+
+env:
+  BRANCH: schema-update/webapp-api
+  LABEL: schema-update
+  TITLE: "fix: update the webapp-api schema"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - id: app-token
+        uses: actions/create-github-app-token@v3.3.0
+        with:
+          client-id: ${{ vars.MULTIPAAS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.MULTIPAAS_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - id: regen
+        name: Regenerate from the live schema
+        env:
+          SCHEMA_ENDPOINT: ${{ secrets.SCHEMA_ENDPOINT }}
+        run: |
+          if [ -z "$SCHEMA_ENDPOINT" ]; then
+            echo "::error::SCHEMA_ENDPOINT is not set, so the schema cannot be fetched."
+            exit 1
+          fi
+          scripts/regenerate-schema "$SCHEMA_ENDPOINT" "$RUNNER_TEMP/pr-body.md" >> "$GITHUB_OUTPUT"
+      - name: Close the update PR, since main already matches
+        if: steps.regen.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          pr="$(gh pr list --head "$BRANCH" --author "app/$APP_SLUG" --state open --json number,isCrossRepository --jq '[.[] | select(.isCrossRepository | not)][0].number // empty')"
+          if [ -n "$pr" ]; then
+            gh pr close "$pr" --delete-branch --comment "main already matches the live webapp-api schema."
+          fi
+      - name: Push the branch and open or update the PR
+        if: steps.regen.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          bot="${APP_SLUG}[bot]"
+          bot_id="$(gh api "/users/${bot}" --jq .id)"
+          git config user.name "$bot"
+          git config user.email "${bot_id}+${bot}@users.noreply.github.com"
+          gh auth setup-git
+          git switch -C "$BRANCH"
+          git commit -qam "$TITLE"
+          # Only push when the tree or its base moved, so an unchanged PR doesn't rerun CI every night.
+          if git fetch -q --depth=2 origin "$BRANCH" 2>/dev/null \
+            && [ "$(git rev-parse 'FETCH_HEAD^{tree}')" = "$(git rev-parse 'HEAD^{tree}')" ] \
+            && [ "$(git rev-parse 'FETCH_HEAD^')" = "$(git rev-parse 'HEAD^')" ]; then
+            echo "The update branch already holds this schema on this main."
+          else
+            git push -q --force origin "HEAD:refs/heads/$BRANCH"
+          fi
+          gh label create "$LABEL" --color 0e8a16 --description "An automated webapp-api schema update" --force
+          pr="$(gh pr list --head "$BRANCH" --author "app/$APP_SLUG" --state open --json number,isCrossRepository --jq '[.[] | select(.isCrossRepository | not)][0].number // empty')"
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --body-file "$RUNNER_TEMP/pr-body.md"
+          else
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md" --label "$LABEL"
+          fi

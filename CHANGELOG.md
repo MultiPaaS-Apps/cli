@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.1.0...v1.2.0) (2026-11-05)
+
+
+### Features
+
+* [MP-235] pin a project to one environment ([#45](https://github.com/MultiPaaS-Apps/cli/issues/45)) ([dd82b1b](https://github.com/MultiPaaS-Apps/cli/commit/dd82b1b6c6f0d305429c79f0dfa414f50da0cec6))
+* [MP-256] describe related and referenced conditions in records list --where ([#54](https://github.com/MultiPaaS-Apps/cli/issues/54)) ([e05ffde](https://github.com/MultiPaaS-Apps/cli/commit/e05ffde1f4e46be53dbe5eb5fb32737380f1ecfb))
+* [MP-267] open webapp-api schema update PRs as multipaas-bot ([#49](https://github.com/MultiPaaS-Apps/cli/issues/49)) ([1d96a74](https://github.com/MultiPaaS-Apps/cli/commit/1d96a74d8dd10e5ff211be814e5c68ecd7a6593b))
+* [MP-268] update the schema when a webapp-api deploy announces itself ([#53](https://github.com/MultiPaaS-Apps/cli/issues/53)) ([628aed6](https://github.com/MultiPaaS-Apps/cli/commit/628aed6c2345ceb16160145695390dcc6da2ff03))
+
+
+### Bug Fixes
+
+* [MP-255] say records list --order-by refuses file fields ([#50](https://github.com/MultiPaaS-Apps/cli/issues/50)) ([32acf0c](https://github.com/MultiPaaS-Apps/cli/commit/32acf0c2b32a4b0cae170b9c64ce78ef3a1ee56e))
+* update the webapp-api schema ([#52](https://github.com/MultiPaaS-Apps/cli/issues/52)) ([0b9c948](https://github.com/MultiPaaS-Apps/cli/commit/0b9c948c8242b9bc54620851305d685e30884a1d))
+* update the webapp-api schema ([#55](https://github.com/MultiPaaS-Apps/cli/issues/55)) ([dd8a3cb](https://github.com/MultiPaaS-Apps/cli/commit/dd8a3cb67d6471ab3fa2a184df9df26a054751aa))
+* update the webapp-api schema ([#56](https://github.com/MultiPaaS-Apps/cli/issues/56)) ([1e07920](https://github.com/MultiPaaS-Apps/cli/commit/1e079205160b10facd5d3c7e7b93f7cd88a611e1))
+
 ## [1.1.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.0.0...v1.1.0) (2026-11-03)
 
 

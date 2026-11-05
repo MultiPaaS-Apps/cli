@@ -855,6 +855,12 @@ Marks an open invitation deleted: its link stops working and sign-in no longer a
 		id: ID!
 		name: String!
 	): PlatformGroup!
+"""
+Registers a file for a record's file field and signs its upload. Write the returned fileId as the field's value once the PUT succeeds.
+"""
+	requestRecordFileUpload(
+		input: RequestRecordFileUploadInput!
+	): RecordFileUpload!
 	requestSignIn(
 		input: RequestSignInInput!
 	): AuthOkResult!
@@ -1323,6 +1329,7 @@ Whether the record belongs to the application rather than to one app-tenant.
 	createdAt: DateTime!
 	data: JSON!
 	entity: Entity!
+	files: [RecordFile!]!
 	id: ID!
 	updatedAt: DateTime!
 }
@@ -1370,6 +1377,24 @@ enum RecordAccessSourceKind {
 	share_user
 }
 
+type RecordFile {
+	contentType: String!
+	fieldId: ID!
+	fileId: ID!
+	filename: String!
+	sizeBytes: Float!
+	url: String!
+	urlExpiresAt: DateTime!
+}
+
+type RecordFileUpload implements Receipt{
+	_receipt: Boolean!
+	expiresAt: DateTime!
+	fileId: ID!
+	headers: [Header!]!
+	url: String!
+}
+
 input RecordOrderInput {
 	direction: SortDirection!
 	field: String!
@@ -1413,6 +1438,7 @@ type RecordShare implements AccessGrant{
 type RecordVersion {
 	current: Boolean!
 	data: JSON!
+	files: [RecordFile!]!
 	id: ID!
 	retiredAt: DateTime
 	versionedAt: DateTime!
@@ -1430,6 +1456,15 @@ input RemoveMemberInput {
 input RenameEnvironmentInput {
 	id: ID!
 	name: String!
+}
+
+input RequestRecordFileUploadInput {
+	contentType: String!
+	entityId: ID!
+	fieldId: ID!
+	filename: String!
+	sha256: String!
+	sizeBytes: Float!
 }
 
 input RequestSignInInput {

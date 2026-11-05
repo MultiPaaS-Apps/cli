@@ -22,7 +22,7 @@ func TestRecordsCreateWritesInTheProjectsTestAppTenant(t *testing.T) {
 	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
 		t.Fatalf("scope %q", last)
 	}
-	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"Ship it"},"createdAt":"2026-10-11T00:00:00.000Z","updatedAt":"2026-10-11T00:00:00.000Z"}}` {
+	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"Ship it"},"createdAt":"2026-10-11T00:00:00.000Z","updatedAt":"2026-10-11T00:00:00.000Z","files":[]}}` {
 		t.Fatalf("printed %s", got.stdout)
 	}
 }
@@ -187,7 +187,7 @@ func TestRecordsGetPrintsTheRecord(t *testing.T) {
 	if got.exit != exitOK {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
-	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"a"},"createdAt":"x","updatedAt":"y"}}` {
+	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"a"},"createdAt":"x","updatedAt":"y","files":[]}}` {
 		t.Fatalf("printed %s", got.stdout)
 	}
 }
@@ -245,7 +245,7 @@ func TestRecordsScopeLetsATenantReadAnAppWideRecord(t *testing.T) {
 	fake := projectFake(t)
 	fake.records["entity-1"] = []map[string]any{{"id": "shared", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}}
 	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "shared", "--json")
-	if got.exit != exitOK || compact(got.stdout) != `{"record":{"id":"shared","appWide":true,"data":{"field-1":"b"},"createdAt":"x","updatedAt":"x"}}` {
+	if got.exit != exitOK || compact(got.stdout) != `{"record":{"id":"shared","appWide":true,"data":{"field-1":"b"},"createdAt":"x","updatedAt":"x","files":[]}}` {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
 	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {

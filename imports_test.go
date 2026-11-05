@@ -15,6 +15,20 @@ import (
 
 const importApp = "app-a-000"
 
+func TestImportStatusInAProjectPinnedToAnEnvironmentSendsTheEnvScope(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "draft")
+	fake.run(t, "init", "--app", importApp, "--env", "env-default", "--tenant", "tenant-e", "--json")
+
+	got := fake.run(t, "import", "status", "--app", importApp, "--import", "import-1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "env:env-default" {
+		t.Fatalf("scope %q", last)
+	}
+}
+
 func TestImportAddUploadsTheFileWithItsHashAndTheSignedHeaders(t *testing.T) {
 	fake := projectFake(t)
 	fake.seedImport("import-1", "draft")

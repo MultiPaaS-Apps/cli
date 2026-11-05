@@ -30,8 +30,9 @@ type app struct {
 }
 
 type appTenant struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	EnvironmentID string `json:"-"`
 }
 
 func (s *session) whoami(ctx context.Context) (signedIn, error) {
@@ -82,8 +83,12 @@ func (s *session) tenants(ctx context.Context, appID string) ([]appTenant, error
 		}
 		found = found || ok
 		for _, candidate := range reached {
-			if !slices.Contains(tenants, candidate) {
+			at := slices.IndexFunc(tenants, func(t appTenant) bool { return t.ID == candidate.ID })
+			switch {
+			case at < 0:
 				tenants = append(tenants, candidate)
+			case tenants[at].EnvironmentID == "":
+				tenants[at].EnvironmentID = candidate.EnvironmentID
 			}
 		}
 	}
@@ -168,7 +173,11 @@ func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsT
 			return nil, false, nil
 		}
 		scoped, err := s.scopedAppTenant(ctx, entitlement)
-		return []appTenant{{ID: scoped.AppTenant.Id, Name: scoped.AppTenant.Name}}, true, err
+		environment := ""
+		if scoped.AppTenant.Environment != nil {
+			environment = scoped.AppTenant.Environment.Id
+		}
+		return []appTenant{{ID: scoped.AppTenant.Id, Name: scoped.AppTenant.Name, EnvironmentID: environment}}, true, err
 	}
 	apps, err := s.appsIn(ctx, entitlement)
 	if err != nil || !slices.ContainsFunc(apps, func(candidate app) bool { return candidate.ID == appID }) {
@@ -178,7 +187,7 @@ func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsT
 	return tenants, true, err
 }
 
-// tenantsAt lists the app-tenants scope reaches: every one of an application, or one environment's.
+// tenantsAt lists the app-tenants scope reaches: an application's default environment's, or one environment's.
 func (s *session) tenantsAt(ctx context.Context, scope string) ([]appTenant, error) {
 	return pages(func(page PageInput) ([]appTenant, bool, error) {
 		var listed *AppTenantsResponse
@@ -191,7 +200,11 @@ func (s *session) tenantsAt(ctx context.Context, scope string) ([]appTenant, err
 		}
 		reached := []appTenant{}
 		for _, item := range listed.AppTenants.Items {
-			reached = append(reached, appTenant{ID: item.Id, Name: item.Name})
+			environment := ""
+			if item.Environment != nil {
+				environment = item.Environment.Id
+			}
+			reached = append(reached, appTenant{ID: item.Id, Name: item.Name, EnvironmentID: environment})
 		}
 		return reached, listed.AppTenants.PageInfo.HasMore, nil
 	})

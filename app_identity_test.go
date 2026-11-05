@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -113,7 +114,7 @@ func TestAppIdentityListShowsNameClientIDSecretCountAndCreated(t *testing.T) {
 	fake := projectFake(t)
 	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")
 	got := fake.run(t, "app-identity", "list", "--app", "app-a-000")
-	for _, want := range []string{"NAME", "CLIENT ID", "SECRETS", "CREATED", "nightly sync", "app-identity-1"} {
+	for _, want := range []string{"NAME", "ENVIRONMENT", "CLIENT ID", "SECRETS", "CREATED", "nightly sync  env-default  app-identity-1"} {
 		if !strings.Contains(got.stdout, want) {
 			t.Fatalf("list lacks %q: %s", want, got.stdout)
 		}
@@ -126,9 +127,52 @@ func TestAppIdentityListShowsNameClientIDSecretCountAndCreated(t *testing.T) {
 	}
 }
 
+func TestIdentitiesCreateWithEnvSendsTheEnvScope(t *testing.T) {
+	fake := projectFake(t)
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-two", name: "Staging"})
+
+	created := fake.run(t, "app-identity", "create", "--app", "app-a-000", "--env", "env-two", "--name", "staging sync", "--json")
+	if created.exit != exitOK {
+		t.Fatalf("exit %d: %s", created.exit, created.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "env:env-two" {
+		t.Fatalf("scope %q", last)
+	}
+	var parsed struct {
+		AppIdentity struct{ Environment struct{ Id string } }
+	}
+	decode(t, created.stdout, &parsed)
+	if parsed.AppIdentity.Environment.Id != "env-two" {
+		t.Fatalf("created %s", created.stdout)
+	}
+
+	inDefault := fake.run(t, "app-identity", "list", "--app", "app-a-000", "--json")
+	if compact(inDefault.stdout) != `{"appIdentities":[]}` {
+		t.Fatalf("the default environment lists %s", inDefault.stdout)
+	}
+	inTwo := fake.run(t, "app-identity", "list", "--app", "app-a-000", "--env", "env-two")
+	if !strings.Contains(inTwo.stdout, "staging sync  env-two      app-identity-1") {
+		t.Fatalf("env-two lists %s", inTwo.stdout)
+	}
+	assertFailure(t, fake.run(t, "app-identity", "secret", "add", "app-identity-1", "--app", "app-a-000", "--json"), exitRefused, "NOT_FOUND")
+	if added := fake.run(t, "app-identity", "secret", "add", "app-identity-1", "--app", "app-a-000", "--env", "env-two", "--json"); added.exit != exitOK {
+		t.Fatalf("exit %d: %s", added.exit, added.stdout)
+	}
+}
+
+func TestAppIdentityListLeavesTheEnvironmentCellEmptyWhenTheServerReturnsNone(t *testing.T) {
+	fake := projectFake(t)
+	fake.appIdentities = []map[string]any{{"id": "app-identity-1", "name": "nightly sync", "environment": nil, "user": nil, "createdAt": "x",
+		"secrets": []map[string]any{}}}
+	got := fake.run(t, "app-identity", "list", "--app", "app-a-000")
+	if got.exit != exitOK || !regexp.MustCompile(`nightly sync\s+app-identity-1\s+0\s`).MatchString(got.stdout) {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+}
+
 func TestAppIdentityJSONPrintsNullForAnIdentityWithoutAUserAndASecretNeverUsed(t *testing.T) {
 	fake := projectFake(t)
-	fake.appIdentities = []map[string]any{{"id": "app-identity-1", "name": "nightly sync", "user": nil, "createdAt": "x",
+	fake.appIdentities = []map[string]any{{"id": "app-identity-1", "name": "nightly sync", "environment": map[string]any{"id": "env-default"}, "user": nil, "createdAt": "x",
 		"secrets": []map[string]any{{"id": "secret-1", "lastFour": "0001", "createdAt": "x", "lastUsedAt": nil}}}}
 
 	listed := fake.run(t, "app-identity", "list", "--app", "app-a-000", "--json")

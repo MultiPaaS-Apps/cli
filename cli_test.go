@@ -159,7 +159,7 @@ func TestTenantsListReadsTheAppsTenantsInTheAppsScope(t *testing.T) {
 		outcomes = append(outcomes, fmt.Sprintf("%s:%d:%s", appID, got.exit, compact(got.stdout)))
 	}
 	want := []string{
-		`app-a-000:0:[{"id":"tenant-a","name":"Test"}]`,
+		`app-a-000:0:[{"id":"tenant-a","name":"Test"},{"id":"tenant-e","name":"Env tenant"}]`,
 		`app-b:0:[{"id":"tenant-b","name":"Beta test"}]`,
 		`app-unknown:1:{"error":{"code":"NOT_FOUND","message":"no application app-unknown that you can reach"}}`,
 	}
@@ -185,7 +185,7 @@ func TestTenantsCreateMakesOneInTheAppsScopeAndListShowsIt(t *testing.T) {
 		t.Fatalf("scope %q", last)
 	}
 	listed := fake.run(t, "tenants", "list", "--app", "app-a-000", "--json")
-	if compact(listed.stdout) != `[{"id":"tenant-a","name":"Test"},{"id":"tenant-new-2","name":"Dev test"}]` {
+	if compact(listed.stdout) != `[{"id":"tenant-a","name":"Test"},{"id":"tenant-new-2","name":"Dev test"},{"id":"tenant-e","name":"Env tenant"}]` {
 		t.Fatalf("list %s", listed.stdout)
 	}
 }
@@ -220,7 +220,7 @@ func TestEnvsCreateThenListShowsIt(t *testing.T) {
 func TestTenantsListWithEnvSendsTheEnvScope(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	listed := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--json")
-	if compact(listed.stdout) != `[{"id":"tenant-e","name":"Env tenant"}]` {
+	if compact(listed.stdout) != `[{"id":"tenant-a","name":"Test"},{"id":"tenant-e","name":"Env tenant"}]` {
 		t.Fatalf("list %s", listed.stdout)
 	}
 	if fake.scopes[len(fake.scopes)-1] != "env:env-default" {
@@ -239,6 +239,34 @@ func TestTenantsListWithEnvSendsTheEnvScope(t *testing.T) {
 	if fake.scopes[len(fake.scopes)-1] != "env:env-default" {
 		t.Fatalf("scopes %v", fake.scopes)
 	}
+}
+
+func TestTenantsCreatedInTheDefaultEnvironmentAreListedBothWays(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "tenants", "create", "--app", "app-a-000", "--env", "env-default", "--name", "Second", "--json")
+	want := `[{"id":"tenant-a","name":"Test"},{"id":"tenant-e","name":"Env tenant"},{"id":"tenant-env-2","name":"Second"}]`
+	for _, args := range [][]string{{"--app", "app-a-000"}, {"--app", "app-a-000", "--env", "env-default"}} {
+		listed := fake.run(t, append([]string{"tenants", "list", "--json"}, args...)...)
+		var items []map[string]any
+		decode(t, listed.stdout, &items)
+		got := []string{}
+		for _, item := range items {
+			got = append(got, item["id"].(string))
+		}
+		slices.Sort(got)
+		if strings.Join(got, ",") != "tenant-a,tenant-e,tenant-env-2" {
+			t.Fatalf("tenants list %v: %s, want ids of %s", args, listed.stdout, want)
+		}
+	}
+}
+
+func TestTenantsListOfAnApplicationWithoutEnvironmentsLeaksNoOtherApplicationsTenants(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	listed := fake.run(t, "tenants", "list", "--app", "app-a-001", "--json")
+	if compact(listed.stdout) != `[]` {
+		t.Fatalf("list %s", listed.stdout)
+	}
+	assertFailure(t, fake.run(t, "init", "--app", "app-a-001", "--tenant", "tenant-e", "--json"), exitRefused, "NOT_FOUND")
 }
 
 func TestEnvAndTenantTogetherAreRefused(t *testing.T) {
@@ -300,7 +328,7 @@ func TestTenantsCreateWithoutManageApplicationIsRefusedUnauthorized(t *testing.T
 	fake := signedInFake(t, fresh)
 	fake.noManageApp = true
 	assertFailure(t, fake.run(t, "tenants", "create", "--app", "app-a-000", "--name", "Dev test", "--json"), exitRefused, "UNAUTHORIZED")
-	if got := fake.run(t, "tenants", "list", "--app", "app-a-000", "--json"); compact(got.stdout) != `[{"id":"tenant-a","name":"Test"}]` {
+	if got := fake.run(t, "tenants", "list", "--app", "app-a-000", "--json"); compact(got.stdout) != `[{"id":"tenant-a","name":"Test"},{"id":"tenant-e","name":"Env tenant"}]` {
 		t.Fatalf("a refused create changed the list: %s", got.stdout)
 	}
 }

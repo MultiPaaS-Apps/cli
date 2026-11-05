@@ -18,10 +18,14 @@ import (
 const projectFile = "multipaas.json"
 
 // projectConfig is multipaas.json: the application an app is built on, the app-tenant it is tested
-// in, the API version it is pinned to, and the OAuth client its end users sign in through.
+// in, the environment it signs in to, the API version it is pinned to, and the OAuth client its end
+// users sign in through. EnvironmentID is the test app-tenant's environment. It is "" in every file
+// written by CLI 1.0.0 or earlier, whose init never wrote it, and the app then signs in to the default
+// environment.
 type projectConfig struct {
 	ApplicationID   string `json:"applicationId"`
 	TestAppTenantID string `json:"testAppTenantId"`
+	EnvironmentID   string `json:"environmentId,omitempty"`
 	APIVersion      string `json:"apiVersion"`
 	OAuthClientID   string `json:"oauthClientId,omitempty"`
 }
@@ -60,8 +64,12 @@ func initProject(command commandFunc) *cobra.Command {
 		if err != nil {
 			return nil, nil, err
 		}
-		if !slices.ContainsFunc(tenants, func(t appTenant) bool { return t.ID == tenantID }) {
+		chosen := slices.IndexFunc(tenants, func(t appTenant) bool { return t.ID == tenantID })
+		if chosen < 0 {
 			return nil, nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no app-tenant " + tenantID + " of application " + appID + " that you can reach"}
+		}
+		if tenants[chosen].EnvironmentID == "" {
+			return nil, nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "app-tenant " + tenantID + " has no environment that you can reach, so multipaas.json cannot name the environment it signs in to"}
 		}
 		pinned, err := s.pinnable(ctx, appID, wanted)
 		if err != nil {
@@ -71,7 +79,7 @@ func initProject(command commandFunc) *cobra.Command {
 			if config.ApplicationID != appID {
 				config.OAuthClientID = ""
 			}
-			config.ApplicationID, config.TestAppTenantID, config.APIVersion = appID, tenantID, pinned
+			config.ApplicationID, config.TestAppTenantID, config.EnvironmentID, config.APIVersion = appID, tenantID, tenants[chosen].EnvironmentID, pinned
 		})
 		result := map[string]any{"config": config, "endpoints": s.endpoints(appID)}
 		return result, func(out io.Writer) {

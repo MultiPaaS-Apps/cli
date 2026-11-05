@@ -18,30 +18,35 @@ func appIdentityCommands(command commandFunc) *cobra.Command {
 }
 
 func appIdentityList(command commandFunc) *cobra.Command {
-	var appID string
+	var appID, envID string
 	cmd := command("list", "List the application's app identities", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		listed := []AppIdentityParts{}
-		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
 			var err error
 			listed, err = appIdentities(ctx, client)
 			return err
 		})
 		return map[string]any{"appIdentities": listed}, func(out io.Writer) {
-			table(out, "NAME\tCLIENT ID\tSECRETS\tCREATED", listed, func(a AppIdentityParts) string {
-				return fmt.Sprintf("%s\t%s\t%d\t%s", a.Name, a.Id, len(a.Secrets), a.CreatedAt)
+			table(out, "NAME\tENVIRONMENT\tCLIENT ID\tSECRETS\tCREATED", listed, func(a AppIdentityParts) string {
+				environment := ""
+				if a.Environment != nil {
+					environment = a.Environment.Id
+				}
+				return fmt.Sprintf("%s\t%s\t%s\t%d\t%s", a.Name, environment, a.Id, len(a.Secrets), a.CreatedAt)
 			})
 		}, err
 	})
 	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	return cmd
 }
 
 func appIdentityCreate(command commandFunc) *cobra.Command {
-	var appID, name string
+	var appID, envID, name string
 	cmd := command("create", "Create an app identity and its first secret", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var created AppIdentityParts
 		var secret string
-		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
 			response, err := CreateAppIdentity(ctx, client, CreateAppIdentityInput{Name: name})
 			if err == nil {
 				created = response.CreateAppIdentity.AppIdentity.AppIdentityParts
@@ -52,6 +57,7 @@ func appIdentityCreate(command commandFunc) *cobra.Command {
 		return map[string]any{"appIdentity": created, "secret": secret}, printSecret(created.Id, secret), err
 	})
 	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&name, "name", "", "the identity's name")
 	_ = cmd.MarkFlagRequired("name")
 	return cmd
@@ -63,11 +69,11 @@ func appIdentitySecretGroup(command commandFunc) *cobra.Command {
 }
 
 func appIdentitySecretAdd(command commandFunc) *cobra.Command {
-	var appID, clientID string
+	var appID, envID, clientID string
 	cmd := command("add <client-id>", "Add a secret to an app identity", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var identity AppIdentityParts
 		var secret string
-		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
 			response, err := CreateAppIdentitySecret(ctx, client, clientID)
 			if err == nil {
 				identity = response.CreateAppIdentitySecret.AppIdentity.AppIdentityParts
@@ -79,15 +85,16 @@ func appIdentitySecretAdd(command commandFunc) *cobra.Command {
 	})
 	cmd.Args = oneID(&clientID)
 	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	return cmd
 }
 
 func appIdentitySecretRevoke(command commandFunc) *cobra.Command {
-	var appID, secretID string
+	var appID, envID, secretID string
 	cmd := command("revoke <secret-id>", "Revoke one secret; tokens already issued keep working until they expire", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var identity AppIdentityParts
 		var lastFour string
-		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
 			listed, err := appIdentities(ctx, client)
 			if err != nil {
 				return err
@@ -110,14 +117,15 @@ func appIdentitySecretRevoke(command commandFunc) *cobra.Command {
 	})
 	cmd.Args = oneID(&secretID)
 	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	return cmd
 }
 
 func appIdentitySecretList(command commandFunc) *cobra.Command {
-	var appID, clientID string
+	var appID, envID, clientID string
 	cmd := command("list <client-id>", "List an app identity's secrets", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		secrets := []AppIdentityPartsSecretsAppIdentitySecret{}
-		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
 			listed, err := appIdentities(ctx, client)
 			if err != nil {
 				return err
@@ -141,14 +149,15 @@ func appIdentitySecretList(command commandFunc) *cobra.Command {
 	})
 	cmd.Args = oneID(&clientID)
 	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	return cmd
 }
 
 func appIdentityRetire(command commandFunc) *cobra.Command {
-	var appID, clientID string
+	var appID, envID, clientID string
 	cmd := command("retire <client-id>", "Retire an app identity; its tokens stop working", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var retired AppIdentityParts
-		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
 			response, err := RetireAppIdentity(ctx, client, clientID)
 			if err == nil {
 				retired = response.RetireAppIdentity.AppIdentityParts
@@ -161,6 +170,7 @@ func appIdentityRetire(command commandFunc) *cobra.Command {
 	})
 	cmd.Args = oneID(&clientID)
 	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
 	return cmd
 }
 

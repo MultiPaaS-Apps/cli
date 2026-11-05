@@ -1279,7 +1279,7 @@ Narrow the list to app-tenant records or app-wide records. Defaults to both.
 """
 		scope: RecordScope
 """
-Conditions every record must meet, keyed by field id or id, createdAt or updatedAt, like {"<field id>": {"lte": 5}}.
+Conditions every record must meet, keyed by field id or id, createdAt or updatedAt, like {"<field id>": {"lte": 5}}. A related field takes {"some": {…}} or {"none": {…}} and a reference {"is": {…}}, each keyed by the other entity's field ids.
 """
 		where: JSON
 	): RecordPage!

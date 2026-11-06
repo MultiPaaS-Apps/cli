@@ -191,6 +191,7 @@ type cliError struct {
 	Code        string       `json:"code"`
 	Message     string       `json:"message"`
 	FieldErrors []fieldError `json:"fieldErrors,omitempty"`
+	Reason      string       `json:"reason,omitempty"`
 }
 
 // fieldError is one field a VALIDATION refusal names, as the server sends it.

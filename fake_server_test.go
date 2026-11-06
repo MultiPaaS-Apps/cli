@@ -38,6 +38,7 @@ type fakeMultiPaaS struct {
 	scopedApps   map[string]fakeRow     // app-tenant id -> its app
 	environments map[string][]fakeEnv   // app id -> its environments, the default first
 	envTenants   map[string][]fakeRow   // environment id -> its app-tenants
+	envsMinted   map[string]int         // app id -> environment ids handed out, so a removal never frees one
 	scopes       []string               // X-MultiPaaS-Scope per GraphQL request ("" when absent)
 	refused      map[string]bool        // client ids myTenants lists but the scope check refuses
 	nameless     bool                   // the signed-in user has no name
@@ -115,13 +116,22 @@ type fakeRow struct{ id, name, env string }
 type fakeEnv struct {
 	id, name  string
 	isDefault bool
+	// protectionSet says a protect or unprotect has run; until then the default environment is protected and the rest are not.
+	protectionSet, protected bool
+}
+
+func (e fakeEnv) deletionProtected() bool {
+	if e.protectionSet {
+		return e.protected
+	}
+	return e.isDefault
 }
 
 func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 	fake := &fakeMultiPaaS{
 		t: t, accessTTL: 3600,
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
-		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
+		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envsMinted: map[string]int{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{},
 		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
 		records: map[string][]map[string]any{},
@@ -344,7 +354,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			apps = f.tenantsInEnvironment(parts[1], f.defaultEnvironment(parts[1]))
 		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
-	case "Environments", "CreateEnvironment", "RenameEnvironment":
+	case "Environments", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "RemoveEnvironment":
 		f.manageEnvironments(w, operation, appOf(parts), variables)
 	case "ScopedAppTenant":
 		scopedApp := f.scopedApps[parts[len(parts)-1]]
@@ -1142,6 +1152,17 @@ func (f *fakeMultiPaaS) entitledToEnvironment(env string) bool {
 	return false
 }
 
+// removalRefusal is the server's reason and message for refusing a removal, default first, or "" when it is allowed.
+func removalRefusal(e fakeEnv) (reason, message string) {
+	if e.isDefault {
+		return "environment_default", "The default environment can't be removed."
+	}
+	if e.deletionProtected() {
+		return "environment_protected", "This environment has deletion protection on. Turn it off before removing the environment."
+	}
+	return "", ""
+}
+
 // manageEnvironments shares these steps with the server, in order: an application in scope, then
 // access.manage.application for a change, then the change. Names are unique within an application.
 func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app string, variables map[string]any) {
@@ -1153,7 +1174,7 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 		return
 	}
 	shown := func(e fakeEnv) map[string]any {
-		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.isDefault}
+		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.deletionProtected()}
 	}
 	input, _ := variables["input"].(map[string]any)
 	name, _ := input["name"].(string)
@@ -1163,7 +1184,8 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 	}
 	switch operation {
 	case "CreateEnvironment":
-		created := fakeEnv{id: fmt.Sprintf("env-new-%d", len(f.environments[app])+1), name: name}
+		f.envsMinted[app] = max(f.envsMinted[app], len(f.environments[app])) + 1
+		created := fakeEnv{id: fmt.Sprintf("env-new-%d", f.envsMinted[app]), name: name}
 		f.environments[app] = append(f.environments[app], created)
 		writeData(w, map[string]any{"createEnvironment": shown(created)})
 	case "RenameEnvironment":
@@ -1174,6 +1196,30 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 		}
 		f.environments[app][i].name = name
 		writeData(w, map[string]any{"renameEnvironment": shown(f.environments[app][i])})
+	case "SetEnvironmentDeletionProtection":
+		i := slices.IndexFunc(f.environments[app], func(e fakeEnv) bool { return e.id == input["id"] })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "environment not found")
+			return
+		}
+		f.environments[app][i].protectionSet = true
+		f.environments[app][i].protected, _ = input["protected"].(bool)
+		writeData(w, map[string]any{"setEnvironmentDeletionProtection": shown(f.environments[app][i])})
+	case "RemoveEnvironment":
+		i := slices.IndexFunc(f.environments[app], func(e fakeEnv) bool { return e.id == input["id"] })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "environment not found")
+			return
+		}
+		if reason, message := removalRefusal(f.environments[app][i]); reason != "" {
+			writeJSONResponse(w, http.StatusOK, map[string]any{
+				"data":   nil,
+				"errors": []map[string]any{{"message": message, "extensions": map[string]any{"code": "FORBIDDEN", "reason": reason}}},
+			})
+			return
+		}
+		f.environments[app] = slices.Delete(f.environments[app], i, i+1)
+		writeData(w, map[string]any{"removeEnvironment": true})
 	default:
 		listed := []map[string]any{}
 		for _, e := range f.environments[app] {

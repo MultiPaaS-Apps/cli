@@ -834,6 +834,9 @@ Marks an open invitation deleted: its link stops working and sign-in no longer a
 		fileId: ID!
 		importId: ID!
 	): DataImport!
+	removeEnvironment(
+		input: RemoveEnvironmentInput!
+	): Boolean!
 	removeMember(
 		input: RemoveMemberInput!
 	): TenantMember!
@@ -915,6 +918,9 @@ Registers a file for a record's file field and signs its upload. Write the retur
 	sendPrompt(
 		input: SendPromptInput!
 	): AiTurn!
+	setEnvironmentDeletionProtection(
+		input: SetEnvironmentDeletionProtectionInput!
+	): Environment!
 	setFeedbackSetting(
 		autoSend: Boolean!
 	): FeedbackSetting!
@@ -1449,6 +1455,10 @@ type RecordVersionPage {
 	pageInfo: PageInfo!
 }
 
+input RemoveEnvironmentInput {
+	id: ID!
+}
+
 input RemoveMemberInput {
 	id: ID!
 }
@@ -1517,6 +1527,11 @@ input SendPromptInput {
 	conversationId: ID!
 	pageContext: PageContextInput
 	text: String!
+}
+
+input SetEnvironmentDeletionProtectionInput {
+	id: ID!
+	protected: Boolean!
 }
 
 union SharePrincipal =AccessGroup | User

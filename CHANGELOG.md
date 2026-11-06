@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.2.0...v1.3.0) (2026-11-06)
+
+
+### Features
+
+* [MP-252] records upload and file metadata on records ([#59](https://github.com/MultiPaaS-Apps/cli/issues/59)) ([3ad55a3](https://github.com/MultiPaaS-Apps/cli/commit/3ad55a3d56c7baa956b9e2cccba514d7503bec44))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#57](https://github.com/MultiPaaS-Apps/cli/issues/57)) ([43aa150](https://github.com/MultiPaaS-Apps/cli/commit/43aa150913ce192ae9ef0fe06197dc8b93dc7b2a))
+
 ## [1.2.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.1.0...v1.2.0) (2026-11-05)
 
 

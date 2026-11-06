@@ -29,5 +29,5 @@ jobs:
           git diff --exit-code
       - uses: goreleaser/goreleaser-action@v7.3.0
         with:
-          version: v2.18.3
+          version: v2.19.0
           args: release --snapshot --clean

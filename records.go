@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
+	"path/filepath"
 	"strings"
 
 	"github.com/Khan/genqlient/graphql"
@@ -23,7 +25,7 @@ type recordTarget struct {
 // object keyed by field id.
 func recordCommands(command commandFunc) *cobra.Command {
 	return group("records", "Read and write an entity's records in an app-tenant, or the application's app-wide records",
-		recordsList(command), recordGet(command), recordCreate(command), recordUpdate(command), recordRetire(command))
+		recordsList(command), recordGet(command), recordCreate(command), recordUpdate(command), recordRetire(command), recordUpload(command))
 }
 
 func recordsList(command commandFunc) *cobra.Command {
@@ -86,6 +88,7 @@ func recordsList(command commandFunc) *cobra.Command {
 		})
 		return list, func(out io.Writer) {
 			table(out, "ID\tUPDATED\tDATA", list, func(r RecordParts) string { return r.Id + "\t" + r.UpdatedAt + "\t" + string(r.Data) })
+			printRecordFiles(out, list)
 		}, err
 	})
 	recordFlags(cmd, &target)
@@ -163,7 +166,7 @@ func recordGet(command commandFunc) *cobra.Command {
 			return nil, nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no record " + id + " of entity " + target.entityID}
 		}
 		record := found.Record.RecordParts
-		return map[string]RecordParts{"record": record}, func(out io.Writer) { fmt.Fprintf(out, "record %s %s\n", record.Id, record.Data) }, nil
+		return map[string]RecordParts{"record": record}, func(out io.Writer) { printRecord(out, record) }, nil
 	})
 	recordFlags(cmd, &target)
 	recordID(cmd, &id)
@@ -225,6 +228,50 @@ func recordRetire(command commandFunc) *cobra.Command {
 	return cmd
 }
 
+func recordUpload(command commandFunc) *cobra.Command {
+	var target recordTarget
+	var fieldID, path string
+	cmd := command("upload <path>", "Upload a file for a file field and print its id, to set on a record with --data", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		size, digest, err := fileDigest(path)
+		if err != nil {
+			return nil, nil, err
+		}
+		scope, err := s.recordScope(ctx, target)
+		if err != nil {
+			return nil, nil, err
+		}
+		name := filepath.Base(path)
+		input := RequestRecordFileUploadInput{
+			EntityId: target.entityID, FieldId: fieldID, Filename: name,
+			ContentType: fileContentType(path), SizeBytes: float64(size), Sha256: digest,
+		}
+		var requested *RequestRecordFileUploadResponse
+		err = s.call(ctx, scope, func(client graphql.Client) (err error) {
+			requested, err = RequestRecordFileUpload(ctx, client, input)
+			return err
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		upload := requested.RequestRecordFileUpload
+		status, err := put(ctx, path, size, upload.Url, upload.Headers)
+		if err != nil || status < 200 || status >= 300 {
+			reason := "no response"
+			if status != 0 {
+				reason = fmt.Sprintf("HTTP %d", status)
+			}
+			return nil, nil, &cliError{exit: exitRefused, Code: "UPLOAD_REFUSED", Message: fmt.Sprintf(
+				"upload of %s refused (%s); nothing was attached. Run records upload again.", name, reason)}
+		}
+		return map[string]map[string]string{"file": {"id": upload.FileId}}, func(out io.Writer) { fmt.Fprintln(out, upload.FileId) }, nil
+	})
+	recordFlags(cmd, &target)
+	cmd.Args = oneID(&path)
+	cmd.Flags().StringVar(&fieldID, "field", "", "the file field's id (from model show)")
+	_ = cmd.MarkFlagRequired("field")
+	return cmd
+}
+
 // recordScope is the scope header the target acts in: the app-tenant's, or with appWide the application's,
 // which only an entitlement that reaches the application itself, not one confined to an app-tenant, can give.
 func (s *session) recordScope(ctx context.Context, target recordTarget) (string, error) {
@@ -271,7 +318,7 @@ func (s *session) writeRecord(ctx context.Context, target recordTarget, data str
 		return err
 	})
 	result := map[string]RecordParts{"record": written}
-	return result, func(out io.Writer) { fmt.Fprintf(out, "record %s %s\n", written.Id, written.Data) }, err
+	return result, func(out io.Writer) { printRecord(out, written) }, err
 }
 
 func recordFlags(cmd *cobra.Command, target *recordTarget) {
@@ -307,4 +354,41 @@ func scopeFlags(cmd *cobra.Command, target *recordTarget, appWideUsage string, w
 func recordID(cmd *cobra.Command, id *string) {
 	cmd.Flags().StringVar(id, "id", "", "the record's id (from records list)")
 	_ = cmd.MarkFlagRequired("id")
+}
+
+// printRecord prints a record's line, then a line per file it holds: the field, the file's name, type and size,
+// and a link that works for 15 minutes.
+func printRecord(out io.Writer, record RecordParts) {
+	fmt.Fprintf(out, "record %s %s\n", record.Id, record.Data)
+	for _, file := range record.Files {
+		fmt.Fprintf(out, "file %s %s (%s, %.0f bytes) %s\n", file.FieldId, file.Filename, file.ContentType, file.SizeBytes, file.Url)
+	}
+}
+
+// printRecordFiles adds a table of the listed records' files, when any has one.
+func printRecordFiles(out io.Writer, records []RecordParts) {
+	type row struct {
+		recordID string
+		file     recordFile
+	}
+	rows := []row{}
+	for _, record := range records {
+		for _, file := range record.Files {
+			rows = append(rows, row{recordID: record.Id, file: file})
+		}
+	}
+	if len(rows) == 0 {
+		return
+	}
+	fmt.Fprintln(out)
+	table(out, "RECORD\tFIELD\tFILE\tBYTES\tURL", rows, func(r row) string {
+		return fmt.Sprintf("%s\t%s\t%s\t%.0f\t%s", r.recordID, r.file.FieldId, r.file.Filename, r.file.SizeBytes, r.file.Url)
+	})
+}
+
+func fileContentType(path string) string {
+	if byExtension := mime.TypeByExtension(filepath.Ext(path)); byExtension != "" {
+		return byExtension
+	}
+	return "application/octet-stream"
 }

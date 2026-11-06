@@ -428,6 +428,9 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			writeData(w, map[string]any{"records": map[string]any{"totalCount": len(rows)}})
 			return
 		}
+		for i, row := range rows {
+			rows[i] = withFiles(row)
+		}
 		writeData(w, map[string]any{"records": pageOf(rows, variables)})
 	case "Record":
 		i := slices.IndexFunc(f.records[variables["entityId"].(string)], func(r map[string]any) bool {
@@ -437,9 +440,11 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			writeData(w, map[string]any{"record": nil})
 			return
 		}
-		writeData(w, map[string]any{"record": f.records[variables["entityId"].(string)][i]})
+		writeData(w, map[string]any{"record": withFiles(f.records[variables["entityId"].(string)][i])})
 	case "CreateRecord", "UpdateRecord", "RetireRecord":
 		f.writeRecord(w, operation, parts, variables)
+	case "RequestRecordFileUpload":
+		f.requestRecordFileUpload(w, variables)
 	case "OAuthClients", "CreateOAuthClient", "UpdateOAuthClient":
 		f.manageOAuth(w, operation, parts, variables)
 	case "AppIdentities", "CreateAppIdentity", "CreateAppIdentitySecret", "RevokeAppIdentitySecret", "RetireAppIdentity":
@@ -690,7 +695,7 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 		stamp := "2026-10-11T00:00:00.000Z"
 		created := map[string]any{"id": fmt.Sprintf("record-%d", len(f.records[entity])+1), "appWide": len(parts) < 3, "data": input["data"], "createdAt": stamp, "updatedAt": stamp}
 		f.records[entity] = append([]map[string]any{created}, f.records[entity]...)
-		writeData(w, map[string]any{field: created})
+		writeData(w, map[string]any{field: withFiles(created)})
 		return
 	}
 	i := slices.IndexFunc(f.records[entity], func(r map[string]any) bool {
@@ -703,7 +708,7 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 	record := maps.Clone(f.records[entity][i])
 	if operation == "RetireRecord" {
 		f.records[entity] = slices.Delete(f.records[entity], i, i+1)
-		writeData(w, map[string]any{field: record})
+		writeData(w, map[string]any{field: withFiles(record)})
 		return
 	}
 	data := maps.Clone(record["data"].(map[string]any))
@@ -714,7 +719,7 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 	maps.Copy(data, input["data"].(map[string]any))
 	record["data"] = data
 	f.records[entity][i] = record
-	writeData(w, map[string]any{field: record})
+	writeData(w, map[string]any{field: withFiles(record)})
 }
 
 // recordInScope is the server's record policy: an app-wide request reaches only app-wide records, and a tenant

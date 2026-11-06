@@ -13,7 +13,7 @@ import (
 type AddDataImportFileAddDataImportFileDataImportFileUpload struct {
 	ImportFile    AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImportFile `json:"importFile"`
 	UploadUrl     string                                                                         `json:"uploadUrl"`
-	UploadHeaders []AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader    `json:"uploadHeaders"`
+	UploadHeaders []signedHeader                                                                 `json:"uploadHeaders"`
 }
 
 // GetImportFile returns AddDataImportFileAddDataImportFileDataImportFileUpload.ImportFile, and is useful for accessing the field via an interface.
@@ -27,7 +27,7 @@ func (v *AddDataImportFileAddDataImportFileDataImportFileUpload) GetUploadUrl() 
 }
 
 // GetUploadHeaders returns AddDataImportFileAddDataImportFileDataImportFileUpload.UploadHeaders, and is useful for accessing the field via an interface.
-func (v *AddDataImportFileAddDataImportFileDataImportFileUpload) GetUploadHeaders() []AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader {
+func (v *AddDataImportFileAddDataImportFileDataImportFileUpload) GetUploadHeaders() []signedHeader {
 	return v.UploadHeaders
 }
 
@@ -107,22 +107,6 @@ func (v *AddDataImportFileAddDataImportFileDataImportFileUploadImportFileDataImp
 	retval.Entity = v.DataImportFileParts.Entity
 	retval.File = v.DataImportFileParts.File
 	return &retval, nil
-}
-
-// AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader includes the requested fields of the GraphQL type Header.
-type AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-// GetName returns AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader.Name, and is useful for accessing the field via an interface.
-func (v *AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader) GetName() string {
-	return v.Name
-}
-
-// GetValue returns AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader.Value, and is useful for accessing the field via an interface.
-func (v *AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader) GetValue() string {
-	return v.Value
 }
 
 // AddDataImportFileResponse is returned by AddDataImportFile on success.
@@ -1823,6 +1807,9 @@ func (v *CreateRecordCreateRecord) GetCreatedAt() string { return v.RecordParts.
 // GetUpdatedAt returns CreateRecordCreateRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *CreateRecordCreateRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
 
+// GetFiles returns CreateRecordCreateRecord.Files, and is useful for accessing the field via an interface.
+func (v *CreateRecordCreateRecord) GetFiles() []recordFile { return v.RecordParts.Files }
+
 func (v *CreateRecordCreateRecord) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -1858,6 +1845,8 @@ type __premarshalCreateRecordCreateRecord struct {
 	CreatedAt string `json:"createdAt"`
 
 	UpdatedAt string `json:"updatedAt"`
+
+	Files []recordFile `json:"files"`
 }
 
 func (v *CreateRecordCreateRecord) MarshalJSON() ([]byte, error) {
@@ -1876,6 +1865,7 @@ func (v *CreateRecordCreateRecord) __premarshalJSON() (*__premarshalCreateRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
 
@@ -3966,6 +3956,7 @@ type RecordParts struct {
 	Data      json.RawMessage `json:"data"`
 	CreatedAt string          `json:"createdAt"`
 	UpdatedAt string          `json:"updatedAt"`
+	Files     []recordFile    `json:"files"`
 }
 
 // GetId returns RecordParts.Id, and is useful for accessing the field via an interface.
@@ -3982,6 +3973,9 @@ func (v *RecordParts) GetCreatedAt() string { return v.CreatedAt }
 
 // GetUpdatedAt returns RecordParts.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RecordParts) GetUpdatedAt() string { return v.UpdatedAt }
+
+// GetFiles returns RecordParts.Files, and is useful for accessing the field via an interface.
+func (v *RecordParts) GetFiles() []recordFile { return v.Files }
 
 // RecordRecord includes the requested fields of the GraphQL type Record.
 type RecordRecord struct {
@@ -4002,6 +3996,9 @@ func (v *RecordRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
 
 // GetUpdatedAt returns RecordRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RecordRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+// GetFiles returns RecordRecord.Files, and is useful for accessing the field via an interface.
+func (v *RecordRecord) GetFiles() []recordFile { return v.RecordParts.Files }
 
 func (v *RecordRecord) UnmarshalJSON(b []byte) error {
 
@@ -4038,6 +4035,8 @@ type __premarshalRecordRecord struct {
 	CreatedAt string `json:"createdAt"`
 
 	UpdatedAt string `json:"updatedAt"`
+
+	Files []recordFile `json:"files"`
 }
 
 func (v *RecordRecord) MarshalJSON() ([]byte, error) {
@@ -4056,6 +4055,7 @@ func (v *RecordRecord) __premarshalJSON() (*__premarshalRecordRecord, error) {
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
 
@@ -4142,6 +4142,9 @@ func (v *RecordsRecordsRecordPageItemsRecord) GetCreatedAt() string { return v.R
 // GetUpdatedAt returns RecordsRecordsRecordPageItemsRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RecordsRecordsRecordPageItemsRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
 
+// GetFiles returns RecordsRecordsRecordPageItemsRecord.Files, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPageItemsRecord) GetFiles() []recordFile { return v.RecordParts.Files }
+
 func (v *RecordsRecordsRecordPageItemsRecord) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -4177,6 +4180,8 @@ type __premarshalRecordsRecordsRecordPageItemsRecord struct {
 	CreatedAt string `json:"createdAt"`
 
 	UpdatedAt string `json:"updatedAt"`
+
+	Files []recordFile `json:"files"`
 }
 
 func (v *RecordsRecordsRecordPageItemsRecord) MarshalJSON() ([]byte, error) {
@@ -4195,6 +4200,7 @@ func (v *RecordsRecordsRecordPageItemsRecord) __premarshalJSON() (*__premarshalR
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
 
@@ -4323,6 +4329,66 @@ type RenameEnvironmentResponse struct {
 // GetRenameEnvironment returns RenameEnvironmentResponse.RenameEnvironment, and is useful for accessing the field via an interface.
 func (v *RenameEnvironmentResponse) GetRenameEnvironment() RenameEnvironmentRenameEnvironment {
 	return v.RenameEnvironment
+}
+
+type RequestRecordFileUploadInput struct {
+	ContentType string  `json:"contentType"`
+	EntityId    string  `json:"entityId"`
+	FieldId     string  `json:"fieldId"`
+	Filename    string  `json:"filename"`
+	Sha256      string  `json:"sha256"`
+	SizeBytes   float64 `json:"sizeBytes"`
+}
+
+// GetContentType returns RequestRecordFileUploadInput.ContentType, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadInput) GetContentType() string { return v.ContentType }
+
+// GetEntityId returns RequestRecordFileUploadInput.EntityId, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadInput) GetEntityId() string { return v.EntityId }
+
+// GetFieldId returns RequestRecordFileUploadInput.FieldId, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadInput) GetFieldId() string { return v.FieldId }
+
+// GetFilename returns RequestRecordFileUploadInput.Filename, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadInput) GetFilename() string { return v.Filename }
+
+// GetSha256 returns RequestRecordFileUploadInput.Sha256, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadInput) GetSha256() string { return v.Sha256 }
+
+// GetSizeBytes returns RequestRecordFileUploadInput.SizeBytes, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadInput) GetSizeBytes() float64 { return v.SizeBytes }
+
+// RequestRecordFileUploadRequestRecordFileUpload includes the requested fields of the GraphQL type RecordFileUpload.
+type RequestRecordFileUploadRequestRecordFileUpload struct {
+	FileId    string         `json:"fileId"`
+	Url       string         `json:"url"`
+	Headers   []signedHeader `json:"headers"`
+	ExpiresAt string         `json:"expiresAt"`
+}
+
+// GetFileId returns RequestRecordFileUploadRequestRecordFileUpload.FileId, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadRequestRecordFileUpload) GetFileId() string { return v.FileId }
+
+// GetUrl returns RequestRecordFileUploadRequestRecordFileUpload.Url, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadRequestRecordFileUpload) GetUrl() string { return v.Url }
+
+// GetHeaders returns RequestRecordFileUploadRequestRecordFileUpload.Headers, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadRequestRecordFileUpload) GetHeaders() []signedHeader {
+	return v.Headers
+}
+
+// GetExpiresAt returns RequestRecordFileUploadRequestRecordFileUpload.ExpiresAt, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadRequestRecordFileUpload) GetExpiresAt() string { return v.ExpiresAt }
+
+// RequestRecordFileUploadResponse is returned by RequestRecordFileUpload on success.
+type RequestRecordFileUploadResponse struct {
+	// Registers a file for a record's file field and signs its upload. Write the returned fileId as the field's value once the PUT succeeds.
+	RequestRecordFileUpload RequestRecordFileUploadRequestRecordFileUpload `json:"requestRecordFileUpload"`
+}
+
+// GetRequestRecordFileUpload returns RequestRecordFileUploadResponse.RequestRecordFileUpload, and is useful for accessing the field via an interface.
+func (v *RequestRecordFileUploadResponse) GetRequestRecordFileUpload() RequestRecordFileUploadRequestRecordFileUpload {
+	return v.RequestRecordFileUpload
 }
 
 // RetireAppIdentityResponse is returned by RetireAppIdentity on success.
@@ -4857,6 +4923,9 @@ func (v *RetireRecordRetireRecord) GetCreatedAt() string { return v.RecordParts.
 // GetUpdatedAt returns RetireRecordRetireRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RetireRecordRetireRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
 
+// GetFiles returns RetireRecordRetireRecord.Files, and is useful for accessing the field via an interface.
+func (v *RetireRecordRetireRecord) GetFiles() []recordFile { return v.RecordParts.Files }
+
 func (v *RetireRecordRetireRecord) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -4892,6 +4961,8 @@ type __premarshalRetireRecordRetireRecord struct {
 	CreatedAt string `json:"createdAt"`
 
 	UpdatedAt string `json:"updatedAt"`
+
+	Files []recordFile `json:"files"`
 }
 
 func (v *RetireRecordRetireRecord) MarshalJSON() ([]byte, error) {
@@ -4910,6 +4981,7 @@ func (v *RetireRecordRetireRecord) __premarshalJSON() (*__premarshalRetireRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
 
@@ -6234,6 +6306,9 @@ func (v *UpdateRecordUpdateRecord) GetCreatedAt() string { return v.RecordParts.
 // GetUpdatedAt returns UpdateRecordUpdateRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *UpdateRecordUpdateRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
 
+// GetFiles returns UpdateRecordUpdateRecord.Files, and is useful for accessing the field via an interface.
+func (v *UpdateRecordUpdateRecord) GetFiles() []recordFile { return v.RecordParts.Files }
+
 func (v *UpdateRecordUpdateRecord) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -6269,6 +6344,8 @@ type __premarshalUpdateRecordUpdateRecord struct {
 	CreatedAt string `json:"createdAt"`
 
 	UpdatedAt string `json:"updatedAt"`
+
+	Files []recordFile `json:"files"`
 }
 
 func (v *UpdateRecordUpdateRecord) MarshalJSON() ([]byte, error) {
@@ -6287,6 +6364,7 @@ func (v *UpdateRecordUpdateRecord) __premarshalJSON() (*__premarshalUpdateRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
 
@@ -6727,6 +6805,14 @@ type __RenameEnvironmentInput struct {
 // GetInput returns __RenameEnvironmentInput.Input, and is useful for accessing the field via an interface.
 func (v *__RenameEnvironmentInput) GetInput() RenameEnvironmentInput { return v.Input }
 
+// __RequestRecordFileUploadInput is used internally by genqlient
+type __RequestRecordFileUploadInput struct {
+	Input RequestRecordFileUploadInput `json:"input"`
+}
+
+// GetInput returns __RequestRecordFileUploadInput.Input, and is useful for accessing the field via an interface.
+func (v *__RequestRecordFileUploadInput) GetInput() RequestRecordFileUploadInput { return v.Input }
+
 // __RetireAppIdentityInput is used internally by genqlient
 type __RetireAppIdentityInput struct {
 	Id string `json:"id"`
@@ -6871,6 +6957,38 @@ type __UpdateRoleInput struct {
 // GetInput returns __UpdateRoleInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateRoleInput) GetInput() UpdateRoleInput { return v.Input }
 
+// recordFile includes the requested fields of the GraphQL type RecordFile.
+type recordFile struct {
+	FieldId      string  `json:"fieldId"`
+	FileId       string  `json:"fileId"`
+	Filename     string  `json:"filename"`
+	ContentType  string  `json:"contentType"`
+	SizeBytes    float64 `json:"sizeBytes"`
+	Url          string  `json:"url"`
+	UrlExpiresAt string  `json:"urlExpiresAt"`
+}
+
+// GetFieldId returns recordFile.FieldId, and is useful for accessing the field via an interface.
+func (v *recordFile) GetFieldId() string { return v.FieldId }
+
+// GetFileId returns recordFile.FileId, and is useful for accessing the field via an interface.
+func (v *recordFile) GetFileId() string { return v.FileId }
+
+// GetFilename returns recordFile.Filename, and is useful for accessing the field via an interface.
+func (v *recordFile) GetFilename() string { return v.Filename }
+
+// GetContentType returns recordFile.ContentType, and is useful for accessing the field via an interface.
+func (v *recordFile) GetContentType() string { return v.ContentType }
+
+// GetSizeBytes returns recordFile.SizeBytes, and is useful for accessing the field via an interface.
+func (v *recordFile) GetSizeBytes() float64 { return v.SizeBytes }
+
+// GetUrl returns recordFile.Url, and is useful for accessing the field via an interface.
+func (v *recordFile) GetUrl() string { return v.Url }
+
+// GetUrlExpiresAt returns recordFile.UrlExpiresAt, and is useful for accessing the field via an interface.
+func (v *recordFile) GetUrlExpiresAt() string { return v.UrlExpiresAt }
+
 // schemaChange includes the requested fields of the GraphQL type SchemaChange.
 type schemaChange struct {
 	Type        string `json:"type"`
@@ -6882,6 +7000,18 @@ func (v *schemaChange) GetType() string { return v.Type }
 
 // GetDescription returns schemaChange.Description, and is useful for accessing the field via an interface.
 func (v *schemaChange) GetDescription() string { return v.Description }
+
+// signedHeader includes the requested fields of the GraphQL type Header.
+type signedHeader struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// GetName returns signedHeader.Name, and is useful for accessing the field via an interface.
+func (v *signedHeader) GetName() string { return v.Name }
+
+// GetValue returns signedHeader.Value, and is useful for accessing the field via an interface.
+func (v *signedHeader) GetValue() string { return v.Value }
 
 // versionDiff includes the requested fields of the GraphQL type ApiSchemaDiff.
 type versionDiff struct {
@@ -7876,6 +8006,15 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	files {
+		fieldId
+		fileId
+		filename
+		contentType
+		sizeBytes
+		url
+		urlExpiresAt
+	}
 }
 `
 
@@ -8667,6 +8806,15 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	files {
+		fieldId
+		fileId
+		filename
+		contentType
+		sizeBytes
+		url
+		urlExpiresAt
+	}
 }
 `
 
@@ -8715,6 +8863,15 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	files {
+		fieldId
+		fileId
+		filename
+		contentType
+		sizeBytes
+		url
+		urlExpiresAt
+	}
 }
 `
 
@@ -8860,6 +9017,46 @@ func RenameEnvironment(
 	}
 
 	data_ = &RenameEnvironmentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RequestRecordFileUpload.
+const RequestRecordFileUpload_Operation = `
+mutation RequestRecordFileUpload ($input: RequestRecordFileUploadInput!) {
+	requestRecordFileUpload(input: $input) {
+		fileId
+		url
+		headers {
+			name
+			value
+		}
+		expiresAt
+	}
+}
+`
+
+func RequestRecordFileUpload(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input RequestRecordFileUploadInput,
+) (data_ *RequestRecordFileUploadResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RequestRecordFileUpload",
+		Query:  RequestRecordFileUpload_Operation,
+		Variables: &__RequestRecordFileUploadInput{
+			Input: input,
+		},
+	}
+
+	data_ = &RequestRecordFileUploadResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -9123,6 +9320,15 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	files {
+		fieldId
+		fileId
+		filename
+		contentType
+		sizeBytes
+		url
+		urlExpiresAt
+	}
 }
 `
 
@@ -9751,6 +9957,15 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	files {
+		fieldId
+		fileId
+		filename
+		contentType
+		sizeBytes
+		url
+		urlExpiresAt
+	}
 }
 `
 

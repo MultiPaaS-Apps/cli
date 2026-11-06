@@ -282,7 +282,7 @@ func upload(ctx context.Context, s *session, scope, importID string, file planne
 
 // put sends path as the body of a PUT to target and returns the response status, or 0 with the error
 // when there was no response. The error is not returned to the user: it names the presigned URL.
-func put(ctx context.Context, path string, size int64, target string, headers []AddDataImportFileAddDataImportFileDataImportFileUploadUploadHeadersHeader) (int, error) {
+func put(ctx context.Context, path string, size int64, target string, headers []signedHeader) (int, error) {
 	body, err := os.Open(path)
 	if err != nil {
 		return 0, err

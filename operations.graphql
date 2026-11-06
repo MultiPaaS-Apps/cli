@@ -299,6 +299,16 @@ fragment RecordParts on Record {
   data
   createdAt
   updatedAt
+  # @genqlient(typename: "recordFile")
+  files {
+    fieldId
+    fileId
+    filename
+    contentType
+    sizeBytes
+    url
+    urlExpiresAt
+  }
 }
 
 query Record($entityId: ID!, $id: ID!) {
@@ -356,6 +366,19 @@ mutation UpdateRecord($input: UpdateRecordInput!) {
 mutation RetireRecord($input: RetireRecordInput!) {
   retireRecord(input: $input) {
     ...RecordParts
+  }
+}
+
+mutation RequestRecordFileUpload($input: RequestRecordFileUploadInput!) {
+  requestRecordFileUpload(input: $input) {
+    fileId
+    url
+    # @genqlient(typename: "signedHeader")
+    headers {
+      name
+      value
+    }
+    expiresAt
   }
 }
 
@@ -501,6 +524,7 @@ mutation AddDataImportFile($input: AddDataImportFileInput!) {
       ...DataImportFileParts
     }
     uploadUrl
+    # @genqlient(typename: "signedHeader")
     uploadHeaders {
       name
       value

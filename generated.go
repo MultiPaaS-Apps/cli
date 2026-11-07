@@ -4238,6 +4238,31 @@ func (v *RemoveDataImportFileResponse) GetRemoveDataImportFile() RemoveDataImpor
 	return v.RemoveDataImportFile
 }
 
+type RemoveEnvironmentInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RemoveEnvironmentInput.Id, and is useful for accessing the field via an interface.
+func (v *RemoveEnvironmentInput) GetId() string { return v.Id }
+
+// RemoveEnvironmentRemoveEnvironment includes the requested fields of the GraphQL type Environment.
+type RemoveEnvironmentRemoveEnvironment struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RemoveEnvironmentRemoveEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *RemoveEnvironmentRemoveEnvironment) GetId() string { return v.Id }
+
+// RemoveEnvironmentResponse is returned by RemoveEnvironment on success.
+type RemoveEnvironmentResponse struct {
+	RemoveEnvironment RemoveEnvironmentRemoveEnvironment `json:"removeEnvironment"`
+}
+
+// GetRemoveEnvironment returns RemoveEnvironmentResponse.RemoveEnvironment, and is useful for accessing the field via an interface.
+func (v *RemoveEnvironmentResponse) GetRemoveEnvironment() RemoveEnvironmentRemoveEnvironment {
+	return v.RemoveEnvironment
+}
+
 type RenameEnvironmentInput struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
@@ -5598,6 +5623,105 @@ type ScopedAppTenantResponse struct {
 // GetMe returns ScopedAppTenantResponse.Me, and is useful for accessing the field via an interface.
 func (v *ScopedAppTenantResponse) GetMe() ScopedAppTenantMeUser { return v.Me }
 
+type SetEnvironmentDeletionProtectionInput struct {
+	Id        string `json:"id"`
+	Protected bool   `json:"protected"`
+}
+
+// GetId returns SetEnvironmentDeletionProtectionInput.Id, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentDeletionProtectionInput) GetId() string { return v.Id }
+
+// GetProtected returns SetEnvironmentDeletionProtectionInput.Protected, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentDeletionProtectionInput) GetProtected() bool { return v.Protected }
+
+// SetEnvironmentDeletionProtectionResponse is returned by SetEnvironmentDeletionProtection on success.
+type SetEnvironmentDeletionProtectionResponse struct {
+	SetEnvironmentDeletionProtection SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment `json:"setEnvironmentDeletionProtection"`
+}
+
+// GetSetEnvironmentDeletionProtection returns SetEnvironmentDeletionProtectionResponse.SetEnvironmentDeletionProtection, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentDeletionProtectionResponse) GetSetEnvironmentDeletionProtection() SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment {
+	return v.SetEnvironmentDeletionProtection
+}
+
+// SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment includes the requested fields of the GraphQL type Environment.
+type SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment struct {
+	EnvironmentParts `json:"-"`
+}
+
+// GetId returns SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment) GetId() string {
+	return v.EnvironmentParts.Id
+}
+
+// GetName returns SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment.Name, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment) GetName() string {
+	return v.EnvironmentParts.Name
+}
+
+// GetIsDefault returns SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment.IsDefault, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment) GetIsDefault() bool {
+	return v.EnvironmentParts.IsDefault
+}
+
+// GetDeletionProtected returns SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment.DeletionProtected, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment) GetDeletionProtected() bool {
+	return v.EnvironmentParts.DeletionProtected
+}
+
+func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnvironmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalSetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	IsDefault bool `json:"isDefault"`
+
+	DeletionProtected bool `json:"deletionProtected"`
+}
+
+func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment) __premarshalJSON() (*__premarshalSetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment, error) {
+	var retval __premarshalSetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnvironment
+
+	retval.Id = v.EnvironmentParts.Id
+	retval.Name = v.EnvironmentParts.Name
+	retval.IsDefault = v.EnvironmentParts.IsDefault
+	retval.DeletionProtected = v.EnvironmentParts.DeletionProtected
+	return &retval, nil
+}
+
 // SetFeedbackSettingResponse is returned by SetFeedbackSetting on success.
 type SetFeedbackSettingResponse struct {
 	SetFeedbackSetting SetFeedbackSettingSetFeedbackSetting `json:"setFeedbackSetting"`
@@ -6797,6 +6921,14 @@ func (v *__RemoveDataImportFileInput) GetImportId() string { return v.ImportId }
 // GetFileId returns __RemoveDataImportFileInput.FileId, and is useful for accessing the field via an interface.
 func (v *__RemoveDataImportFileInput) GetFileId() string { return v.FileId }
 
+// __RemoveEnvironmentInput is used internally by genqlient
+type __RemoveEnvironmentInput struct {
+	Input RemoveEnvironmentInput `json:"input"`
+}
+
+// GetInput returns __RemoveEnvironmentInput.Input, and is useful for accessing the field via an interface.
+func (v *__RemoveEnvironmentInput) GetInput() RemoveEnvironmentInput { return v.Input }
+
 // __RenameEnvironmentInput is used internally by genqlient
 type __RenameEnvironmentInput struct {
 	Input RenameEnvironmentInput `json:"input"`
@@ -6884,6 +7016,16 @@ type __RunDataImportInput struct {
 
 // GetImportId returns __RunDataImportInput.ImportId, and is useful for accessing the field via an interface.
 func (v *__RunDataImportInput) GetImportId() string { return v.ImportId }
+
+// __SetEnvironmentDeletionProtectionInput is used internally by genqlient
+type __SetEnvironmentDeletionProtectionInput struct {
+	Input SetEnvironmentDeletionProtectionInput `json:"input"`
+}
+
+// GetInput returns __SetEnvironmentDeletionProtectionInput.Input, and is useful for accessing the field via an interface.
+func (v *__SetEnvironmentDeletionProtectionInput) GetInput() SetEnvironmentDeletionProtectionInput {
+	return v.Input
+}
 
 // __SetFeedbackSettingInput is used internally by genqlient
 type __SetFeedbackSettingInput struct {
@@ -8988,6 +9130,40 @@ func RemoveDataImportFile(
 	return data_, err_
 }
 
+// The mutation executed by RemoveEnvironment.
+const RemoveEnvironment_Operation = `
+mutation RemoveEnvironment ($input: RemoveEnvironmentInput!) {
+	removeEnvironment(input: $input) {
+		id
+	}
+}
+`
+
+func RemoveEnvironment(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input RemoveEnvironmentInput,
+) (data_ *RemoveEnvironmentResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RemoveEnvironment",
+		Query:  RemoveEnvironment_Operation,
+		Variables: &__RemoveEnvironmentInput{
+			Input: input,
+		},
+	}
+
+	data_ = &RemoveEnvironmentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by RenameEnvironment.
 const RenameEnvironment_Operation = `
 mutation RenameEnvironment ($input: RenameEnvironmentInput!) {
@@ -9606,6 +9782,46 @@ func ScopedAppTenant(
 	}
 
 	data_ = &ScopedAppTenantResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by SetEnvironmentDeletionProtection.
+const SetEnvironmentDeletionProtection_Operation = `
+mutation SetEnvironmentDeletionProtection ($input: SetEnvironmentDeletionProtectionInput!) {
+	setEnvironmentDeletionProtection(input: $input) {
+		... EnvironmentParts
+	}
+}
+fragment EnvironmentParts on Environment {
+	id
+	name
+	isDefault
+	deletionProtected
+}
+`
+
+func SetEnvironmentDeletionProtection(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input SetEnvironmentDeletionProtectionInput,
+) (data_ *SetEnvironmentDeletionProtectionResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "SetEnvironmentDeletionProtection",
+		Query:  SetEnvironmentDeletionProtection_Operation,
+		Variables: &__SetEnvironmentDeletionProtectionInput{
+			Input: input,
+		},
+	}
+
+	data_ = &SetEnvironmentDeletionProtectionResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

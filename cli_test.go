@@ -217,6 +217,94 @@ func TestEnvsCreateThenListShowsIt(t *testing.T) {
 	assertFailure(t, fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "staging", "--json"), exitRefused, "VALIDATION")
 }
 
+func TestEnvsProtectUnprotectAndRemoveAnEnvironment(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	fake.mutations = nil
+
+	protected := fake.run(t, "envs", "protect", "--app", "app-a-000", "--env", "env-new-2", "--json")
+	if compact(protected.stdout) != `{"environment":{"id":"env-new-2","name":"test","isDefault":false,"deletionProtected":true}}` {
+		t.Fatalf("protect %s", protected.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"id": "env-new-2", "protected": true}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+	if text := fake.run(t, "envs", "protect", "--app", "app-a-000", "--env", "env-new-2"); text.stdout != "environment env-new-2 \"test\" is protected\n" {
+		t.Fatalf("protect text %q", text.stdout)
+	}
+	listed := fake.run(t, "envs", "list", "--app", "app-a-000")
+	if !strings.Contains(listed.stdout, "PROTECTED") || !regexp.MustCompile(`test\s+env-new-2\s+false\s+true`).MatchString(listed.stdout) {
+		t.Fatalf("list %s", listed.stdout)
+	}
+
+	refused := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-new-2", "--json")
+	assertFailure(t, refused, exitRefused, "FORBIDDEN")
+	assertReason(t, refused, "environment_protected")
+
+	unprotected := fake.run(t, "envs", "unprotect", "--app", "app-a-000", "--env", "env-new-2")
+	if unprotected.stdout != "environment env-new-2 \"test\" is not protected\n" {
+		t.Fatalf("unprotect text %q", unprotected.stdout)
+	}
+	want = map[string]any{"input": map[string]any{"id": "env-new-2", "protected": false}}
+	if last := fake.mutations[len(fake.mutations)-1]; !reflect.DeepEqual(last, want) {
+		t.Fatalf("sent %v, want %v", last, want)
+	}
+
+	removed := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-new-2", "--json")
+	if compact(removed.stdout) != `{"removed":true,"id":"env-new-2"}` {
+		t.Fatalf("remove %s", removed.stdout)
+	}
+	assertFailure(t, fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-new-2", "--json"), exitRefused, "NOT_FOUND")
+	again := fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	if !strings.Contains(compact(again.stdout), `"id":"env-new-3"`) {
+		t.Fatalf("a removed environment's id was reused: %s", again.stdout)
+	}
+
+	fake.run(t, "envs", "unprotect", "--app", "app-a-000", "--env", "env-default")
+	defaultRefused := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-default", "--json")
+	assertFailure(t, defaultRefused, exitRefused, "FORBIDDEN")
+	assertReason(t, defaultRefused, "environment_default")
+	if text := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-default"); text.exit != exitRefused {
+		t.Fatalf("default remove exit %d", text.exit)
+	}
+}
+
+func TestEnvsRemoveSaysTheDataWillBeErased(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	got := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-new-2")
+	if got.exit != exitOK || got.stdout != "environment env-new-2 is being removed; its data will be erased\n" {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+}
+
+func TestEnvsRemoveFailsWhenTheAnswerNamesNoEnvironment(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	fake.removeNoData = true
+	for _, args := range [][]string{{"--json"}, {}} {
+		got := fake.run(t, append([]string{"envs", "remove", "--app", "app-a-000", "--env", "env-new-2"}, args...)...)
+		if got.exit != exitRefused || strings.Contains(got.stdout, `"removed":true`) || strings.Contains(got.stdout, "is being removed") {
+			t.Fatalf("%v: exit %d, want %d with no success output: %q", args, got.exit, exitRefused, got.stdout)
+		}
+	}
+	var failure struct{ Error struct{ Code string } }
+	decode(t, fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-new-2", "--json").stdout, &failure)
+	if failure.Error.Code != "CLI_ERROR" {
+		t.Fatalf("code %q, want CLI_ERROR", failure.Error.Code)
+	}
+}
+
+func assertReason(t *testing.T, got result, reason string) {
+	t.Helper()
+	var failure struct{ Error struct{ Reason string } }
+	decode(t, got.stdout, &failure)
+	if failure.Error.Reason != reason {
+		t.Fatalf("reason %q, want %q: %s", failure.Error.Reason, reason, got.stdout)
+	}
+}
+
 func TestTenantsListWithEnvSendsTheEnvScope(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	listed := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--json")

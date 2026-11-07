@@ -70,6 +70,7 @@ type fakeMultiPaaS struct {
 	secretSeq     int                         // app identity secrets created so far; ids are never reused
 	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
 	scopedEnvNull bool                        // an app-tenant-level read returns the app-tenant's environment as null
+	removeNoData  bool                        // removeEnvironment answers HTTP 200 with {"data":null} and no errors
 	noManageApp   bool                        // the signed-in user lacks access.manage.application
 	noCreateApp   bool                        // the signed-in user lacks client.applications.create
 	roles         []map[string]any            // the application's roles; appTenant is nil for an application role
@@ -1206,6 +1207,10 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 		f.environments[app][i].protected, _ = input["protected"].(bool)
 		writeData(w, map[string]any{"setEnvironmentDeletionProtection": shown(f.environments[app][i])})
 	case "RemoveEnvironment":
+		if f.removeNoData {
+			writeData(w, nil)
+			return
+		}
 		i := slices.IndexFunc(f.environments[app], func(e fakeEnv) bool { return e.id == input["id"] })
 		if i < 0 {
 			graphQLRefusal(w, "NOT_FOUND", "environment not found")
@@ -1218,8 +1223,9 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 			})
 			return
 		}
+		removed := f.environments[app][i]
 		f.environments[app] = slices.Delete(f.environments[app], i, i+1)
-		writeData(w, map[string]any{"removeEnvironment": true})
+		writeData(w, map[string]any{"removeEnvironment": shown(removed)})
 	default:
 		listed := []map[string]any{}
 		for _, e := range f.environments[app] {

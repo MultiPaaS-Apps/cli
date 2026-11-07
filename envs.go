@@ -115,10 +115,14 @@ func envsRemove(command commandFunc) *cobra.Command {
 		var removed removal
 		err := s.inApp(ctx, appID, func(client graphql.Client) error {
 			response, err := RemoveEnvironment(ctx, client, RemoveEnvironmentInput{Id: envID})
-			if err == nil {
-				removed = removal{Removed: response.RemoveEnvironment, ID: envID}
+			if err != nil {
+				return err
 			}
-			return err
+			if response.RemoveEnvironment.Id == "" {
+				return &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "the server's answer did not say which environment was removed; run envs list to see whether it still exists"}
+			}
+			removed = removal{Removed: true, ID: response.RemoveEnvironment.Id}
+			return nil
 		})
 		return removed, func(out io.Writer) {
 			fmt.Fprintf(out, "environment %s is being removed; its data will be erased\n", removed.ID)

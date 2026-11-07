@@ -4245,13 +4245,23 @@ type RemoveEnvironmentInput struct {
 // GetId returns RemoveEnvironmentInput.Id, and is useful for accessing the field via an interface.
 func (v *RemoveEnvironmentInput) GetId() string { return v.Id }
 
+// RemoveEnvironmentRemoveEnvironment includes the requested fields of the GraphQL type Environment.
+type RemoveEnvironmentRemoveEnvironment struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RemoveEnvironmentRemoveEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *RemoveEnvironmentRemoveEnvironment) GetId() string { return v.Id }
+
 // RemoveEnvironmentResponse is returned by RemoveEnvironment on success.
 type RemoveEnvironmentResponse struct {
-	RemoveEnvironment bool `json:"removeEnvironment"`
+	RemoveEnvironment RemoveEnvironmentRemoveEnvironment `json:"removeEnvironment"`
 }
 
 // GetRemoveEnvironment returns RemoveEnvironmentResponse.RemoveEnvironment, and is useful for accessing the field via an interface.
-func (v *RemoveEnvironmentResponse) GetRemoveEnvironment() bool { return v.RemoveEnvironment }
+func (v *RemoveEnvironmentResponse) GetRemoveEnvironment() RemoveEnvironmentRemoveEnvironment {
+	return v.RemoveEnvironment
+}
 
 type RenameEnvironmentInput struct {
 	Id   string `json:"id"`
@@ -9123,7 +9133,9 @@ func RemoveDataImportFile(
 // The mutation executed by RemoveEnvironment.
 const RemoveEnvironment_Operation = `
 mutation RemoveEnvironment ($input: RemoveEnvironmentInput!) {
-	removeEnvironment(input: $input)
+	removeEnvironment(input: $input) {
+		id
+	}
 }
 `
 

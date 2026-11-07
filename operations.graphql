@@ -748,5 +748,7 @@ mutation SetEnvironmentDeletionProtection($input: SetEnvironmentDeletionProtecti
 }
 
 mutation RemoveEnvironment($input: RemoveEnvironmentInput!) {
-  removeEnvironment(input: $input)
+  removeEnvironment(input: $input) {
+    id
+  }
 }

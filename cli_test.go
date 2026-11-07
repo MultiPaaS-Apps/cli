@@ -279,6 +279,23 @@ func TestEnvsRemoveSaysTheDataWillBeErased(t *testing.T) {
 	}
 }
 
+func TestEnvsRemoveFailsWhenTheAnswerNamesNoEnvironment(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	fake.removeNoData = true
+	for _, args := range [][]string{{"--json"}, {}} {
+		got := fake.run(t, append([]string{"envs", "remove", "--app", "app-a-000", "--env", "env-new-2"}, args...)...)
+		if got.exit != exitRefused || strings.Contains(got.stdout, `"removed":true`) || strings.Contains(got.stdout, "is being removed") {
+			t.Fatalf("%v: exit %d, want %d with no success output: %q", args, got.exit, exitRefused, got.stdout)
+		}
+	}
+	var failure struct{ Error struct{ Code string } }
+	decode(t, fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-new-2", "--json").stdout, &failure)
+	if failure.Error.Code != "CLI_ERROR" {
+		t.Fatalf("code %q, want CLI_ERROR", failure.Error.Code)
+	}
+}
+
 func assertReason(t *testing.T, got result, reason string) {
 	t.Helper()
 	var failure struct{ Error struct{ Reason string } }

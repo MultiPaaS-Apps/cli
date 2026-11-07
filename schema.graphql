@@ -429,6 +429,7 @@ type DataImportFile {
 }
 
 enum DataImportFileKind {
+	files
 	memberships
 	records
 	tenants

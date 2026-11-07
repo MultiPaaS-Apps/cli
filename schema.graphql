@@ -1332,6 +1332,10 @@ Whether the record belongs to the application rather than to one app-tenant.
 	files: [RecordFile!]!
 	id: ID!
 	updatedAt: DateTime!
+"""
+The id of this version of the record. Every update changes it. Pass it as expectedVersion to update only if the record hasn't changed since.
+"""
+	version: ID!
 }
 
 type RecordAccess {
@@ -1677,6 +1681,10 @@ input UpdateRecordInput {
 	clearFieldIds: [ID!]
 	data: JSON!
 	entityId: ID!
+"""
+Write only if the record is still at this version. Otherwise nothing is written and the update fails with CONFLICT.
+"""
+	expectedVersion: ID
 	recordId: ID!
 }
 

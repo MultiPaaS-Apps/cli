@@ -87,7 +87,9 @@ func recordsList(command commandFunc) *cobra.Command {
 			return found, listed.Records.PageInfo.HasMore, nil
 		})
 		return list, func(out io.Writer) {
-			table(out, "ID\tUPDATED\tDATA", list, func(r RecordParts) string { return r.Id + "\t" + r.UpdatedAt + "\t" + string(r.Data) })
+			table(out, "ID\tVERSION\tUPDATED\tDATA", list, func(r RecordParts) string {
+				return r.Id + "\t" + r.Version + "\t" + r.UpdatedAt + "\t" + string(r.Data)
+			})
 			printRecordFiles(out, list)
 		}, err
 	})
@@ -193,11 +195,11 @@ func recordCreate(command commandFunc) *cobra.Command {
 
 func recordUpdate(command commandFunc) *cobra.Command {
 	var target recordTarget
-	var id, data string
+	var id, data, expectedVersion string
 	var clear []string
-	cmd := command("update", "Change a record: the fields in --data are set, those in --clear are cleared, the rest are kept", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	cmd := command("update", "Change a record: the fields in --data are set, those in --clear are cleared, the rest are kept; with --expected-version only if no one changed it since", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		return s.writeRecord(ctx, target, data, func(client graphql.Client, raw json.RawMessage) (RecordParts, error) {
-			updated, err := UpdateRecord(ctx, client, UpdateRecordInput{EntityId: target.entityID, RecordId: id, Data: raw, ClearFieldIds: clear})
+			updated, err := UpdateRecord(ctx, client, UpdateRecordInput{EntityId: target.entityID, RecordId: id, Data: raw, ClearFieldIds: clear, ExpectedVersion: expectedVersion})
 			if err != nil {
 				return RecordParts{}, err
 			}
@@ -208,6 +210,7 @@ func recordUpdate(command commandFunc) *cobra.Command {
 	recordID(cmd, &id)
 	cmd.Flags().StringVar(&data, "data", "{}", "the fields to set, as a JSON object keyed by field id (from model show)")
 	cmd.Flags().StringSliceVar(&clear, "clear", nil, "field ids to clear, comma-separated")
+	cmd.Flags().StringVar(&expectedVersion, "expected-version", "", "update only if the record is still at this version, its version from records get or list; otherwise it is refused with CONFLICT and nothing is written")
 	return cmd
 }
 
@@ -359,7 +362,7 @@ func recordID(cmd *cobra.Command, id *string) {
 // printRecord prints a record's line, then a line per file it holds: the field, the file's name, type and size,
 // and a link that works for 15 minutes.
 func printRecord(out io.Writer, record RecordParts) {
-	fmt.Fprintf(out, "record %s %s\n", record.Id, record.Data)
+	fmt.Fprintf(out, "record %s version %s %s\n", record.Id, record.Version, record.Data)
 	for _, file := range record.Files {
 		fmt.Fprintf(out, "file %s %s (%s, %.0f bytes) %s\n", file.FieldId, file.Filename, file.ContentType, file.SizeBytes, file.Url)
 	}

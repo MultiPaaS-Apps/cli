@@ -1807,6 +1807,9 @@ func (v *CreateRecordCreateRecord) GetCreatedAt() string { return v.RecordParts.
 // GetUpdatedAt returns CreateRecordCreateRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *CreateRecordCreateRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
 
+// GetVersion returns CreateRecordCreateRecord.Version, and is useful for accessing the field via an interface.
+func (v *CreateRecordCreateRecord) GetVersion() string { return v.RecordParts.Version }
+
 // GetFiles returns CreateRecordCreateRecord.Files, and is useful for accessing the field via an interface.
 func (v *CreateRecordCreateRecord) GetFiles() []recordFile { return v.RecordParts.Files }
 
@@ -1846,6 +1849,8 @@ type __premarshalCreateRecordCreateRecord struct {
 
 	UpdatedAt string `json:"updatedAt"`
 
+	Version string `json:"version"`
+
 	Files []recordFile `json:"files"`
 }
 
@@ -1865,6 +1870,7 @@ func (v *CreateRecordCreateRecord) __premarshalJSON() (*__premarshalCreateRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Version = v.RecordParts.Version
 	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
@@ -3956,7 +3962,9 @@ type RecordParts struct {
 	Data      json.RawMessage `json:"data"`
 	CreatedAt string          `json:"createdAt"`
 	UpdatedAt string          `json:"updatedAt"`
-	Files     []recordFile    `json:"files"`
+	// The id of this version of the record. Every update changes it. Pass it as expectedVersion to update only if the record hasn't changed since.
+	Version string       `json:"version"`
+	Files   []recordFile `json:"files"`
 }
 
 // GetId returns RecordParts.Id, and is useful for accessing the field via an interface.
@@ -3973,6 +3981,9 @@ func (v *RecordParts) GetCreatedAt() string { return v.CreatedAt }
 
 // GetUpdatedAt returns RecordParts.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RecordParts) GetUpdatedAt() string { return v.UpdatedAt }
+
+// GetVersion returns RecordParts.Version, and is useful for accessing the field via an interface.
+func (v *RecordParts) GetVersion() string { return v.Version }
 
 // GetFiles returns RecordParts.Files, and is useful for accessing the field via an interface.
 func (v *RecordParts) GetFiles() []recordFile { return v.Files }
@@ -3996,6 +4007,9 @@ func (v *RecordRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
 
 // GetUpdatedAt returns RecordRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RecordRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+// GetVersion returns RecordRecord.Version, and is useful for accessing the field via an interface.
+func (v *RecordRecord) GetVersion() string { return v.RecordParts.Version }
 
 // GetFiles returns RecordRecord.Files, and is useful for accessing the field via an interface.
 func (v *RecordRecord) GetFiles() []recordFile { return v.RecordParts.Files }
@@ -4036,6 +4050,8 @@ type __premarshalRecordRecord struct {
 
 	UpdatedAt string `json:"updatedAt"`
 
+	Version string `json:"version"`
+
 	Files []recordFile `json:"files"`
 }
 
@@ -4055,6 +4071,7 @@ func (v *RecordRecord) __premarshalJSON() (*__premarshalRecordRecord, error) {
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Version = v.RecordParts.Version
 	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
@@ -4142,6 +4159,9 @@ func (v *RecordsRecordsRecordPageItemsRecord) GetCreatedAt() string { return v.R
 // GetUpdatedAt returns RecordsRecordsRecordPageItemsRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RecordsRecordsRecordPageItemsRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
 
+// GetVersion returns RecordsRecordsRecordPageItemsRecord.Version, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPageItemsRecord) GetVersion() string { return v.RecordParts.Version }
+
 // GetFiles returns RecordsRecordsRecordPageItemsRecord.Files, and is useful for accessing the field via an interface.
 func (v *RecordsRecordsRecordPageItemsRecord) GetFiles() []recordFile { return v.RecordParts.Files }
 
@@ -4181,6 +4201,8 @@ type __premarshalRecordsRecordsRecordPageItemsRecord struct {
 
 	UpdatedAt string `json:"updatedAt"`
 
+	Version string `json:"version"`
+
 	Files []recordFile `json:"files"`
 }
 
@@ -4200,6 +4222,7 @@ func (v *RecordsRecordsRecordPageItemsRecord) __premarshalJSON() (*__premarshalR
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Version = v.RecordParts.Version
 	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
@@ -4923,6 +4946,9 @@ func (v *RetireRecordRetireRecord) GetCreatedAt() string { return v.RecordParts.
 // GetUpdatedAt returns RetireRecordRetireRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *RetireRecordRetireRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
 
+// GetVersion returns RetireRecordRetireRecord.Version, and is useful for accessing the field via an interface.
+func (v *RetireRecordRetireRecord) GetVersion() string { return v.RecordParts.Version }
+
 // GetFiles returns RetireRecordRetireRecord.Files, and is useful for accessing the field via an interface.
 func (v *RetireRecordRetireRecord) GetFiles() []recordFile { return v.RecordParts.Files }
 
@@ -4962,6 +4988,8 @@ type __premarshalRetireRecordRetireRecord struct {
 
 	UpdatedAt string `json:"updatedAt"`
 
+	Version string `json:"version"`
+
 	Files []recordFile `json:"files"`
 }
 
@@ -4981,6 +5009,7 @@ func (v *RetireRecordRetireRecord) __premarshalJSON() (*__premarshalRetireRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Version = v.RecordParts.Version
 	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
@@ -6263,7 +6292,9 @@ type UpdateRecordInput struct {
 	ClearFieldIds []string        `json:"clearFieldIds"`
 	Data          json.RawMessage `json:"data"`
 	EntityId      string          `json:"entityId"`
-	RecordId      string          `json:"recordId"`
+	// Write only if the record is still at this version. Otherwise nothing is written and the update fails with CONFLICT.
+	ExpectedVersion string `json:"expectedVersion,omitempty"`
+	RecordId        string `json:"recordId"`
 }
 
 // GetClearFieldIds returns UpdateRecordInput.ClearFieldIds, and is useful for accessing the field via an interface.
@@ -6274,6 +6305,9 @@ func (v *UpdateRecordInput) GetData() json.RawMessage { return v.Data }
 
 // GetEntityId returns UpdateRecordInput.EntityId, and is useful for accessing the field via an interface.
 func (v *UpdateRecordInput) GetEntityId() string { return v.EntityId }
+
+// GetExpectedVersion returns UpdateRecordInput.ExpectedVersion, and is useful for accessing the field via an interface.
+func (v *UpdateRecordInput) GetExpectedVersion() string { return v.ExpectedVersion }
 
 // GetRecordId returns UpdateRecordInput.RecordId, and is useful for accessing the field via an interface.
 func (v *UpdateRecordInput) GetRecordId() string { return v.RecordId }
@@ -6305,6 +6339,9 @@ func (v *UpdateRecordUpdateRecord) GetCreatedAt() string { return v.RecordParts.
 
 // GetUpdatedAt returns UpdateRecordUpdateRecord.UpdatedAt, and is useful for accessing the field via an interface.
 func (v *UpdateRecordUpdateRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+// GetVersion returns UpdateRecordUpdateRecord.Version, and is useful for accessing the field via an interface.
+func (v *UpdateRecordUpdateRecord) GetVersion() string { return v.RecordParts.Version }
 
 // GetFiles returns UpdateRecordUpdateRecord.Files, and is useful for accessing the field via an interface.
 func (v *UpdateRecordUpdateRecord) GetFiles() []recordFile { return v.RecordParts.Files }
@@ -6345,6 +6382,8 @@ type __premarshalUpdateRecordUpdateRecord struct {
 
 	UpdatedAt string `json:"updatedAt"`
 
+	Version string `json:"version"`
+
 	Files []recordFile `json:"files"`
 }
 
@@ -6364,6 +6403,7 @@ func (v *UpdateRecordUpdateRecord) __premarshalJSON() (*__premarshalUpdateRecord
 	retval.Data = v.RecordParts.Data
 	retval.CreatedAt = v.RecordParts.CreatedAt
 	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Version = v.RecordParts.Version
 	retval.Files = v.RecordParts.Files
 	return &retval, nil
 }
@@ -8006,6 +8046,7 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	version
 	files {
 		fieldId
 		fileId
@@ -8806,6 +8847,7 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	version
 	files {
 		fieldId
 		fileId
@@ -8863,6 +8905,7 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	version
 	files {
 		fieldId
 		fileId
@@ -9320,6 +9363,7 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	version
 	files {
 		fieldId
 		fileId
@@ -9957,6 +10001,7 @@ fragment RecordParts on Record {
 	data
 	createdAt
 	updatedAt
+	version
 	files {
 		fieldId
 		fileId

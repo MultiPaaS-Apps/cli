@@ -299,6 +299,7 @@ fragment RecordParts on Record {
   data
   createdAt
   updatedAt
+  version
   # @genqlient(typename: "recordFile")
   files {
     fieldId
@@ -357,7 +358,10 @@ mutation CreateRecord($input: CreateRecordInput!) {
   }
 }
 
-mutation UpdateRecord($input: UpdateRecordInput!) {
+# @genqlient(for: "UpdateRecordInput.expectedVersion", omitempty: true)
+mutation UpdateRecord(
+  $input: UpdateRecordInput!
+) {
   updateRecord(input: $input) {
     ...RecordParts
   }

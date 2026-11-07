@@ -28,6 +28,8 @@ type fakeMultiPaaS struct {
 	mu           sync.Mutex
 	deny         bool                   // authorize redirects with error=access_denied
 	accessTTL    int                    // expires_in for every minted pair
+	nextVersion  int                    // last version minted for a created record
+	nextRecordID int                    // last id minted for a created record
 	codes        map[string]pendingCode // code -> what it was issued for
 	chains       map[string]*chain      // any token ever minted -> its chain
 	refreshes    int                    // refresh grants answered
@@ -685,7 +687,8 @@ func (f *fakeMultiPaaS) revisionRows(app string) []map[string]any {
 
 // writeRecord shares these steps with the server: the write lands in the app-tenant in scope, or is app-wide when none is. An
 // update merges data into the record after dropping clearFieldIds, as the server's does; it does not
-// check the data against the entity's fields.
+// check the data against the entity's fields. An update with expectedVersion is refused with CONFLICT unless it matches the
+// record's version, and every update changes the version.
 func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
 	f.mutations = append(f.mutations, variables)
 	input := variables["input"].(map[string]any)
@@ -693,7 +696,9 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 	field := strings.ToLower(operation[:1]) + operation[1:]
 	if operation == "CreateRecord" {
 		stamp := "2026-10-11T00:00:00.000Z"
-		created := map[string]any{"id": fmt.Sprintf("record-%d", len(f.records[entity])+1), "appWide": len(parts) < 3, "data": input["data"], "createdAt": stamp, "updatedAt": stamp}
+		f.nextVersion++
+		f.nextRecordID++
+		created := map[string]any{"id": fmt.Sprintf("record-%d", f.nextRecordID), "appWide": len(parts) < 3, "data": input["data"], "createdAt": stamp, "updatedAt": stamp, "version": fmt.Sprintf("version-%d", f.nextVersion)}
 		f.records[entity] = append([]map[string]any{created}, f.records[entity]...)
 		writeData(w, map[string]any{field: withFiles(created)})
 		return
@@ -711,6 +716,11 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 		writeData(w, map[string]any{field: withFiles(record)})
 		return
 	}
+	if expected, ok := input["expectedVersion"].(string); ok && expected != record["version"] {
+		graphQLRefusal(w, "CONFLICT", "record has changed since that version")
+		return
+	}
+	record["version"] = fmt.Sprintf("%v+", record["version"])
 	data := maps.Clone(record["data"].(map[string]any))
 	cleared, _ := input["clearFieldIds"].([]any)
 	for _, id := range cleared {

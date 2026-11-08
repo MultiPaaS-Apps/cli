@@ -6415,12 +6415,11 @@ func (v *UpdateOAuthClientUpdateOAuthClient) __premarshalJSON() (*__premarshalUp
 }
 
 type UpdateRecordInput struct {
-	ClearFieldIds []string        `json:"clearFieldIds"`
-	Data          json.RawMessage `json:"data"`
-	EntityId      string          `json:"entityId"`
-	// Write only if the record is still at this version. Otherwise nothing is written and the update fails with CONFLICT.
-	ExpectedVersion string `json:"expectedVersion,omitempty"`
-	RecordId        string `json:"recordId"`
+	ClearFieldIds   []string        `json:"clearFieldIds"`
+	Data            json.RawMessage `json:"data"`
+	EntityId        string          `json:"entityId"`
+	ExpectedVersion string          `json:"expectedVersion,omitempty"`
+	RecordId        string          `json:"recordId"`
 }
 
 // GetClearFieldIds returns UpdateRecordInput.ClearFieldIds, and is useful for accessing the field via an interface.

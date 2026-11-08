@@ -1,7 +1,8 @@
 package main
 
 // The import commands load an application's data from export files: create an import, add one
-// JSON-lines file per kind (and per entity for records), check it, then run it.
+// JSON-lines file per kind (and per entity for records) and the record files they name, check it,
+// then run it.
 
 import (
 	"bufio"
@@ -11,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,6 +33,8 @@ var (
 const (
 	importContentType  = "application/x-ndjson"
 	maxImportFileBytes = 512 << 20
+	maxImportNameBytes = 255
+	filesFolder        = "files"
 )
 
 var reservedKinds = map[string]DataImportFileKind{
@@ -39,11 +43,13 @@ var reservedKinds = map[string]DataImportFileKind{
 	"memberships": DataImportFileKindMemberships,
 }
 
-// plannedFile is one file to add to an import: records files name their entity.
+// plannedFile is one file to add to an import: records files name their entity, and a files part
+// carries the name a row's file field uses to refer to it.
 type plannedFile struct {
 	path     string
 	kind     DataImportFileKind
 	entityID string
+	name     string
 }
 
 func importCommands(command commandFunc) *cobra.Command {
@@ -53,7 +59,7 @@ func importCommands(command commandFunc) *cobra.Command {
 
 func importCreate(command commandFunc) *cobra.Command {
 	var appID, envID, dir string
-	cmd := command("create", "Create an import, adding every .jsonl file in --dir", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	cmd := command("create", "Create an import, adding every .jsonl file in --dir and every regular file under --dir/files (symlinks are skipped)", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
@@ -92,21 +98,35 @@ func importCreate(command commandFunc) *cobra.Command {
 	})
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
-	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it")
+	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it; every regular file under its files/ folder (symlinks are skipped) is added too, named by its path under files/, for a row's file field to name")
 	return cmd
 }
 
 func importAdd(command commandFunc) *cobra.Command {
-	var appID, envID, importID, kind, entityID, path string
-	cmd := command("add", "Add one export file to an import", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		if !slices.Contains([]string{"tenants", "users", "memberships", "records"}, kind) {
-			return nil, nil, fmt.Errorf("--kind must be one of tenants, users, memberships, records")
+	var appID, envID, importID, kind, entityID, path, name string
+	cmd := command("add", "Add one export file, or one record file, to an import", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		if !slices.Contains([]string{"tenants", "users", "memberships", "records", "files"}, kind) {
+			return nil, nil, fmt.Errorf("--kind must be one of tenants, users, memberships, records, files")
+		}
+		if kind == "files" && entityID != "" {
+			return nil, nil, fmt.Errorf("--entity is for --kind records; a files part is named, not tied to an entity")
+		}
+		if kind != "files" && name != "" {
+			return nil, nil, fmt.Errorf("--name is for --kind files")
+		}
+		if kind == "files" {
+			if name == "" {
+				name = filepath.Base(path)
+			}
+			if len(name) > maxImportNameBytes {
+				return nil, nil, &cliError{exit: exitRefused, Code: "IMPORT_FILE_INVALID", Message: name + " is a name over 255 bytes."}
+			}
 		}
 		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
 		}
-		added, err := upload(ctx, s, scope, importID, plannedFile{path: path, kind: DataImportFileKind(kind), entityID: entityID})
+		added, err := upload(ctx, s, scope, importID, plannedFile{path: path, kind: DataImportFileKind(kind), entityID: entityID, name: name})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -117,9 +137,10 @@ func importAdd(command commandFunc) *cobra.Command {
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
 	cmd.Flags().StringVar(&importID, "import", "", "the import's id")
-	cmd.Flags().StringVar(&kind, "kind", "", "what the file holds: tenants, users, memberships or records")
+	cmd.Flags().StringVar(&kind, "kind", "", "what the file holds: tenants, users, memberships, records, or files (a record file a row's file field names)")
 	cmd.Flags().StringVar(&entityID, "entity", "", "the entity's id (from model show), for --kind records")
-	cmd.Flags().StringVar(&path, "file", "", "the .jsonl file to upload")
+	cmd.Flags().StringVar(&name, "name", "", "the name a row's file field uses for the file, for --kind files; defaults to the file's base name")
+	cmd.Flags().StringVar(&path, "file", "", "the file to upload: .jsonl, or any record file for --kind files")
 	for _, name := range []string{"import", "kind", "file"} {
 		_ = cmd.MarkFlagRequired(name)
 	}
@@ -242,10 +263,13 @@ func upload(ctx context.Context, s *session, scope, importID string, file planne
 	if err != nil {
 		return DataImportFileParts{}, err
 	}
-	name := filepath.Base(file.path)
+	name, contentType := filepath.Base(file.path), importContentType
+	if file.kind == DataImportFileKindFiles {
+		name, contentType = file.name, fileContentType(file.path)
+	}
 	input := map[string]any{
 		"importId": importID, "kind": file.kind, "filename": name,
-		"contentType": importContentType, "sizeBytes": size, "sha256": digest,
+		"contentType": contentType, "sizeBytes": size, "sha256": digest,
 	}
 	if file.entityID != "" {
 		input["entityId"] = file.entityID
@@ -386,7 +410,8 @@ func fullReport(ctx context.Context, current DataImportParts) (DataImportParts, 
 	return current, nil
 }
 
-// planDir maps each .jsonl in dir to a kind, and records files to an entity, before anything is created.
+// planDir maps each .jsonl in dir to a kind, records files to an entity, and adds every regular file
+// under dir/files as a files part (symlinks are skipped), before anything is created.
 func planDir(ctx context.Context, s *session, scope, dir string) ([]plannedFile, error) {
 	listed, err := os.ReadDir(dir)
 	if err != nil {
@@ -401,7 +426,11 @@ func planDir(ctx context.Context, s *session, scope, dir string) ([]plannedFile,
 	if len(names) == 0 {
 		return nil, &cliError{exit: exitRefused, Code: "IMPORT_DIR_EMPTY", Message: "no .jsonl files in " + dir}
 	}
-	if err := refuseUnusable(dir, names); err != nil {
+	recordFiles, err := listRecordFiles(dir)
+	if err != nil {
+		return nil, err
+	}
+	if err := refuseUnusable(dir, append(slices.Clone(names), recordFiles...)); err != nil {
 		return nil, err
 	}
 	entities, err := listEntities(ctx, s, scope)
@@ -442,10 +471,38 @@ func planDir(ctx context.Context, s *session, scope, dir string) ([]plannedFile,
 		return nil, &cliError{exit: exitRefused, Code: "IMPORT_FILE_AMBIGUOUS", Message: strings.Join(ambiguous, ", ") +
 			" matches more than one entity. Rename the file, or add it with import add. Nothing was created."}
 	}
+	for _, rel := range recordFiles {
+		planned = append(planned, plannedFile{path: filepath.Join(dir, rel), kind: DataImportFileKindFiles, name: strings.TrimPrefix(rel, filesFolder+"/")})
+	}
 	return planned, refuseDuplicates(planned)
 }
 
-// refuseUnusable fails, naming every file that cannot be opened or whose size the server would refuse.
+// listRecordFiles are the regular files under dir/files, as slash-separated paths relative to dir.
+// A missing files folder holds none; directories and symlinks are skipped.
+func listRecordFiles(dir string) ([]string, error) {
+	found := []string{}
+	root := filepath.Join(dir, filesFolder)
+	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			if path == root && os.IsNotExist(err) {
+				return nil
+			}
+			return err
+		}
+		if entry.Type().IsRegular() {
+			rel, err := filepath.Rel(dir, path)
+			if err != nil {
+				return err
+			}
+			found = append(found, filepath.ToSlash(rel))
+		}
+		return nil
+	})
+	return found, err
+}
+
+// refuseUnusable fails, naming every file that cannot be opened, whose size the server would refuse,
+// or whose part name (the path under files/) is over 255 bytes.
 func refuseUnusable(dir string, names []string) error {
 	unusable := []string{}
 	for _, name := range names {
@@ -456,7 +513,7 @@ func refuseUnusable(dir string, names []string) error {
 		}
 		info, err := file.Stat()
 		_ = file.Close()
-		if err != nil || info.Size() < 1 || info.Size() > maxImportFileBytes {
+		if err != nil || info.Size() < 1 || info.Size() > maxImportFileBytes || len(strings.TrimPrefix(name, filesFolder+"/")) > maxImportNameBytes {
 			unusable = append(unusable, name)
 		}
 	}
@@ -464,13 +521,16 @@ func refuseUnusable(dir string, names []string) error {
 		return nil
 	}
 	return &cliError{exit: exitRefused, Code: "IMPORT_FILE_INVALID", Message: strings.Join(unusable, ", ") +
-		" cannot be read, is empty, or is over 512 MiB. Nothing was created."}
+		" cannot be read, is empty, is over 512 MiB, or has a name over 255 bytes. Nothing was created."}
 }
 
 // refuseDuplicates fails when two files map to the same kind, or to the same entity, as the server would on the second add.
 func refuseDuplicates(planned []plannedFile) error {
 	first := map[string]string{}
 	for _, file := range planned {
+		if file.kind == DataImportFileKindFiles {
+			continue
+		}
 		target := string(file.kind) + " " + file.entityID
 		name := filepath.Base(file.path)
 		if other, seen := first[target]; seen {

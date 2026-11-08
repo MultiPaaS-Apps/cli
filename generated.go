@@ -2106,6 +2106,7 @@ func (v *DataImportDataImport) __premarshalJSON() (*__premarshalDataImportDataIm
 type DataImportFileKind string
 
 const (
+	DataImportFileKindFiles       DataImportFileKind = "files"
 	DataImportFileKindMemberships DataImportFileKind = "memberships"
 	DataImportFileKindRecords     DataImportFileKind = "records"
 	DataImportFileKindTenants     DataImportFileKind = "tenants"
@@ -2113,6 +2114,7 @@ const (
 )
 
 var AllDataImportFileKind = []DataImportFileKind{
+	DataImportFileKindFiles,
 	DataImportFileKindMemberships,
 	DataImportFileKindRecords,
 	DataImportFileKindTenants,

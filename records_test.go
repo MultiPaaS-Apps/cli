@@ -425,3 +425,17 @@ func TestRecordsUpdateWithAStaleExpectedVersionIsRefusedWithConflictAndWritesNot
 		t.Fatalf("record is now %v", data)
 	}
 }
+
+func TestRecordsUpdateRefusesAnEmptyExpectedVersionAndWritesNothing(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "version": "v1", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "x"}}
+	got := fake.run(t, "records", "update", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-1",
+		"--data", `{"field-1":"b"}`, "--expected-version", "", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "--expected-version is empty") {
+		t.Fatalf("printed %s", got.stdout)
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}

@@ -208,6 +208,18 @@ func recordUpdate(command commandFunc) *cobra.Command {
 	})
 	recordFlags(cmd, &target)
 	recordID(cmd, &id)
+	previous := cmd.PreRunE
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if previous != nil {
+			if err := previous(cmd, args); err != nil {
+				return err
+			}
+		}
+		if cmd.Flags().Changed("expected-version") && expectedVersion == "" {
+			return fmt.Errorf("--expected-version is empty: give the record's version from records get or list, or leave --expected-version off to update without a version check")
+		}
+		return nil
+	}
 	cmd.Flags().StringVar(&data, "data", "{}", "the fields to set, as a JSON object keyed by field id (from model show)")
 	cmd.Flags().StringSliceVar(&clear, "clear", nil, "field ids to clear, comma-separated")
 	cmd.Flags().StringVar(&expectedVersion, "expected-version", "", "update only if the record is still at this version, its version from records get or list; otherwise it is refused with CONFLICT and nothing is written")

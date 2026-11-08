@@ -1697,9 +1697,6 @@ input UpdateRecordInput {
 	clearFieldIds: [ID!]
 	data: JSON!
 	entityId: ID!
-"""
-Write only if the record is still at this version. Otherwise nothing is written and the update fails with CONFLICT.
-"""
 	expectedVersion: ID
 	recordId: ID!
 }

@@ -59,7 +59,7 @@ func importCommands(command commandFunc) *cobra.Command {
 
 func importCreate(command commandFunc) *cobra.Command {
 	var appID, envID, dir string
-	cmd := command("create", "Create an import, adding every .jsonl file in --dir and every file under --dir/files", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	cmd := command("create", "Create an import, adding every .jsonl file in --dir and every regular file under --dir/files (symlinks are skipped)", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
@@ -98,7 +98,7 @@ func importCreate(command commandFunc) *cobra.Command {
 	})
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
-	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it; every file under its files/ folder is added too, named by its path under files/, for a row's file field to name")
+	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it; every regular file under its files/ folder (symlinks are skipped) is added too, named by its path under files/, for a row's file field to name")
 	return cmd
 }
 
@@ -410,8 +410,8 @@ func fullReport(ctx context.Context, current DataImportParts) (DataImportParts, 
 	return current, nil
 }
 
-// planDir maps each .jsonl in dir to a kind, records files to an entity, and adds every file under
-// dir/files as a files part, before anything is created.
+// planDir maps each .jsonl in dir to a kind, records files to an entity, and adds every regular file
+// under dir/files as a files part (symlinks are skipped), before anything is created.
 func planDir(ctx context.Context, s *session, scope, dir string) ([]plannedFile, error) {
 	listed, err := os.ReadDir(dir)
 	if err != nil {

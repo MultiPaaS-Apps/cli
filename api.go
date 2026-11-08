@@ -288,6 +288,7 @@ func fromGraphQL(err error) error {
 	}
 	failure := &cliError{exit: exit, Code: code, Message: refusals[0].Message}
 	failure.FieldErrors = fieldErrorsOf(refusals[0].Extensions["fieldErrors"])
+	failure.Reason, _ = refusals[0].Extensions["reason"].(string)
 	return failure
 }
 

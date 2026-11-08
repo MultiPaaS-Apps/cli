@@ -22,7 +22,7 @@ func TestRecordsCreateWritesInTheProjectsTestAppTenant(t *testing.T) {
 	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
 		t.Fatalf("scope %q", last)
 	}
-	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"Ship it"},"createdAt":"2026-10-11T00:00:00.000Z","updatedAt":"2026-10-11T00:00:00.000Z","files":[]}}` {
+	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"Ship it"},"createdAt":"2026-10-11T00:00:00.000Z","updatedAt":"2026-10-11T00:00:00.000Z","version":"version-1","files":[]}}` {
 		t.Fatalf("printed %s", got.stdout)
 	}
 }
@@ -182,13 +182,22 @@ func TestARecordCommandInAnAppTenantEntitlementReachesOnlyItsOwnAppTenant(t *tes
 
 func TestRecordsGetPrintsTheRecord(t *testing.T) {
 	fake := projectFake(t)
-	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "y"}}
+	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "version": "v1", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "y"}}
 	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-1", "--json")
 	if got.exit != exitOK {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
-	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"a"},"createdAt":"x","updatedAt":"y","files":[]}}` {
+	if compact(got.stdout) != `{"record":{"id":"record-1","appWide":false,"data":{"field-1":"a"},"createdAt":"x","updatedAt":"y","version":"v1","files":[]}}` {
 		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsGetPrintsTheVersionWithoutJSON(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "version": "v7", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "y"}}
+	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-1")
+	if got.exit != exitOK || !strings.HasPrefix(got.stdout, "record record-1 version v7 ") {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
 }
 
@@ -243,9 +252,9 @@ func TestRecordsScopeRefusesWhatTheServerRefuses(t *testing.T) {
 
 func TestRecordsScopeLetsATenantReadAnAppWideRecord(t *testing.T) {
 	fake := projectFake(t)
-	fake.records["entity-1"] = []map[string]any{{"id": "shared", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}}
+	fake.records["entity-1"] = []map[string]any{{"id": "shared", "version": "v1", "appWide": true, "data": map[string]any{"field-1": "b"}, "createdAt": "x", "updatedAt": "x"}}
 	got := fake.run(t, "records", "get", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "shared", "--json")
-	if got.exit != exitOK || compact(got.stdout) != `{"record":{"id":"shared","appWide":true,"data":{"field-1":"b"},"createdAt":"x","updatedAt":"x","files":[]}}` {
+	if got.exit != exitOK || compact(got.stdout) != `{"record":{"id":"shared","appWide":true,"data":{"field-1":"b"},"createdAt":"x","updatedAt":"x","version":"v1","files":[]}}` {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
 	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
@@ -385,5 +394,48 @@ func TestRecordsListByParentNeedsBothFlags(t *testing.T) {
 		if !strings.Contains(alone.stdout, "--parent-field and --parent-record go together") || len(fake.scopes) != seen {
 			t.Fatalf("printed %s after %d calls", alone.stdout, len(fake.scopes)-seen)
 		}
+	}
+}
+
+func TestRecordsUpdateWithTheCurrentExpectedVersionWritesAndPrintsTheNewVersion(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "version": "v1", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "x"}}
+	got := fake.run(t, "records", "update", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-1",
+		"--data", `{"field-1":"b"}`, "--expected-version", "v1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if sent := fake.mutations[0]["input"].(map[string]any)["expectedVersion"]; sent != "v1" {
+		t.Fatalf("sent expectedVersion %v", sent)
+	}
+	var printed struct{ Record struct{ Version string } }
+	decode(t, got.stdout, &printed)
+	if printed.Record.Version == "" || printed.Record.Version == "v1" {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsUpdateWithAStaleExpectedVersionIsRefusedWithConflictAndWritesNothing(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "version": "v2", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "x"}}
+	got := fake.run(t, "records", "update", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-1",
+		"--data", `{"field-1":"b"}`, "--expected-version", "v1", "--json")
+	assertFailure(t, got, exitRefused, "CONFLICT")
+	if data := fake.records["entity-1"][0]["data"]; !reflect.DeepEqual(data, map[string]any{"field-1": "a"}) {
+		t.Fatalf("record is now %v", data)
+	}
+}
+
+func TestRecordsUpdateRefusesAnEmptyExpectedVersionAndWritesNothing(t *testing.T) {
+	fake := projectFake(t)
+	fake.records["entity-1"] = []map[string]any{{"id": "record-1", "version": "v1", "data": map[string]any{"field-1": "a"}, "createdAt": "x", "updatedAt": "x"}}
+	got := fake.run(t, "records", "update", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--id", "record-1",
+		"--data", `{"field-1":"b"}`, "--expected-version", "", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "--expected-version is empty") {
+		t.Fatalf("printed %s", got.stdout)
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
 	}
 }

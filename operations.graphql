@@ -97,6 +97,9 @@ fragment FieldParts on Field {
   # @genqlient(pointer: true)
   maxFileBytes
   required
+  notNull
+  # @genqlient(pointer: true)
+  defaultValue
   enumValues
   # @genqlient(pointer: true)
   enumType {
@@ -168,6 +171,13 @@ query Fields($entityId: ID!, $page: PageInput!) {
     pageInfo {
       hasMore
     }
+  }
+}
+
+query Field($id: ID!) {
+  # @genqlient(pointer: true)
+  field(id: $id) {
+    ...FieldParts
   }
 }
 

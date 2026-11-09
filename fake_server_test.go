@@ -373,6 +373,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		writeData(w, map[string]any{"entities": pageOf(f.entities[appOf(parts)], variables)})
 	case "EnumTypes":
 		writeData(w, map[string]any{"enumTypes": pageOf(f.enumTypes[appOf(parts)], variables)})
+	case "Field":
+		writeData(w, map[string]any{"field": f.fieldByID(variables["id"].(string))})
 	case "Fields":
 		writeData(w, map[string]any{"fields": pageOf(f.fields[variables["entityId"].(string)], variables)})
 	case "Constraints":
@@ -670,6 +672,18 @@ func appOf(parts []string) string {
 		return ""
 	}
 	return parts[1]
+}
+
+// fieldByID is the field with id on any entity, or nil.
+func (f *fakeMultiPaaS) fieldByID(id string) map[string]any {
+	for _, fields := range f.fields {
+		for _, field := range fields {
+			if field["id"] == id {
+				return field
+			}
+		}
+	}
+	return nil
 }
 
 func pageOf(rows []map[string]any, variables map[string]any) map[string]any {

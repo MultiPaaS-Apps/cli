@@ -27,8 +27,15 @@ const refreshMargin = time.Minute
 // token returns the access token, refreshing first when it is near expiry or is the one the
 // server just rejected. A refresh the server refuses means the chain is dead: the entry is removed.
 func (s *session) token(ctx context.Context, rejected string) (string, error) {
+	deployer, err := s.deployer()
+	if err != nil {
+		return "", err
+	}
+	if deployer {
+		return s.deployerAccessToken(ctx, rejected)
+	}
 	token := ""
-	err := updateCredentials(func(creds credentialFile) error {
+	err = updateCredentials(func(creds credentialFile) error {
 		current, ok := creds[s.credentialKey()]
 		if !ok {
 			return nil

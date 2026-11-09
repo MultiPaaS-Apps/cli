@@ -52,33 +52,40 @@ type fakeMultiPaaS struct {
 	release      chan struct{}          // closed at cleanup, to free handlers that never answer
 	accessTokens map[string]bool        // every access token minted, so a refresh grant can refuse one
 
-	entities      map[string][]map[string]any // app id -> its entities, as model show reads them
-	fields        map[string][]map[string]any // entity id -> its fields
-	enumTypes     map[string][]map[string]any // app id -> its enum types
-	constraints   map[string][]map[string]any // entity id -> its constraints
-	revisions     map[string]int              // app id -> how many revisions its model has
-	mutations     []map[string]any            // the variables of every model mutation received
-	noModelEdit   bool                        // the signed-in user lacks model.edit
-	refuseChange  [2]string                   // a model mutation is refused with this code and message
-	failVersion   bool                        // LatestModelRevision answers HTTP 500
-	records       map[string][]map[string]any // entity id -> its live records, newest first; appWide marks the application's own
-	recordScopes  []string                    // the scope variable of every Records read ("" when absent)
-	recordReads   []recordRead                // every Records and RecordsCount request received
-	refuseRecords []map[string]any            // when set, every records read is refused as VALIDATION with these fieldErrors
-	lastQuery     string                      // the query text of the GraphQL request being answered
-	oauthClients  []map[string]any            // the application's sign-in clients
-	appIdentities []map[string]any            // the application's app identities
-	identitySeq   int                         // app identities created so far; ids are never reused
-	secretSeq     int                         // app identity secrets created so far; ids are never reused
-	noManageOAuth bool                        // the signed-in user lacks application.manage_oauth
-	scopedEnvNull bool                        // an app-tenant-level read returns the app-tenant's environment as null
-	removeNoData  bool                        // removeEnvironment answers HTTP 200 with {"data":null} and no errors
-	noManageApp   bool                        // the signed-in user lacks access.manage.application
-	noCreateApp   bool                        // the signed-in user lacks client.applications.create
-	roles         []map[string]any            // the application's roles; appTenant is nil for an application role
-	assignments   []map[string]any            // role assignments: id, roleId, userId, appTenant
-	roleSeq       int                         // roles created so far; ids are never reused
-	assignmentSeq int                         // assignments created so far; ids are never reused
+	entities                     map[string][]map[string]any // app id -> its entities, as model show reads them
+	fields                       map[string][]map[string]any // entity id -> its fields
+	enumTypes                    map[string][]map[string]any // app id -> its enum types
+	constraints                  map[string][]map[string]any // entity id -> its constraints
+	revisions                    map[string]int              // app id -> how many revisions its model has
+	mutations                    []map[string]any            // the variables of every model mutation received
+	noModelEdit                  bool                        // the signed-in user lacks model.edit
+	refuseChange                 [2]string                   // a model mutation is refused with this code and message
+	failVersion                  bool                        // LatestModelRevision answers HTTP 500
+	records                      map[string][]map[string]any // entity id -> its live records, newest first; appWide marks the application's own
+	recordScopes                 []string                    // the scope variable of every Records read ("" when absent)
+	recordReads                  []recordRead                // every Records and RecordsCount request received
+	refuseRecords                []map[string]any            // when set, every records read is refused as VALIDATION with these fieldErrors
+	lastQuery                    string                      // the query text of the GraphQL request being answered
+	oauthClients                 []map[string]any            // the application's sign-in clients
+	appIdentities                []map[string]any            // the application's app identities
+	identitySeq                  int                         // app identities created so far; ids are never reused
+	deployers                    []map[string]any            // the application's deployers
+	deployerSeq                  int                         // deployers created so far; ids are never reused
+	secretSeq                    int                         // app identity secrets created so far; ids are never reused
+	noManageOAuth                bool                        // the signed-in user lacks application.manage_oauth
+	scopedEnvNull                bool                        // an app-tenant-level read returns the app-tenant's environment as null
+	removeNoData                 bool                        // removeEnvironment answers HTTP 200 with {"data":null} and no errors
+	deployerID, deployerSecret   string                      // the deployer the fake knows; empty for none
+	envClientID, envClientSecret string                      // MULTIPAAS_CLIENT_ID and _SECRET the CLI runs with
+	deployerTokens               map[string]bool             // access tokens minted by the client-credentials grant
+	deployerMints                int                         // client-credentials grants answered
+	refuseFirstDeployerToken     bool                        // the first deployer token is refused, as an expired one is
+	noManageApp                  bool                        // the signed-in user lacks access.manage.application
+	noCreateApp                  bool                        // the signed-in user lacks client.applications.create
+	roles                        []map[string]any            // the application's roles; appTenant is nil for an application role
+	assignments                  []map[string]any            // role assignments: id, roleId, userId, appTenant
+	roleSeq                      int                         // roles created so far; ids are never reused
+	assignmentSeq                int                         // assignments created so far; ids are never reused
 
 	imports          map[string]*fakeImport // import id -> its state
 	uploads          map[string]fakeUpload  // File id -> what its PUT received
@@ -135,7 +142,7 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 		t: t, accessTTL: 3600,
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
 		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envsMinted: map[string]int{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
-		release: make(chan struct{}), accessTokens: map[string]bool{},
+		release: make(chan struct{}), accessTokens: map[string]bool{}, deployerTokens: map[string]bool{},
 		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
 		records: map[string][]map[string]any{},
 		imports: map[string]*fakeImport{}, uploads: map[string]fakeUpload{}, statusQueue: map[string][]string{},
@@ -233,6 +240,16 @@ func (f *fakeMultiPaaS) token(w http.ResponseWriter, r *http.Request) {
 		current.used[presented] = true
 		current.deadAccess = false
 		f.mint(w, current)
+	case "client_credentials":
+		if form.Get("client_id") != f.deployerID || form.Get("client_secret") != f.deployerSecret {
+			writeJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "invalid_client", "error_description": "Unknown client, or a wrong or revoked secret."})
+			return
+		}
+		f.deployerMints++
+		current := &chain{used: map[string]bool{}, access: randomToken()}
+		current.deadAccess = f.refuseFirstDeployerToken && f.deployerMints == 1
+		f.chains[current.access], f.deployerTokens[current.access] = current, true
+		writeJSONResponse(w, http.StatusOK, map[string]any{"access_token": current.access, "token_type": "Bearer", "expires_in": f.accessTTL})
 	default:
 		oauthRefusal(w, "unsupported_grant_type", "grant_type must be authorization_code or refresh_token.")
 	}
@@ -278,6 +295,9 @@ func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 	}
 	f.cliVersion = r.Header.Get("X-MultiPaaS-Cli-Version")
 	token, _ := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if f.deployerTokens[token] {
+		scope = f.deployerSlashScope(scope)
+	}
 	current, known := f.chains[token]
 	switch {
 	case r.Header.Get("Cookie") != "":
@@ -294,6 +314,30 @@ func (f *fakeMultiPaaS) graphql(w http.ResponseWriter, r *http.Request) {
 		f.lastQuery = request.Query
 		f.answer(w, request.OperationName, scope, request.Variables)
 	}
+}
+
+// deployerSlashScope is the slash form the fake answers a deployer's app: or tenant: scope in, so the rest of the fake serves it.
+func (f *fakeMultiPaaS) deployerSlashScope(scope string) string {
+	if tenant, ok := strings.CutPrefix(scope, "tenant:"); ok {
+		for app, rows := range f.tenants {
+			if slices.ContainsFunc(rows, func(r fakeRow) bool { return r.id == tenant }) {
+				if slashed := f.deployerSlashScope("app:" + app); slashed != "app:"+app {
+					return slashed + "/" + tenant
+				}
+			}
+		}
+		return scope
+	}
+	app, ok := strings.CutPrefix(scope, "app:")
+	if !ok {
+		return scope
+	}
+	for client, apps := range f.apps {
+		if slices.ContainsFunc(apps, func(a fakeRow) bool { return a.id == app }) {
+			return client + "/" + app
+		}
+	}
+	return scope
 }
 
 // recordRead is one Records or RecordsCount request: its operation, query text and variables.
@@ -464,6 +508,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageOAuth(w, operation, parts, variables)
 	case "AppIdentities", "CreateAppIdentity", "CreateAppIdentitySecret", "RevokeAppIdentitySecret", "RetireAppIdentity":
 		f.manageAppIdentity(w, operation, parts, variables)
+	case "Deployers", "CreateDeployer", "RetireDeployer":
+		f.manageDeployers(w, operation, variables)
 	case "Roles", "PermissionCatalog", "CreateRole", "UpdateRole", "RoleAssignments", "AssignRole", "UnassignRole":
 		f.manageRoles(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
@@ -522,12 +568,17 @@ func (f *fakeMultiPaaS) mint(w http.ResponseWriter, current *chain) {
 	})
 }
 
+// knownClient is the developer client, or the deployer the fake knows.
+func (f *fakeMultiPaaS) knownClient(id string) bool {
+	return id == developerClientID || (f.deployerID != "" && id == f.deployerID)
+}
+
 func (f *fakeMultiPaaS) form(w http.ResponseWriter, r *http.Request) (url.Values, bool) {
 	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
 		oauthRefusal(w, "invalid_request", "The body must be application/x-www-form-urlencoded.")
 		return nil, false
 	}
-	if err := r.ParseForm(); err != nil || r.PostForm.Get("client_id") != developerClientID {
+	if err := r.ParseForm(); err != nil || !f.knownClient(r.PostForm.Get("client_id")) {
 		writeJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "invalid_client", "error_description": "Unknown client_id."})
 		return nil, false
 	}
@@ -586,6 +637,27 @@ func fakeEnvironment(id string) any {
 }
 
 const noEnvironment = "none"
+
+// manageDeployers answers the deployer operations; a retired deployer leaves the list.
+func (f *fakeMultiPaaS) manageDeployers(w http.ResponseWriter, operation string, variables map[string]any) {
+	switch operation {
+	case "CreateDeployer":
+		f.deployerSeq++
+		created := map[string]any{"id": fmt.Sprintf("deployer-%d", f.deployerSeq), "name": variables["input"].(map[string]any)["name"], "lastFour": "abcd", "createdAt": "2026-11-08T00:00:00Z", "lastUsedAt": nil}
+		f.deployers = append(f.deployers, created)
+		writeData(w, map[string]any{"createDeployer": map[string]any{"deployer": created, "secret": "secret-abcd"}})
+	case "RetireDeployer":
+		i := slices.IndexFunc(f.deployers, func(d map[string]any) bool { return d["id"] == variables["id"] })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "deployer not found")
+			return
+		}
+		f.deployers = slices.Delete(f.deployers, i, i+1)
+		writeData(w, map[string]any{"retireDeployer": true})
+	default:
+		writeData(w, map[string]any{"application": map[string]any{"deployers": f.deployers}})
+	}
+}
 
 func nullable(value string) any {
 	if value == "" {

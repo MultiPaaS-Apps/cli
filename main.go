@@ -8,13 +8,15 @@ var version = "dev"
 
 func main() {
 	os.Exit(run(os.Args[1:], environment{
-		stdout:      os.Stdout,
-		stderr:      os.Stderr,
-		stdin:       os.Stdin,
-		version:     version,
-		apiURL:      os.Getenv("MULTIPAAS_API_URL"),
-		profile:     os.Getenv("MULTIPAAS_PROFILE"),
-		origins:     originsFor,
-		openBrowser: openBrowser,
+		stdout:       os.Stdout,
+		stderr:       os.Stderr,
+		stdin:        os.Stdin,
+		version:      version,
+		apiURL:       os.Getenv("MULTIPAAS_API_URL"),
+		profile:      os.Getenv("MULTIPAAS_PROFILE"),
+		clientID:     os.Getenv("MULTIPAAS_CLIENT_ID"),
+		clientSecret: os.Getenv("MULTIPAAS_CLIENT_SECRET"),
+		origins:      originsFor,
+		openBrowser:  openBrowser,
 	}))
 }

@@ -735,6 +735,7 @@ func (f *fakeMultiPaaS) drive(t *testing.T, version string, open func(string) er
 	stderr := &urlWatcher{}
 	exit := run(args, environment{
 		stdout: &stdout, stderr: stderr, stdin: strings.NewReader(stdin), version: version, origins: f.origins, profile: f.profile,
+		clientID: f.envClientID, clientSecret: f.envClientSecret,
 		openBrowser: func(url string) error {
 			if err := open(url); err != nil {
 				return browse(stderr.printedURL())
@@ -792,6 +793,22 @@ const (
 // the fake, with the saved access token already past its expiry when expiredToken is set.
 func signedInFake(t *testing.T, expiredToken bool) *fakeMultiPaaS {
 	fake := signedOutFake(t)
+	seedEntitlements(fake)
+	if got := fake.run(t, "login", "--json"); got.exit != exitOK {
+		t.Fatalf("sign-in for the test failed: %d %s", got.exit, got.stdout)
+	}
+	if expiredToken {
+		saved := readCredentials(t)[fake.server.URL]
+		saved.ExpiresAt = time.Now().Add(-time.Second)
+		writeCredentialsForTest(t, fake.server.URL, saved)
+	}
+	fake.scopes, fake.refreshes = nil, 0
+	return fake
+}
+
+// seedEntitlements gives fake one client-level and one app-tenant-level entitlement and the apps, tenants and
+// environments they reach.
+func seedEntitlements(fake *fakeMultiPaaS) {
 	fake.entitlements = []entitlement{
 		{clientID: "client-a", clientName: "Acme"},
 		{clientID: "client-b", clientName: "Beta", applicationID: "app-b", appTenantID: "tenant-b"},
@@ -805,16 +822,58 @@ func signedInFake(t *testing.T, expiredToken bool) *fakeMultiPaaS {
 	fake.envTenants["env-default"] = []fakeRow{{id: "tenant-e", name: "Env tenant"}}
 	fake.tenants["app-b"] = []fakeRow{{id: "tenant-b", name: "Beta test"}}
 	fake.scopedApps["tenant-b"] = fakeRow{id: "app-b", name: "Orders"}
-	if got := fake.run(t, "login", "--json"); got.exit != exitOK {
-		t.Fatalf("sign-in for the test failed: %d %s", got.exit, got.stdout)
-	}
-	if expiredToken {
-		saved := readCredentials(t)[fake.server.URL]
-		saved.ExpiresAt = time.Now().Add(-time.Second)
-		writeCredentialsForTest(t, fake.server.URL, saved)
-	}
-	fake.scopes, fake.refreshes = nil, 0
+}
+
+// deployerFake is signedInFake's data with no one signed in, and a deployer the CLI runs as.
+func deployerFake(t *testing.T) *fakeMultiPaaS {
+	fake := signedOutFake(t)
+	seedEntitlements(fake)
+	fake.deployerID, fake.deployerSecret = "deployer-1", "deployer-secret"
+	fake.envClientID, fake.envClientSecret = fake.deployerID, fake.deployerSecret
 	return fake
+}
+
+func TestDeployerCreatesAnEnvironmentWithoutASavedSignIn(t *testing.T) {
+	fake := deployerFake(t)
+	got := fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "pr-7", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	if fake.scopes[len(fake.scopes)-1] != "app:app-a-000" || fake.deployerMints != 1 {
+		t.Fatalf("scopes %v, mints %d", fake.scopes, fake.deployerMints)
+	}
+	if _, err := os.Stat(credentialsPath(t)); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("credentials file: %v", err)
+	}
+}
+
+func TestDeployerMintsAgainOnceWhenItsTokenIsRefused(t *testing.T) {
+	fake := deployerFake(t)
+	fake.refuseFirstDeployerToken = true
+	if got := fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "pr-8", "--json"); got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if fake.deployerMints != 2 {
+		t.Fatalf("mints %d", fake.deployerMints)
+	}
+}
+
+func TestDeployerNeedsBothVariables(t *testing.T) {
+	fake := deployerFake(t)
+	fake.envClientSecret = ""
+	assertFailure(t, fake.run(t, "envs", "list", "--app", "app-a-000", "--json"), exitRefused, "DEPLOYER_CREDENTIALS_INCOMPLETE")
+}
+
+func TestLoginAndLogoutAreRefusedForADeployer(t *testing.T) {
+	fake := deployerFake(t)
+	assertFailure(t, fake.run(t, "login", "--json"), exitRefused, "DEPLOYER")
+	assertFailure(t, fake.run(t, "logout", "--json"), exitRefused, "DEPLOYER")
+}
+
+func TestDeployerWithAWrongSecretIsRefused(t *testing.T) {
+	fake := deployerFake(t)
+	fake.envClientSecret = "wrong"
+	assertFailure(t, fake.run(t, "envs", "list", "--app", "app-a-000", "--json"), exitRefused, "invalid_client")
 }
 
 func assertFailure(t *testing.T, got result, exit int, code string) {
@@ -862,5 +921,50 @@ func writeCredentialsForTest(t *testing.T, apiURL string, saved credential) {
 	t.Helper()
 	if err := updateCredentials(func(creds credentialFile) error { creds[apiURL] = saved; return nil }); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestDeployersCreateListThenRetire(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	created := fake.run(t, "deployers", "create", "--app", "app-a-000", "--name", "CI", "--json")
+	if compact(created.stdout) != `{"deployer":{"id":"deployer-1","name":"CI","lastFour":"abcd","createdAt":"2026-11-08T00:00:00Z","lastUsedAt":null},"secret":"secret-abcd"}` {
+		t.Fatalf("create %d %s", created.exit, created.stdout)
+	}
+	listed := fake.run(t, "deployers", "list", "--app", "app-a-000", "--json")
+	if !strings.Contains(listed.stdout, `"id": "deployer-1"`) || strings.Contains(listed.stdout, "secret-abcd") {
+		t.Fatalf("list %s", listed.stdout)
+	}
+	if got := fake.run(t, "deployers", "retire", "--app", "app-a-000", "--id", "deployer-1", "--json"); compact(got.stdout) != `{"id":"deployer-1","retired":true}` {
+		t.Fatalf("retire %d %s", got.exit, got.stdout)
+	}
+	assertFailure(t, fake.run(t, "deployers", "retire", "--app", "app-a-000", "--id", "deployer-1", "--json"), exitRefused, "NOT_FOUND")
+}
+
+func TestDeployerGivesAnAppIdentityARoleInAnAppTenantByItsNamedScope(t *testing.T) {
+	fake := projectFake(t)
+	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")
+	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--json")
+	fake.deployerID, fake.deployerSecret = "deployer-1", "deployer-secret"
+	fake.envClientID, fake.envClientSecret = fake.deployerID, fake.deployerSecret
+	fake.scopes = nil
+
+	got := fake.run(t, "app-identity", "role", "add", "app-identity-1", "--role", "sync", "--app", "app-a-000", "--tenant", "tenant-a", "--json")
+
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	if len(fake.scopes) == 0 || slices.Compact(slices.Clone(fake.scopes))[0] != "tenant:tenant-a" || len(slices.Compact(slices.Clone(fake.scopes))) != 1 {
+		t.Fatalf("scopes %v", fake.scopes)
+	}
+}
+
+func TestDeployerNotFoundCarriesNoProfileHint(t *testing.T) {
+	fake := deployerFake(t)
+
+	got := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-missing", "--profile", "work", "--json")
+
+	assertFailure(t, got, exitRefused, "NOT_FOUND")
+	if strings.Contains(got.stdout, "profile") {
+		t.Fatalf("hint on a deployer: %s", got.stdout)
 	}
 }

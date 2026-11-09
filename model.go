@@ -503,6 +503,13 @@ func (s *session) latestVersion(ctx context.Context, scope string) (string, erro
 // appScope is the scope sent for appID, or for its app-tenant tenantID when that is not "": the first
 // entitlement that reaches it. An app-tenant-level entitlement reaches only its own app-tenant.
 func (s *session) appScope(ctx context.Context, appID, tenantID string) (string, error) {
+	deployer, err := s.deployer()
+	if err != nil {
+		return "", err
+	}
+	if deployer {
+		return deployerScope(appID, tenantID), nil
+	}
 	entitlements, err := s.entitlements(ctx)
 	if err != nil {
 		return "", err

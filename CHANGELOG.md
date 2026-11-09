@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.3.0...v1.4.0) (2026-11-09)
+
+
+### Features
+
+* [MP-236] add envs protect, unprotect and remove ([#62](https://github.com/MultiPaaS-Apps/cli/issues/62)) ([b111ed8](https://github.com/MultiPaaS-Apps/cli/commit/b111ed89dace70f80f509c9100533fbdaffe9c33))
+* [MP-254] upload an import's record files from a files folder ([#63](https://github.com/MultiPaaS-Apps/cli/issues/63)) ([cca72f8](https://github.com/MultiPaaS-Apps/cli/commit/cca72f80a25f037b79159d0cd954129a8108aa76))
+* [MP-261] records show their version, and records update takes --expected-version ([#64](https://github.com/MultiPaaS-Apps/cli/issues/64)) ([ec36f61](https://github.com/MultiPaaS-Apps/cli/commit/ec36f61609273139bcfcb0d150aa36ef0d561a24))
+* [MP-281] set field defaults and not-null from the CLI ([#67](https://github.com/MultiPaaS-Apps/cli/issues/67)) ([af608ba](https://github.com/MultiPaaS-Apps/cli/commit/af608ba14236f3d2b6d8ff15766cc7117a2d6f64))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#65](https://github.com/MultiPaaS-Apps/cli/issues/65)) ([8e4a3a1](https://github.com/MultiPaaS-Apps/cli/commit/8e4a3a17e51fe36f547125718455ee7b707813b5))
+
 ## [1.3.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.2.0...v1.3.0) (2026-11-06)
 
 

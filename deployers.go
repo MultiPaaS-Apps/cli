@@ -63,11 +63,15 @@ func deployersCreate(command commandFunc) *cobra.Command {
 func deployersRetire(command commandFunc) *cobra.Command {
 	var appID, id string
 	cmd := command("retire", "Retire a deployer; its tokens stop working at once", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		retiredID := id
 		err := s.inApp(ctx, appID, func(client graphql.Client) error {
-			_, err := RetireDeployer(ctx, client, id)
+			response, err := RetireDeployer(ctx, client, id)
+			if err == nil {
+				retiredID = response.RetireDeployer.Id
+			}
 			return err
 		})
-		return map[string]any{"retired": true, "id": id}, func(out io.Writer) { fmt.Fprintf(out, "Retired deployer %s\n", id) }, err
+		return map[string]any{"retired": true, "id": retiredID}, func(out io.Writer) { fmt.Fprintf(out, "Retired deployer %s\n", retiredID) }, err
 	})
 	appFlag(cmd, &appID)
 	cmd.Flags().StringVar(&id, "id", "", "the deployer's client ID, from deployers list")

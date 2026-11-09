@@ -652,8 +652,9 @@ func (f *fakeMultiPaaS) manageDeployers(w http.ResponseWriter, operation string,
 			graphQLRefusal(w, "NOT_FOUND", "deployer not found")
 			return
 		}
+		retired := f.deployers[i]
 		f.deployers = slices.Delete(f.deployers, i, i+1)
-		writeData(w, map[string]any{"retireDeployer": true})
+		writeData(w, map[string]any{"retireDeployer": map[string]any{"id": retired["id"]}})
 	default:
 		writeData(w, map[string]any{"application": map[string]any{"deployers": f.deployers}})
 	}

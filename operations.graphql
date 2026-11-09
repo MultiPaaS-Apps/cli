@@ -794,5 +794,7 @@ mutation CreateDeployer($input: CreateDeployerInput!) {
 }
 
 mutation RetireDeployer($id: ID!) {
-  retireDeployer(id: $id)
+  retireDeployer(id: $id) {
+    id
+  }
 }

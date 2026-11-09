@@ -5065,11 +5065,24 @@ func (v *RetireConstraintRetireConstraint) __premarshalJSON() (*__premarshalReti
 
 // RetireDeployerResponse is returned by RetireDeployer on success.
 type RetireDeployerResponse struct {
-	RetireDeployer bool `json:"retireDeployer"`
+	RetireDeployer RetireDeployerRetireDeployer `json:"retireDeployer"`
 }
 
 // GetRetireDeployer returns RetireDeployerResponse.RetireDeployer, and is useful for accessing the field via an interface.
-func (v *RetireDeployerResponse) GetRetireDeployer() bool { return v.RetireDeployer }
+func (v *RetireDeployerResponse) GetRetireDeployer() RetireDeployerRetireDeployer {
+	return v.RetireDeployer
+}
+
+// RetireDeployerRetireDeployer includes the requested fields of the GraphQL type Deployer.
+// The GraphQL type's documentation follows.
+//
+// A credential CI uses to create and remove test environments: its id is the OAuth client_id.
+type RetireDeployerRetireDeployer struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RetireDeployerRetireDeployer.Id, and is useful for accessing the field via an interface.
+func (v *RetireDeployerRetireDeployer) GetId() string { return v.Id }
 
 // RetireEntityResponse is returned by RetireEntity on success.
 type RetireEntityResponse struct {
@@ -10038,7 +10051,9 @@ func RetireConstraint(
 // The mutation executed by RetireDeployer.
 const RetireDeployer_Operation = `
 mutation RetireDeployer ($id: ID!) {
-	retireDeployer(id: $id)
+	retireDeployer(id: $id) {
+		id
+	}
 }
 `
 

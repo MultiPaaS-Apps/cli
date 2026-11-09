@@ -24,6 +24,7 @@ multipaas entity create --app <app id> --name Order
 multipaas field add --app <app id> --entity <entity id> --type text --name Title --required
 multipaas enum create --app <app id> --name Status --values "Open,In progress,Done"
 multipaas field add --app <app id> --entity <entity id> --type enum --name Status --enum-type <enum id>
+multipaas field add --app <app id> --entity <entity id> --type number --name Priority --default 3 --not-null
 multipaas constraint add --app <app id> --entity <entity id> --fields <field id>,<field id>
 multipaas init --app <app id> --tenant <app-tenant id>   # in your app's directory: writes multipaas.json
 multipaas versions list

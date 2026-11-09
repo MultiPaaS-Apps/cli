@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -15,10 +17,12 @@ import (
 // commandFunc builds one leaf command; run passes its own, so model commands share --json and reporting.
 type commandFunc func(use, short string, do func(context.Context, *session) (any, func(io.Writer), error)) *cobra.Command
 
-// option is one input a model command takes: its flag, the input field it sets, its help, and its kind
-// ("string", "bool", "int", "list", or "values" for an enum's VALUE or VALUE=GRAPHQL_NAME entries).
+// option is one input a model command takes: its flag, the input field it sets, its help, its kind
+// ("string", "bool", "int", "list", "values" for an enum's VALUE or VALUE=GRAPHQL_NAME entries, "null" for a switch that
+// clears its field, or "false" for one that sets it false), and a flag it can't be given with.
 type option struct {
 	flag, field, usage, kind string
+	excludes                 string
 	required                 bool
 }
 
@@ -39,6 +43,8 @@ func modelCommands(command commandFunc) []*cobra.Command {
 		{flag: "name", field: "name", usage: "the field's display name"},
 		{flag: "api-name", field: "graphqlFieldName", usage: "its GraphQL field name (default: from the name)"},
 		{flag: "required", field: "required", usage: "a record must have a value", kind: "bool"},
+		{flag: "not-null", field: "notNull", usage: "the field always holds a value: a record without one gets the default, and existing records without one are given it (needs --default, or a default already set)", kind: "bool"},
+		{flag: "default", field: "defaultValue", usage: "the value a record gets when it is written without one: a number for a number field, true or false for a boolean field, a record id for a reference field, else the text as given (an enum value, or an ISO timestamp for a timestamp field)"},
 		{flag: "enum-type", field: "enumTypeId", usage: "an enum field's enum type id (from model show)"},
 		{flag: "references", field: "referencesEntityId", usage: "a reference field's target entity id"},
 		{flag: "related", field: "relatedFieldId", usage: "a related field's reference field id"},
@@ -79,7 +85,10 @@ func modelCommands(command commandFunc) []*cobra.Command {
 				{flag: fieldType.flag, field: fieldType.field, usage: fieldType.usage, required: true},
 				{flag: "lifecycle", field: "isLifecycle", usage: "the entity's lifecycle field", kind: "bool"},
 			}, fieldOptions...)...),
-			change(command, "update", "Change a field", "field", updateField, append([]option{fieldID, fieldType}, fieldOptions...)...),
+			change(command, "update", "Change a field", "field", updateField, append([]option{fieldID, fieldType,
+				{flag: "clear-default", field: "defaultValue", usage: "remove the field's default (refused while the field is not null)", kind: "null", excludes: "default"},
+				{flag: "nullable", field: "notNull", usage: "the field may be empty again", kind: "false", excludes: "not-null"},
+			}, fieldOptions...)...),
 			change(command, "retire", "Retire a field", "field", retireField, fieldID),
 		),
 		group("constraint", "Declare and retire unique constraints",
@@ -126,7 +135,7 @@ func change(command commandFunc, use, short, noun string, mutate mutation, optio
 	appFlag(cmd, &appID)
 	for _, o := range options {
 		switch o.kind {
-		case "bool":
+		case "bool", "null", "false":
 			cmd.Flags().Bool(o.flag, false, o.usage)
 		case "int":
 			cmd.Flags().Int64(o.flag, 0, o.usage)
@@ -139,10 +148,16 @@ func change(command commandFunc, use, short, noun string, mutate mutation, optio
 			_ = cmd.MarkFlagRequired(o.flag)
 		}
 	}
+	for _, o := range options {
+		if o.excludes != "" {
+			cmd.MarkFlagsMutuallyExclusive(o.flag, o.excludes)
+		}
+	}
 	return cmd
 }
 
 // readInput is the mutation input from the flags given on the command line, so an update changes only what was named.
+// A "null" or "false" flag sends null or false for its input field, and nothing when given =false.
 func readInput(cmd *cobra.Command, options []option) map[string]any {
 	input := map[string]any{}
 	for _, o := range options {
@@ -159,6 +174,14 @@ func readInput(cmd *cobra.Command, options []option) map[string]any {
 		case "values":
 			entries, _ := cmd.Flags().GetStringSlice(o.flag)
 			input[o.field] = enumValueInputs(entries)
+		case "null":
+			if on, _ := cmd.Flags().GetBool(o.flag); on {
+				input[o.field] = nil
+			}
+		case "false":
+			if on, _ := cmd.Flags().GetBool(o.flag); on {
+				input[o.field] = false
+			}
 		default:
 			input[o.field], _ = cmd.Flags().GetString(o.flag)
 		}
@@ -244,6 +267,13 @@ func retireEnumType(ctx context.Context, client graphql.Client, input map[string
 }
 
 func createField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
+	if given, ok := input["defaultValue"].(string); ok {
+		value, err := fieldDefault(input["type"].(string), given)
+		if err != nil {
+			return nil, err
+		}
+		input["defaultValue"] = value
+	}
 	created, err := CreateField(ctx, client, input)
 	if err != nil {
 		return nil, err
@@ -252,11 +282,38 @@ func createField(ctx context.Context, client graphql.Client, input map[string]an
 }
 
 func updateField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
+	if given, ok := input["defaultValue"].(string); ok {
+		fieldType, err := updatedFieldType(ctx, client, input)
+		if err != nil {
+			return nil, err
+		}
+		value, err := fieldDefault(fieldType, given)
+		if err != nil {
+			return nil, err
+		}
+		input["defaultValue"] = value
+	}
 	updated, err := UpdateField(ctx, client, input)
 	if err != nil {
 		return nil, err
 	}
 	return &updated.UpdateField.FieldParts, nil
+}
+
+// updatedFieldType is the type the field has after the update: the --type given, else its current type.
+func updatedFieldType(ctx context.Context, client graphql.Client, input map[string]any) (string, error) {
+	if fieldType, ok := input["type"].(string); ok {
+		return fieldType, nil
+	}
+	fieldID := input["fieldId"].(string)
+	current, err := Field(ctx, client, fieldID)
+	if err != nil {
+		return "", err
+	}
+	if current.Field == nil {
+		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no field " + fieldID + " in this application"}
+	}
+	return current.Field.Type, nil
 }
 
 func retireField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
@@ -265,6 +322,31 @@ func retireField(ctx context.Context, client graphql.Client, input map[string]an
 		return nil, err
 	}
 	return &retired.RetireField.FieldParts, nil
+}
+
+// fieldDefault is a --default value as the JSON value a field of fieldType stores. The platform refuses a default on
+// a file or related field, so the CLI refuses it without sending the change.
+func fieldDefault(fieldType, given string) (any, error) {
+	switch fieldType {
+	case "number":
+		number, err := strconv.ParseFloat(given, 64)
+		if err != nil || math.IsInf(number, 0) || math.IsNaN(number) {
+			return nil, fmt.Errorf("--default for a number field must be a number, not %q", given)
+		}
+		return number, nil
+	case "boolean":
+		switch given {
+		case "true":
+			return true, nil
+		case "false":
+			return false, nil
+		}
+		return nil, fmt.Errorf("--default for a boolean field must be true or false, not %q", given)
+	case "file", "related":
+		return nil, fmt.Errorf("a %s field can't have a default", fieldType)
+	default:
+		return given, nil
+	}
 }
 
 func createConstraint(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
@@ -536,7 +618,7 @@ func printModel(out io.Writer, shown shownModel) {
 	fmt.Fprintf(out, "API version %s\n", shown.APIVersion)
 	for _, entity := range shown.Entities {
 		fmt.Fprintf(out, "\n%s (%s, managed %t)  %s\n", entity.Name, entity.GraphqlTypeName, entity.Managed, entity.Id)
-		table(out, "  FIELD\tTYPE\tREQUIRED\tID", entity.Fields, func(f FieldParts) string {
+		table(out, "  FIELD\tTYPE\tREQUIRED\tNOT NULL\tDEFAULT\tID", entity.Fields, func(f FieldParts) string {
 			kind := f.Type
 			if f.EnumType != nil {
 				kind += " " + f.EnumType.Name
@@ -544,7 +626,7 @@ func printModel(out io.Writer, shown shownModel) {
 			if f.MaxFileBytes != nil {
 				kind += fmt.Sprintf(" (max %d bytes)", int64(*f.MaxFileBytes))
 			}
-			return "  " + f.GraphqlFieldName + "\t" + kind + "\t" + strconv.FormatBool(f.Required) + "\t" + f.Id
+			return "  " + f.GraphqlFieldName + "\t" + kind + "\t" + strconv.FormatBool(f.Required) + "\t" + strconv.FormatBool(f.NotNull) + "\t" + shownDefault(f.DefaultValue) + "\t" + f.Id
 		})
 		for _, constraint := range entity.Constraints {
 			ids := []string{}
@@ -555,6 +637,14 @@ func printModel(out io.Writer, shown shownModel) {
 		}
 	}
 	printEnums(out, shown.Enums)
+}
+
+// shownDefault is a field's default as JSON, so the text "3" and the number 3 print differently, or "-" when it has none.
+func shownDefault(value *json.RawMessage) string {
+	if value == nil {
+		return "-"
+	}
+	return string(*value)
 }
 
 func printEnums(out io.Writer, enums []EnumTypeParts) {

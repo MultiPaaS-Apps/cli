@@ -67,6 +67,74 @@ func TestFieldUpdateSendsOnlyTheMaximumSize(t *testing.T) {
 	}
 }
 
+func TestFieldUpdateReadsTheFieldsTypeToSendItsDefault(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.fields["entity-1"] = []map[string]any{{"id": "field-1", "graphqlFieldName": "priority", "type": "number", "notNull": false}}
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--default", "5", "--not-null", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"fieldId": "field-1", "defaultValue": float64(5), "notNull": true}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+}
+
+func TestFieldUpdateUsesTheTypeGivenForItsDefault(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.fields["entity-1"] = []map[string]any{{"id": "field-1", "graphqlFieldName": "priority", "type": "text", "notNull": false}}
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--type", "boolean", "--default", "true", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"fieldId": "field-1", "type": "boolean", "defaultValue": true}}
+	if !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations[0], want)
+	}
+}
+
+func TestFieldUpdateClearsTheDefaultAndNotNull(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--clear-default", "--nullable", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"fieldId": "field-1", "defaultValue": nil, "notNull": false}}
+	if !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations[0], want)
+	}
+}
+
+func TestFieldUpdateSendsNothingForAClearOrNullableFlagGivenAsFalse(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--clear-default=false", "--nullable=false", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"fieldId": "field-1"}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+}
+
+func TestFieldUpdateRefusesConflictingDefaultAndNotNullFlags(t *testing.T) {
+	for _, c := range []struct {
+		flags   []string
+		message string
+	}{
+		{[]string{"--default", "1", "--clear-default"}, "if any flags in the group [clear-default default] are set none of the others can be; [clear-default default] were all set"},
+		{[]string{"--not-null", "--nullable"}, "if any flags in the group [nullable not-null] are set none of the others can be; [not-null nullable] were all set"},
+	} {
+		fake := signedInFake(t, fresh)
+		fake.fields["entity-1"] = []map[string]any{{"id": "field-1", "graphqlFieldName": "priority", "type": "number", "notNull": false}}
+		args := append([]string{"field", "update", "--app", "app-a-000", "--id", "field-1"}, c.flags...)
+		got := fake.run(t, args...)
+		if got.exit == exitOK || !strings.Contains(got.stdout+got.stderr, c.message) || len(fake.mutations) != 0 {
+			t.Fatalf("%v: exit %d, printed %q %q, sent %v", c.flags, got.exit, got.stdout, got.stderr, fake.mutations)
+		}
+	}
+}
+
 func TestModelShowPrintsAFileFieldsMaximumSize(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	fake.entities["app-a-000"] = append(fake.entities["app-a-000"], map[string]any{"id": "entity-1", "name": "Order"})
@@ -83,6 +151,99 @@ func TestModelShowPrintsAFileFieldsMaximumSize(t *testing.T) {
 	}
 	if strings.Contains(got.stdout, "text (max") {
 		t.Fatalf("a field without a maximum printed one: %q", got.stdout)
+	}
+}
+
+func TestModelShowPrintsEachFieldsDefaultAndNotNull(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entities["app-a-000"] = append(fake.entities["app-a-000"], map[string]any{"id": "entity-1", "name": "Ticket"})
+	fake.fields["entity-1"] = []map[string]any{
+		{"id": "field-1", "graphqlFieldName": "priority", "type": "number", "notNull": true, "defaultValue": 3},
+		{"id": "field-2", "graphqlFieldName": "code", "type": "text", "defaultValue": "3"},
+		{"id": "field-3", "graphqlFieldName": "note", "type": "text"},
+	}
+	got := fake.run(t, "model", "show", "--app", "app-a-000")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	for _, want := range []string{"NOT NULL", "DEFAULT"} {
+		if !strings.Contains(got.stdout, want) {
+			t.Fatalf("no %s column: %q", want, got.stdout)
+		}
+	}
+	lines := map[string][]string{}
+	for _, line := range strings.Split(got.stdout, "\n") {
+		if words := strings.Fields(line); len(words) == 6 {
+			lines[words[0]] = words
+		}
+	}
+	for name, want := range map[string][]string{
+		"priority": {"priority", "number", "false", "true", "3", "field-1"},
+		"code":     {"code", "text", "false", "false", `"3"`, "field-2"},
+		"note":     {"note", "text", "false", "false", "-", "field-3"},
+	} {
+		if !reflect.DeepEqual(lines[name], want) {
+			t.Fatalf("%s printed %v, want %v, in %q", name, lines[name], want, got.stdout)
+		}
+	}
+}
+
+func TestFieldAddSendsANumberDefaultAsANumberAndNotNull(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "number", "--name", "Priority", "--default", "3", "--not-null", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"entityId": "entity-1", "type": "number", "name": "Priority", "defaultValue": float64(3), "notNull": true}}
+	if !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations[0], want)
+	}
+}
+
+func TestFieldAddSendsEachTypesDefaultAsItsValue(t *testing.T) {
+	for _, c := range []struct {
+		fieldType, given string
+		want             any
+	}{
+		{"boolean", "true", true},
+		{"boolean", "false", false},
+		{"text", "3", "3"},
+		{"enum", "low", "low"},
+		{"timestamp", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z"},
+		{"reference", "8f0c2a4e-1b7d-4c55-9a3e-0d6f1e2b3c4d", "8f0c2a4e-1b7d-4c55-9a3e-0d6f1e2b3c4d"},
+	} {
+		fake := signedInFake(t, fresh)
+		got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", c.fieldType, "--default", c.given, "--json")
+		if got.exit != exitOK {
+			t.Fatalf("%s: exit %d: %s", c.fieldType, got.exit, got.stdout)
+		}
+		input := fake.mutations[0]["input"].(map[string]any)
+		if !reflect.DeepEqual(input["defaultValue"], c.want) {
+			t.Fatalf("%s --default %s sent %#v, want %#v", c.fieldType, c.given, input["defaultValue"], c.want)
+		}
+	}
+}
+
+func TestFieldAddRefusesABadDefaultBeforeSendingAnything(t *testing.T) {
+	for _, c := range []struct{ fieldType, given, message string }{
+		{"number", "three", `--default for a number field must be a number, not "three"`},
+		{"boolean", "yes", `--default for a boolean field must be true or false, not "yes"`},
+		{"file", "x", "a file field can't have a default"},
+		{"related", "x", "a related field can't have a default"},
+	} {
+		t.Run(c.fieldType, func(t *testing.T) {
+			fake := signedInFake(t, fresh)
+			got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", c.fieldType, "--default", c.given, "--json")
+			assertFailure(t, got, exitRefused, "CLI_ERROR")
+			var failure struct{ Error cliError }
+			decode(t, got.stdout, &failure)
+			if failure.Error.Message != c.message {
+				t.Fatalf("%s --default %s printed %q, want %q", c.fieldType, c.given, failure.Error.Message, c.message)
+			}
+			if len(fake.mutations) != 0 {
+				t.Fatalf("%s: sent %v", c.fieldType, fake.mutations)
+			}
+		})
 	}
 }
 

@@ -1582,6 +1582,12 @@ func (v *CreateFieldCreateField) GetMaxFileBytes() *float64 { return v.FieldPart
 // GetRequired returns CreateFieldCreateField.Required, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetRequired() bool { return v.FieldParts.Required }
 
+// GetNotNull returns CreateFieldCreateField.NotNull, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetNotNull() bool { return v.FieldParts.NotNull }
+
+// GetDefaultValue returns CreateFieldCreateField.DefaultValue, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
+
 // GetEnumValues returns CreateFieldCreateField.EnumValues, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetEnumValues() []string { return v.FieldParts.EnumValues }
 
@@ -1644,6 +1650,10 @@ type __premarshalCreateFieldCreateField struct {
 
 	Required bool `json:"required"`
 
+	NotNull bool `json:"notNull"`
+
+	DefaultValue *json.RawMessage `json:"defaultValue"`
+
 	EnumValues []string `json:"enumValues"`
 
 	EnumType *FieldPartsEnumType `json:"enumType"`
@@ -1675,6 +1685,8 @@ func (v *CreateFieldCreateField) __premarshalJSON() (*__premarshalCreateFieldCre
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
+	retval.NotNull = v.FieldParts.NotNull
+	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
@@ -3023,6 +3035,144 @@ var AllFeedbackStatus = []FeedbackStatus{
 	FeedbackStatusUnderReview,
 }
 
+// FieldField includes the requested fields of the GraphQL type Field.
+type FieldField struct {
+	FieldParts `json:"-"`
+}
+
+// GetId returns FieldField.Id, and is useful for accessing the field via an interface.
+func (v *FieldField) GetId() string { return v.FieldParts.Id }
+
+// GetEntity returns FieldField.Entity, and is useful for accessing the field via an interface.
+func (v *FieldField) GetEntity() FieldPartsEntity { return v.FieldParts.Entity }
+
+// GetName returns FieldField.Name, and is useful for accessing the field via an interface.
+func (v *FieldField) GetName() *string { return v.FieldParts.Name }
+
+// GetGraphqlFieldName returns FieldField.GraphqlFieldName, and is useful for accessing the field via an interface.
+func (v *FieldField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetType returns FieldField.Type, and is useful for accessing the field via an interface.
+func (v *FieldField) GetType() string { return v.FieldParts.Type }
+
+// GetMaxFileBytes returns FieldField.MaxFileBytes, and is useful for accessing the field via an interface.
+func (v *FieldField) GetMaxFileBytes() *float64 { return v.FieldParts.MaxFileBytes }
+
+// GetRequired returns FieldField.Required, and is useful for accessing the field via an interface.
+func (v *FieldField) GetRequired() bool { return v.FieldParts.Required }
+
+// GetNotNull returns FieldField.NotNull, and is useful for accessing the field via an interface.
+func (v *FieldField) GetNotNull() bool { return v.FieldParts.NotNull }
+
+// GetDefaultValue returns FieldField.DefaultValue, and is useful for accessing the field via an interface.
+func (v *FieldField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
+
+// GetEnumValues returns FieldField.EnumValues, and is useful for accessing the field via an interface.
+func (v *FieldField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetEnumType returns FieldField.EnumType, and is useful for accessing the field via an interface.
+func (v *FieldField) GetEnumType() *FieldPartsEnumType { return v.FieldParts.EnumType }
+
+// GetIsLifecycle returns FieldField.IsLifecycle, and is useful for accessing the field via an interface.
+func (v *FieldField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
+
+// GetIsParent returns FieldField.IsParent, and is useful for accessing the field via an interface.
+func (v *FieldField) GetIsParent() bool { return v.FieldParts.IsParent }
+
+// GetReferencesEntity returns FieldField.ReferencesEntity, and is useful for accessing the field via an interface.
+func (v *FieldField) GetReferencesEntity() *FieldPartsReferencesEntity {
+	return v.FieldParts.ReferencesEntity
+}
+
+// GetRelatedField returns FieldField.RelatedField, and is useful for accessing the field via an interface.
+func (v *FieldField) GetRelatedField() *FieldPartsRelatedField { return v.FieldParts.RelatedField }
+
+func (v *FieldField) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*FieldField
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.FieldField = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FieldParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalFieldField struct {
+	Id string `json:"id"`
+
+	Entity FieldPartsEntity `json:"entity"`
+
+	Name *string `json:"name"`
+
+	GraphqlFieldName string `json:"graphqlFieldName"`
+
+	Type string `json:"type"`
+
+	MaxFileBytes *float64 `json:"maxFileBytes"`
+
+	Required bool `json:"required"`
+
+	NotNull bool `json:"notNull"`
+
+	DefaultValue *json.RawMessage `json:"defaultValue"`
+
+	EnumValues []string `json:"enumValues"`
+
+	EnumType *FieldPartsEnumType `json:"enumType"`
+
+	IsLifecycle bool `json:"isLifecycle"`
+
+	IsParent bool `json:"isParent"`
+
+	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
+
+	RelatedField *FieldPartsRelatedField `json:"relatedField"`
+}
+
+func (v *FieldField) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *FieldField) __premarshalJSON() (*__premarshalFieldField, error) {
+	var retval __premarshalFieldField
+
+	retval.Id = v.FieldParts.Id
+	retval.Entity = v.FieldParts.Entity
+	retval.Name = v.FieldParts.Name
+	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Type = v.FieldParts.Type
+	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
+	retval.Required = v.FieldParts.Required
+	retval.NotNull = v.FieldParts.NotNull
+	retval.DefaultValue = v.FieldParts.DefaultValue
+	retval.EnumValues = v.FieldParts.EnumValues
+	retval.EnumType = v.FieldParts.EnumType
+	retval.IsLifecycle = v.FieldParts.IsLifecycle
+	retval.IsParent = v.FieldParts.IsParent
+	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
+	retval.RelatedField = v.FieldParts.RelatedField
+	return &retval, nil
+}
+
 // FieldParts includes the GraphQL fields of Field requested by the fragment FieldParts.
 type FieldParts struct {
 	Id               string                      `json:"id"`
@@ -3032,6 +3182,8 @@ type FieldParts struct {
 	Type             string                      `json:"type"`
 	MaxFileBytes     *float64                    `json:"maxFileBytes"`
 	Required         bool                        `json:"required"`
+	NotNull          bool                        `json:"notNull"`
+	DefaultValue     *json.RawMessage            `json:"defaultValue"`
 	EnumValues       []string                    `json:"enumValues"`
 	EnumType         *FieldPartsEnumType         `json:"enumType"`
 	IsLifecycle      bool                        `json:"isLifecycle"`
@@ -3060,6 +3212,12 @@ func (v *FieldParts) GetMaxFileBytes() *float64 { return v.MaxFileBytes }
 
 // GetRequired returns FieldParts.Required, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetRequired() bool { return v.Required }
+
+// GetNotNull returns FieldParts.NotNull, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetNotNull() bool { return v.NotNull }
+
+// GetDefaultValue returns FieldParts.DefaultValue, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetDefaultValue() *json.RawMessage { return v.DefaultValue }
 
 // GetEnumValues returns FieldParts.EnumValues, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetEnumValues() []string { return v.EnumValues }
@@ -3115,6 +3273,14 @@ type FieldPartsRelatedField struct {
 // GetId returns FieldPartsRelatedField.Id, and is useful for accessing the field via an interface.
 func (v *FieldPartsRelatedField) GetId() string { return v.Id }
 
+// FieldResponse is returned by Field on success.
+type FieldResponse struct {
+	Field *FieldField `json:"field"`
+}
+
+// GetField returns FieldResponse.Field, and is useful for accessing the field via an interface.
+func (v *FieldResponse) GetField() *FieldField { return v.Field }
+
 // FieldsFieldsFieldPage includes the requested fields of the GraphQL type FieldPage.
 type FieldsFieldsFieldPage struct {
 	Items    []FieldsFieldsFieldPageItemsField `json:"items"`
@@ -3156,6 +3322,14 @@ func (v *FieldsFieldsFieldPageItemsField) GetMaxFileBytes() *float64 {
 
 // GetRequired returns FieldsFieldsFieldPageItemsField.Required, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetRequired() bool { return v.FieldParts.Required }
+
+// GetNotNull returns FieldsFieldsFieldPageItemsField.NotNull, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetNotNull() bool { return v.FieldParts.NotNull }
+
+// GetDefaultValue returns FieldsFieldsFieldPageItemsField.DefaultValue, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetDefaultValue() *json.RawMessage {
+	return v.FieldParts.DefaultValue
+}
 
 // GetEnumValues returns FieldsFieldsFieldPageItemsField.EnumValues, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetEnumValues() []string { return v.FieldParts.EnumValues }
@@ -3221,6 +3395,10 @@ type __premarshalFieldsFieldsFieldPageItemsField struct {
 
 	Required bool `json:"required"`
 
+	NotNull bool `json:"notNull"`
+
+	DefaultValue *json.RawMessage `json:"defaultValue"`
+
 	EnumValues []string `json:"enumValues"`
 
 	EnumType *FieldPartsEnumType `json:"enumType"`
@@ -3252,6 +3430,8 @@ func (v *FieldsFieldsFieldPageItemsField) __premarshalJSON() (*__premarshalField
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
+	retval.NotNull = v.FieldParts.NotNull
+	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
@@ -4832,6 +5012,12 @@ func (v *RetireFieldRetireField) GetMaxFileBytes() *float64 { return v.FieldPart
 // GetRequired returns RetireFieldRetireField.Required, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetRequired() bool { return v.FieldParts.Required }
 
+// GetNotNull returns RetireFieldRetireField.NotNull, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetNotNull() bool { return v.FieldParts.NotNull }
+
+// GetDefaultValue returns RetireFieldRetireField.DefaultValue, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
+
 // GetEnumValues returns RetireFieldRetireField.EnumValues, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetEnumValues() []string { return v.FieldParts.EnumValues }
 
@@ -4894,6 +5080,10 @@ type __premarshalRetireFieldRetireField struct {
 
 	Required bool `json:"required"`
 
+	NotNull bool `json:"notNull"`
+
+	DefaultValue *json.RawMessage `json:"defaultValue"`
+
 	EnumValues []string `json:"enumValues"`
 
 	EnumType *FieldPartsEnumType `json:"enumType"`
@@ -4925,6 +5115,8 @@ func (v *RetireFieldRetireField) __premarshalJSON() (*__premarshalRetireFieldRet
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
+	retval.NotNull = v.FieldParts.NotNull
+	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
@@ -6213,6 +6405,12 @@ func (v *UpdateFieldUpdateField) GetMaxFileBytes() *float64 { return v.FieldPart
 // GetRequired returns UpdateFieldUpdateField.Required, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetRequired() bool { return v.FieldParts.Required }
 
+// GetNotNull returns UpdateFieldUpdateField.NotNull, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetNotNull() bool { return v.FieldParts.NotNull }
+
+// GetDefaultValue returns UpdateFieldUpdateField.DefaultValue, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
+
 // GetEnumValues returns UpdateFieldUpdateField.EnumValues, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetEnumValues() []string { return v.FieldParts.EnumValues }
 
@@ -6275,6 +6473,10 @@ type __premarshalUpdateFieldUpdateField struct {
 
 	Required bool `json:"required"`
 
+	NotNull bool `json:"notNull"`
+
+	DefaultValue *json.RawMessage `json:"defaultValue"`
+
 	EnumValues []string `json:"enumValues"`
 
 	EnumType *FieldPartsEnumType `json:"enumType"`
@@ -6306,6 +6508,8 @@ func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpd
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
+	retval.NotNull = v.FieldParts.NotNull
+	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
 	retval.IsLifecycle = v.FieldParts.IsLifecycle
@@ -6849,6 +7053,14 @@ type __EnumTypesInput struct {
 
 // GetPage returns __EnumTypesInput.Page, and is useful for accessing the field via an interface.
 func (v *__EnumTypesInput) GetPage() PageInput { return v.Page }
+
+// __FieldInput is used internally by genqlient
+type __FieldInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __FieldInput.Id, and is useful for accessing the field via an interface.
+func (v *__FieldInput) GetId() string { return v.Id }
 
 // __FieldsInput is used internally by genqlient
 type __FieldsInput struct {
@@ -8095,6 +8307,8 @@ fragment FieldParts on Field {
 	type
 	maxFileBytes
 	required
+	notNull
+	defaultValue
 	enumValues
 	enumType {
 		id
@@ -8583,6 +8797,66 @@ func FeedbackSetting(
 	return data_, err_
 }
 
+// The query executed by Field.
+const Field_Operation = `
+query Field ($id: ID!) {
+	field(id: $id) {
+		... FieldParts
+	}
+}
+fragment FieldParts on Field {
+	id
+	entity {
+		id
+	}
+	name
+	graphqlFieldName
+	type
+	maxFileBytes
+	required
+	notNull
+	defaultValue
+	enumValues
+	enumType {
+		id
+		name
+	}
+	isLifecycle
+	isParent
+	referencesEntity {
+		id
+	}
+	relatedField {
+		id
+	}
+}
+`
+
+func Field(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *FieldResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Field",
+		Query:  Field_Operation,
+		Variables: &__FieldInput{
+			Id: id,
+		},
+	}
+
+	data_ = &FieldResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Fields.
 const Fields_Operation = `
 query Fields ($entityId: ID!, $page: PageInput!) {
@@ -8605,6 +8879,8 @@ fragment FieldParts on Field {
 	type
 	maxFileBytes
 	required
+	notNull
+	defaultValue
 	enumValues
 	enumType {
 		id
@@ -9486,6 +9762,8 @@ fragment FieldParts on Field {
 	type
 	maxFileBytes
 	required
+	notNull
+	defaultValue
 	enumValues
 	enumType {
 		id
@@ -10124,6 +10402,8 @@ fragment FieldParts on Field {
 	type
 	maxFileBytes
 	required
+	notNull
+	defaultValue
 	enumValues
 	enumType {
 		id

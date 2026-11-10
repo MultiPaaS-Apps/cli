@@ -285,6 +285,15 @@ func TestFieldAddRefusesAListDefaultThatIsNotAnArray(t *testing.T) {
 	}
 }
 
+func TestFieldAddRefusesAListDefaultWithANullElement(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "text", "--list", "--default", `["a",null]`, "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
 func TestFieldAddRefusesANullListDefault(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "text", "--list", "--default", "null", "--json")

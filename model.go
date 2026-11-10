@@ -330,9 +330,17 @@ func retireField(ctx context.Context, client graphql.Client, input map[string]an
 // a file or related field, so the CLI refuses it without sending the change.
 func fieldDefault(fieldType, given string, list bool) (any, error) {
 	if list {
-		var values []string
-		if err := json.Unmarshal([]byte(given), &values); err != nil || values == nil {
-			return nil, fmt.Errorf(`--default for a list field must be a JSON array of strings, such as '["a","b"]', not %q`, given)
+		var elements []*string
+		refused := fmt.Errorf(`--default for a list field must be a JSON array of strings, such as '["a","b"]', not %q`, given)
+		if err := json.Unmarshal([]byte(given), &elements); err != nil || elements == nil {
+			return nil, refused
+		}
+		values := make([]string, len(elements))
+		for i, element := range elements {
+			if element == nil {
+				return nil, refused
+			}
+			values[i] = *element
 		}
 		return values, nil
 	}

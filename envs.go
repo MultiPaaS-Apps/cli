@@ -50,8 +50,8 @@ func (s *session) environmentsIn(ctx context.Context, scope string) ([]Environme
 	return list, err
 }
 
-// envsCreate needs access.manage.application on the application, and the server makes its creator the new
-// environment's App manager.
+// envsCreate needs a developer to hold access.manage.application on the application, and the server makes them the
+// new environment's App manager. A deployer needs no permission and holds no role in the environment it creates.
 func envsCreate(command commandFunc) *cobra.Command {
 	var appID, name string
 	cmd := command("create", "Create an environment to test your app in", func(ctx context.Context, s *session) (any, func(io.Writer), error) {

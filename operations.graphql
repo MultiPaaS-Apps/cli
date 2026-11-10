@@ -766,3 +766,35 @@ mutation RemoveEnvironment($input: RemoveEnvironmentInput!) {
     id
   }
 }
+
+fragment DeployerParts on Deployer {
+  id
+  name
+  lastFour
+  createdAt
+  # @genqlient(pointer: true)
+  lastUsedAt
+}
+
+query Deployers($id: ID!) {
+  application(id: $id) {
+    deployers {
+      ...DeployerParts
+    }
+  }
+}
+
+mutation CreateDeployer($input: CreateDeployerInput!) {
+  createDeployer(input: $input) {
+    deployer {
+      ...DeployerParts
+    }
+    secret
+  }
+}
+
+mutation RetireDeployer($id: ID!) {
+  retireDeployer(id: $id) {
+    id
+  }
+}

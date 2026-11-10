@@ -1297,6 +1297,133 @@ func (v *CreateDataImportResponse) GetCreateDataImport() CreateDataImportCreateD
 	return v.CreateDataImport
 }
 
+// CreateDeployerCreateDeployerDeployerWithSecret includes the requested fields of the GraphQL type DeployerWithSecret.
+// The GraphQL type's documentation follows.
+//
+// The deployer plus its secret, returned only here and never again.
+type CreateDeployerCreateDeployerDeployerWithSecret struct {
+	Deployer CreateDeployerCreateDeployerDeployerWithSecretDeployer `json:"deployer"`
+	Secret   string                                                 `json:"secret"`
+}
+
+// GetDeployer returns CreateDeployerCreateDeployerDeployerWithSecret.Deployer, and is useful for accessing the field via an interface.
+func (v *CreateDeployerCreateDeployerDeployerWithSecret) GetDeployer() CreateDeployerCreateDeployerDeployerWithSecretDeployer {
+	return v.Deployer
+}
+
+// GetSecret returns CreateDeployerCreateDeployerDeployerWithSecret.Secret, and is useful for accessing the field via an interface.
+func (v *CreateDeployerCreateDeployerDeployerWithSecret) GetSecret() string { return v.Secret }
+
+// CreateDeployerCreateDeployerDeployerWithSecretDeployer includes the requested fields of the GraphQL type Deployer.
+// The GraphQL type's documentation follows.
+//
+// A credential CI uses to create and remove test environments: its id is the OAuth client_id.
+type CreateDeployerCreateDeployerDeployerWithSecretDeployer struct {
+	DeployerParts `json:"-"`
+}
+
+// GetId returns CreateDeployerCreateDeployerDeployerWithSecretDeployer.Id, and is useful for accessing the field via an interface.
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) GetId() string {
+	return v.DeployerParts.Id
+}
+
+// GetName returns CreateDeployerCreateDeployerDeployerWithSecretDeployer.Name, and is useful for accessing the field via an interface.
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) GetName() string {
+	return v.DeployerParts.Name
+}
+
+// GetLastFour returns CreateDeployerCreateDeployerDeployerWithSecretDeployer.LastFour, and is useful for accessing the field via an interface.
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) GetLastFour() string {
+	return v.DeployerParts.LastFour
+}
+
+// GetCreatedAt returns CreateDeployerCreateDeployerDeployerWithSecretDeployer.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) GetCreatedAt() string {
+	return v.DeployerParts.CreatedAt
+}
+
+// GetLastUsedAt returns CreateDeployerCreateDeployerDeployerWithSecretDeployer.LastUsedAt, and is useful for accessing the field via an interface.
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) GetLastUsedAt() *string {
+	return v.DeployerParts.LastUsedAt
+}
+
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateDeployerCreateDeployerDeployerWithSecretDeployer
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateDeployerCreateDeployerDeployerWithSecretDeployer = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DeployerParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateDeployerCreateDeployerDeployerWithSecretDeployer struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	LastFour string `json:"lastFour"`
+
+	CreatedAt string `json:"createdAt"`
+
+	LastUsedAt *string `json:"lastUsedAt"`
+}
+
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateDeployerCreateDeployerDeployerWithSecretDeployer) __premarshalJSON() (*__premarshalCreateDeployerCreateDeployerDeployerWithSecretDeployer, error) {
+	var retval __premarshalCreateDeployerCreateDeployerDeployerWithSecretDeployer
+
+	retval.Id = v.DeployerParts.Id
+	retval.Name = v.DeployerParts.Name
+	retval.LastFour = v.DeployerParts.LastFour
+	retval.CreatedAt = v.DeployerParts.CreatedAt
+	retval.LastUsedAt = v.DeployerParts.LastUsedAt
+	return &retval, nil
+}
+
+type CreateDeployerInput struct {
+	ApplicationId string `json:"applicationId"`
+	Name          string `json:"name"`
+}
+
+// GetApplicationId returns CreateDeployerInput.ApplicationId, and is useful for accessing the field via an interface.
+func (v *CreateDeployerInput) GetApplicationId() string { return v.ApplicationId }
+
+// GetName returns CreateDeployerInput.Name, and is useful for accessing the field via an interface.
+func (v *CreateDeployerInput) GetName() string { return v.Name }
+
+// CreateDeployerResponse is returned by CreateDeployer on success.
+type CreateDeployerResponse struct {
+	CreateDeployer CreateDeployerCreateDeployerDeployerWithSecret `json:"createDeployer"`
+}
+
+// GetCreateDeployer returns CreateDeployerResponse.CreateDeployer, and is useful for accessing the field via an interface.
+func (v *CreateDeployerResponse) GetCreateDeployer() CreateDeployerCreateDeployerDeployerWithSecret {
+	return v.CreateDeployer
+}
+
 // CreateEntityCreateEntity includes the requested fields of the GraphQL type Entity.
 type CreateEntityCreateEntity struct {
 	EntityParts `json:"-"`
@@ -2490,6 +2617,134 @@ type DeleteDataImportResponse struct {
 func (v *DeleteDataImportResponse) GetDeleteDataImport() DeleteDataImportDeleteDataImport {
 	return v.DeleteDataImport
 }
+
+// DeployerParts includes the GraphQL fields of Deployer requested by the fragment DeployerParts.
+// The GraphQL type's documentation follows.
+//
+// A credential CI uses to create and remove test environments: its id is the OAuth client_id.
+type DeployerParts struct {
+	Id         string  `json:"id"`
+	Name       string  `json:"name"`
+	LastFour   string  `json:"lastFour"`
+	CreatedAt  string  `json:"createdAt"`
+	LastUsedAt *string `json:"lastUsedAt"`
+}
+
+// GetId returns DeployerParts.Id, and is useful for accessing the field via an interface.
+func (v *DeployerParts) GetId() string { return v.Id }
+
+// GetName returns DeployerParts.Name, and is useful for accessing the field via an interface.
+func (v *DeployerParts) GetName() string { return v.Name }
+
+// GetLastFour returns DeployerParts.LastFour, and is useful for accessing the field via an interface.
+func (v *DeployerParts) GetLastFour() string { return v.LastFour }
+
+// GetCreatedAt returns DeployerParts.CreatedAt, and is useful for accessing the field via an interface.
+func (v *DeployerParts) GetCreatedAt() string { return v.CreatedAt }
+
+// GetLastUsedAt returns DeployerParts.LastUsedAt, and is useful for accessing the field via an interface.
+func (v *DeployerParts) GetLastUsedAt() *string { return v.LastUsedAt }
+
+// DeployersApplication includes the requested fields of the GraphQL type Application.
+type DeployersApplication struct {
+	Deployers []DeployersApplicationDeployersDeployer `json:"deployers"`
+}
+
+// GetDeployers returns DeployersApplication.Deployers, and is useful for accessing the field via an interface.
+func (v *DeployersApplication) GetDeployers() []DeployersApplicationDeployersDeployer {
+	return v.Deployers
+}
+
+// DeployersApplicationDeployersDeployer includes the requested fields of the GraphQL type Deployer.
+// The GraphQL type's documentation follows.
+//
+// A credential CI uses to create and remove test environments: its id is the OAuth client_id.
+type DeployersApplicationDeployersDeployer struct {
+	DeployerParts `json:"-"`
+}
+
+// GetId returns DeployersApplicationDeployersDeployer.Id, and is useful for accessing the field via an interface.
+func (v *DeployersApplicationDeployersDeployer) GetId() string { return v.DeployerParts.Id }
+
+// GetName returns DeployersApplicationDeployersDeployer.Name, and is useful for accessing the field via an interface.
+func (v *DeployersApplicationDeployersDeployer) GetName() string { return v.DeployerParts.Name }
+
+// GetLastFour returns DeployersApplicationDeployersDeployer.LastFour, and is useful for accessing the field via an interface.
+func (v *DeployersApplicationDeployersDeployer) GetLastFour() string { return v.DeployerParts.LastFour }
+
+// GetCreatedAt returns DeployersApplicationDeployersDeployer.CreatedAt, and is useful for accessing the field via an interface.
+func (v *DeployersApplicationDeployersDeployer) GetCreatedAt() string {
+	return v.DeployerParts.CreatedAt
+}
+
+// GetLastUsedAt returns DeployersApplicationDeployersDeployer.LastUsedAt, and is useful for accessing the field via an interface.
+func (v *DeployersApplicationDeployersDeployer) GetLastUsedAt() *string {
+	return v.DeployerParts.LastUsedAt
+}
+
+func (v *DeployersApplicationDeployersDeployer) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeployersApplicationDeployersDeployer
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeployersApplicationDeployersDeployer = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.DeployerParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeployersApplicationDeployersDeployer struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	LastFour string `json:"lastFour"`
+
+	CreatedAt string `json:"createdAt"`
+
+	LastUsedAt *string `json:"lastUsedAt"`
+}
+
+func (v *DeployersApplicationDeployersDeployer) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeployersApplicationDeployersDeployer) __premarshalJSON() (*__premarshalDeployersApplicationDeployersDeployer, error) {
+	var retval __premarshalDeployersApplicationDeployersDeployer
+
+	retval.Id = v.DeployerParts.Id
+	retval.Name = v.DeployerParts.Name
+	retval.LastFour = v.DeployerParts.LastFour
+	retval.CreatedAt = v.DeployerParts.CreatedAt
+	retval.LastUsedAt = v.DeployerParts.LastUsedAt
+	return &retval, nil
+}
+
+// DeployersResponse is returned by Deployers on success.
+type DeployersResponse struct {
+	Application DeployersApplication `json:"application"`
+}
+
+// GetApplication returns DeployersResponse.Application, and is useful for accessing the field via an interface.
+func (v *DeployersResponse) GetApplication() DeployersApplication { return v.Application }
 
 // EntitiesEntitiesEntityPage includes the requested fields of the GraphQL type EntityPage.
 type EntitiesEntitiesEntityPage struct {
@@ -4808,6 +5063,27 @@ func (v *RetireConstraintRetireConstraint) __premarshalJSON() (*__premarshalReti
 	return &retval, nil
 }
 
+// RetireDeployerResponse is returned by RetireDeployer on success.
+type RetireDeployerResponse struct {
+	RetireDeployer RetireDeployerRetireDeployer `json:"retireDeployer"`
+}
+
+// GetRetireDeployer returns RetireDeployerResponse.RetireDeployer, and is useful for accessing the field via an interface.
+func (v *RetireDeployerResponse) GetRetireDeployer() RetireDeployerRetireDeployer {
+	return v.RetireDeployer
+}
+
+// RetireDeployerRetireDeployer includes the requested fields of the GraphQL type Deployer.
+// The GraphQL type's documentation follows.
+//
+// A credential CI uses to create and remove test environments: its id is the OAuth client_id.
+type RetireDeployerRetireDeployer struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RetireDeployerRetireDeployer.Id, and is useful for accessing the field via an interface.
+func (v *RetireDeployerRetireDeployer) GetId() string { return v.Id }
+
 // RetireEntityResponse is returned by RetireEntity on success.
 type RetireEntityResponse struct {
 	RetireEntity RetireEntityRetireEntity `json:"retireEntity"`
@@ -6962,6 +7238,14 @@ type __CreateDataImportInput struct {
 // GetApplicationId returns __CreateDataImportInput.ApplicationId, and is useful for accessing the field via an interface.
 func (v *__CreateDataImportInput) GetApplicationId() string { return v.ApplicationId }
 
+// __CreateDeployerInput is used internally by genqlient
+type __CreateDeployerInput struct {
+	Input CreateDeployerInput `json:"input"`
+}
+
+// GetInput returns __CreateDeployerInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateDeployerInput) GetInput() CreateDeployerInput { return v.Input }
+
 // __CreateEntityInput is used internally by genqlient
 type __CreateEntityInput struct {
 	Input map[string]any `json:"input"`
@@ -7037,6 +7321,14 @@ type __DeleteDataImportInput struct {
 
 // GetImportId returns __DeleteDataImportInput.ImportId, and is useful for accessing the field via an interface.
 func (v *__DeleteDataImportInput) GetImportId() string { return v.ImportId }
+
+// __DeployersInput is used internally by genqlient
+type __DeployersInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __DeployersInput.Id, and is useful for accessing the field via an interface.
+func (v *__DeployersInput) GetId() string { return v.Id }
 
 // __EntitiesInput is used internally by genqlient
 type __EntitiesInput struct {
@@ -7213,6 +7505,14 @@ type __RetireConstraintInput struct {
 
 // GetConstraintId returns __RetireConstraintInput.ConstraintId, and is useful for accessing the field via an interface.
 func (v *__RetireConstraintInput) GetConstraintId() string { return v.ConstraintId }
+
+// __RetireDeployerInput is used internally by genqlient
+type __RetireDeployerInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __RetireDeployerInput.Id, and is useful for accessing the field via an interface.
+func (v *__RetireDeployerInput) GetId() string { return v.Id }
 
 // __RetireEntityInput is used internally by genqlient
 type __RetireEntityInput struct {
@@ -8166,6 +8466,50 @@ func CreateDataImport(
 	return data_, err_
 }
 
+// The mutation executed by CreateDeployer.
+const CreateDeployer_Operation = `
+mutation CreateDeployer ($input: CreateDeployerInput!) {
+	createDeployer(input: $input) {
+		deployer {
+			... DeployerParts
+		}
+		secret
+	}
+}
+fragment DeployerParts on Deployer {
+	id
+	name
+	lastFour
+	createdAt
+	lastUsedAt
+}
+`
+
+func CreateDeployer(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input CreateDeployerInput,
+) (data_ *CreateDeployerResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateDeployer",
+		Query:  CreateDeployer_Operation,
+		Variables: &__CreateDeployerInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateDeployerResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by CreateEntity.
 const CreateEntity_Operation = `
 mutation CreateEntity ($input: CreateEntityInput!) {
@@ -8622,6 +8966,49 @@ func DeleteDataImport(
 	}
 
 	data_ = &DeleteDataImportResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Deployers.
+const Deployers_Operation = `
+query Deployers ($id: ID!) {
+	application(id: $id) {
+		deployers {
+			... DeployerParts
+		}
+	}
+}
+fragment DeployerParts on Deployer {
+	id
+	name
+	lastFour
+	createdAt
+	lastUsedAt
+}
+`
+
+func Deployers(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *DeployersResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Deployers",
+		Query:  Deployers_Operation,
+		Variables: &__DeployersInput{
+			Id: id,
+		},
+	}
+
+	data_ = &DeployersResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -9650,6 +10037,40 @@ func RetireConstraint(
 	}
 
 	data_ = &RetireConstraintResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RetireDeployer.
+const RetireDeployer_Operation = `
+mutation RetireDeployer ($id: ID!) {
+	retireDeployer(id: $id) {
+		id
+	}
+}
+`
+
+func RetireDeployer(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *RetireDeployerResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RetireDeployer",
+		Query:  RetireDeployer_Operation,
+		Variables: &__RetireDeployerInput{
+			Id: id,
+		},
+	}
+
+	data_ = &RetireDeployerResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

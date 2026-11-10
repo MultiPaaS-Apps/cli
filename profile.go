@@ -64,13 +64,17 @@ func (s *session) profileSuffix() string {
 	return " (profile " + s.profile + ")"
 }
 
-// withProfileHint adds to a NOT_FOUND which sign-in the command ran as. Any other failure, or one before a session existed, is unchanged.
+// withProfileHint adds to a NOT_FOUND which sign-in the command ran as. Any other failure, one before a session
+// existed, or one while MULTIPAAS_CLIENT_ID and MULTIPAAS_CLIENT_SECRET name a deployer, is unchanged.
 func withProfileHint(s *session, err error) error {
 	if s == nil || err == nil {
 		return err
 	}
 	failure := asCLIError(err)
 	if failure.Code != "NOT_FOUND" {
+		return err
+	}
+	if deployer, deployerErr := s.deployer(); deployerErr != nil || deployer {
 		return err
 	}
 	hint := s.profileHint()

@@ -28,6 +28,8 @@ type session struct {
 	profile string // "" = the unnamed sign-in
 	env     environment
 	http    *http.Client
+
+	deployerToken string // a deployer's access token, minted at most once per command run unless rejected
 }
 
 // login signs in through the browser: a PKCE authorization code delivered to a loopback listener on
@@ -139,6 +141,11 @@ func awaitCallback(ctx context.Context, listener net.Listener, state, loginComma
 // postForm posts an OAuth form as the developer client and decodes the JSON answer into into (nil discards it).
 func (s *session) postForm(ctx context.Context, path string, form url.Values, into any) error {
 	form.Set("client_id", developerClientID)
+	return s.postOAuth(ctx, path, form, into)
+}
+
+// postOAuth posts form to the OAuth server and decodes its answer into into, or returns its refusal.
+func (s *session) postOAuth(ctx context.Context, path string, form url.Values, into any) error {
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, s.origins.api+path, strings.NewReader(form.Encode()))
 	if err != nil {
 		return err

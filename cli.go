@@ -36,6 +36,8 @@ type environment struct {
 	version        string
 	apiURL         string // MULTIPAAS_API_URL, empty when unset
 	profile        string // MULTIPAAS_PROFILE, empty when unset
+	clientID       string // MULTIPAAS_CLIENT_ID: a deployer CI signs in as, empty when unset
+	clientSecret   string // MULTIPAAS_CLIENT_SECRET
 	origins        func(apiURL string) (origins, error)
 	openBrowser    func(url string) error
 }
@@ -85,6 +87,9 @@ func run(args []string, env environment) int {
 
 	root.AddCommand(
 		command("login", "Sign in through your browser", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+			if err := s.refuseAsDeployer(); err != nil {
+				return nil, nil, err
+			}
 			if err := s.login(ctx); err != nil {
 				return nil, nil, err
 			}
@@ -92,6 +97,9 @@ func run(args []string, env environment) int {
 			return who, func(out io.Writer) { fmt.Fprintf(out, "Signed in as %s%s\n", who.User.Email, s.profileSuffix()) }, err
 		}),
 		command("logout", "Sign out and revoke your tokens", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+			if err := s.refuseAsDeployer(); err != nil {
+				return nil, nil, err
+			}
 			signedOut, err := s.logout(ctx)
 			result := map[string]any{"signedOut": signedOut, "profile": s.profileJSON()}
 			return result, func(out io.Writer) { fmt.Fprintln(out, "Signed out"+s.profileSuffix()) }, err
@@ -124,7 +132,7 @@ func run(args []string, env environment) int {
 	root.AddCommand(apps, tenants, envsCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
-	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
+	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), deployerCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
 
 	root.SetArgs(args)
 	root.SetOut(env.stdout)

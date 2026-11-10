@@ -142,6 +142,7 @@ type AppTenantPage {
 
 type Application {
 	createdAt: DateTime!
+	deployers: [Deployer!]!
 	environments: [Environment!]!
 	id: ID!
 	name: String!
@@ -333,6 +334,11 @@ input CreateConstraintInput {
 	fieldIds: [ID!]!
 }
 
+input CreateDeployerInput {
+	applicationId: ID!
+	name: String!
+}
+
 input CreateEntityInput {
 	graphqlPluralName: String
 	graphqlTypeName: String
@@ -476,6 +482,25 @@ input DenyOAuthAuthorizationInput {
 	clientId: ID!
 	redirectUri: String!
 	state: String
+}
+
+"""
+A credential CI uses to create and remove test environments: its id is the OAuth client_id.
+"""
+type Deployer {
+	createdAt: DateTime!
+	id: ID!
+	lastFour: String!
+	lastUsedAt: DateTime
+	name: String!
+}
+
+"""
+The deployer plus its secret, returned only here and never again.
+"""
+type DeployerWithSecret {
+	deployer: Deployer!
+	secret: String!
 }
 
 type EffectiveRole {
@@ -760,6 +785,9 @@ type Mutation {
 	createDataImport(
 		applicationId: ID!
 	): DataImport!
+	createDeployer(
+		input: CreateDeployerInput!
+	): DeployerWithSecret!
 	createEntity(
 		input: CreateEntityInput!
 	): Entity!
@@ -886,6 +914,9 @@ Registers a file for a record's file field and signs its upload. Write the retur
 	retireConstraint(
 		constraintId: ID!
 	): Constraint!
+	retireDeployer(
+		id: ID!
+	): Deployer!
 	retireEntity(
 		entityId: ID!
 	): Entity!
@@ -1379,6 +1410,7 @@ type RecordAccessSource {
 }
 
 enum RecordAccessSourceKind {
+	deployer
 	group_role
 	platform_group_role
 	platform_role

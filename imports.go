@@ -10,14 +10,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
@@ -59,7 +60,7 @@ func importCommands(command commandFunc) *cobra.Command {
 
 func importCreate(command commandFunc) *cobra.Command {
 	var appID, envID, dir string
-	cmd := command("create", "Create an import, adding every .jsonl file in --dir and every regular file under --dir/files (symlinks are skipped)", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	cmd := command("create", "Create an import, adding every .jsonl file in --dir and every file under --dir/files, following symlinks", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		scope, err := s.scopeIn(ctx, appID, envID)
 		if err != nil {
 			return nil, nil, err
@@ -98,7 +99,7 @@ func importCreate(command commandFunc) *cobra.Command {
 	})
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
-	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it; every regular file under its files/ folder (symlinks are skipped) is added too, named by its path under files/, for a row's file field to name")
+	cmd.Flags().StringVar(&dir, "dir", "", "a directory of .jsonl files: tenants, users, memberships, and one per entity named for it; every file under its files/ folder is added too, following symlinks, named by the path it is reached at under files/, for a row's file field to name")
 	return cmd
 }
 
@@ -410,8 +411,8 @@ func fullReport(ctx context.Context, current DataImportParts) (DataImportParts, 
 	return current, nil
 }
 
-// planDir maps each .jsonl in dir to a kind, records files to an entity, and adds every regular file
-// under dir/files as a files part (symlinks are skipped), before anything is created.
+// planDir maps each .jsonl in dir to a kind, records files to an entity, and adds every file
+// under dir/files as a files part, following symlinks, before anything is created.
 func planDir(ctx context.Context, s *session, scope, dir string) ([]plannedFile, error) {
 	listed, err := os.ReadDir(dir)
 	if err != nil {
@@ -477,28 +478,87 @@ func planDir(ctx context.Context, s *session, scope, dir string) ([]plannedFile,
 	return planned, refuseDuplicates(planned)
 }
 
-// listRecordFiles are the regular files under dir/files, as slash-separated paths relative to dir.
-// A missing files folder holds none; directories and symlinks are skipped.
+// listRecordFiles are the files under dir/files, as slash-separated paths relative to dir, each named by
+// the path it is reached at. Symlinks are followed, files/ itself included: a link to a file is that file,
+// and a link to a folder is walked. A missing files folder holds none. A link that points at nothing, into a
+// chain of links that loops, or at a folder it sits inside, is refused, naming every such link, before
+// anything is created. Any other failure to read a path is returned as it is.
 func listRecordFiles(dir string) ([]string, error) {
-	found := []string{}
-	root := filepath.Join(dir, filesFolder)
-	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			if path == root && os.IsNotExist(err) {
+	walk := &recordFileWalk{dir: dir, found: []string{}}
+	if err := walk.visit(filesFolder, nil); err != nil {
+		return nil, err
+	}
+	if len(walk.dangling) > 0 || len(walk.circular) > 0 {
+		parts := []string{}
+		if len(walk.dangling) > 0 {
+			parts = append(parts, "Cannot follow "+strings.Join(walk.dangling, ", ")+": a link that points at nothing, or into a chain of links that loops. Point each one straight at the file or folder it stands for, or remove it if that no longer exists.")
+		}
+		if len(walk.circular) > 0 {
+			parts = append(parts, "Cannot follow "+strings.Join(walk.circular, ", ")+": a link to a folder it sits inside would repeat that folder's files without end. Remove each one.")
+		}
+		parts = append(parts, "Nothing was created.")
+		return nil, &cliError{exit: exitRefused, Code: "IMPORT_FILE_INVALID", Message: strings.Join(parts, " ")}
+	}
+	return walk.found, nil
+}
+
+// recordFileWalk collects the files under dir/files, the links that point at nothing or loop among themselves,
+// and the links to a folder they sit inside.
+type recordFileWalk struct {
+	dir                       string
+	found, dangling, circular []string
+}
+
+// visit adds the entry reached at rel, a slash path under dir, following links. above holds the real
+// paths of the folders rel sits inside.
+func (w *recordFileWalk) visit(rel string, above []string) error {
+	path := filepath.Join(w.dir, filepath.FromSlash(rel))
+	info, err := os.Stat(path)
+	if err != nil {
+		if _, lerr := os.Lstat(path); lerr != nil {
+			if rel == filesFolder && os.IsNotExist(lerr) {
 				return nil
 			}
+			return lerr
+		}
+		if !os.IsNotExist(err) && !errors.Is(err, syscall.ELOOP) {
 			return err
 		}
-		if entry.Type().IsRegular() {
-			rel, err := filepath.Rel(dir, path)
-			if err != nil {
-				return err
-			}
-			found = append(found, filepath.ToSlash(rel))
-		}
+		w.dangling = append(w.dangling, rel)
 		return nil
-	})
-	return found, err
+	}
+	if info.Mode().IsRegular() {
+		w.found = append(w.found, rel)
+		return nil
+	}
+	if !info.IsDir() {
+		return nil
+	}
+	real, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return err
+	}
+	if slices.ContainsFunc(above, func(folder string) bool { return within(folder, real) }) {
+		w.circular = append(w.circular, rel)
+		return nil
+	}
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	above = append(slices.Clip(above), real)
+	for _, entry := range entries {
+		if err := w.visit(rel+"/"+entry.Name(), above); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// within reports whether path is folder or inside it.
+func within(path, folder string) bool {
+	rel, err := filepath.Rel(folder, path)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 // refuseUnusable fails, naming every file that cannot be opened, whose size the server would refuse,

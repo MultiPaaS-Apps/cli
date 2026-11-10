@@ -247,6 +247,109 @@ func TestFieldAddRefusesABadDefaultBeforeSendingAnything(t *testing.T) {
 	}
 }
 
+func TestFieldAddSendsList(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "text", "--name", "Tags", "--list", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"entityId": "entity-1", "type": "text", "name": "Tags", "list": true}}
+	if !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations[0], want)
+	}
+}
+
+func TestFieldAddSendsAListDefaultAsAnArray(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "text", "--list", "--default", `["a","b"]`, "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	input := fake.mutations[0]["input"].(map[string]any)
+	if want := []any{"a", "b"}; !reflect.DeepEqual(input["defaultValue"], want) {
+		t.Fatalf("sent %#v, want %#v", input["defaultValue"], want)
+	}
+}
+
+func TestFieldAddRefusesAListDefaultThatIsNotAnArray(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "text", "--list", "--default", "a", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	var failure struct{ Error cliError }
+	decode(t, got.stdout, &failure)
+	if want := `--default for a list field must be a JSON array of strings, such as '["a","b"]', not "a"`; failure.Error.Message != want {
+		t.Fatalf("printed %q, want %q", failure.Error.Message, want)
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestFieldAddRefusesANullListDefault(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "add", "--app", "app-a-000", "--entity", "entity-1", "--type", "text", "--list", "--default", "null", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestFieldUpdateRefusesANullListDefault(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.fields["entity-1"] = []map[string]any{{"id": "field-1", "graphqlFieldName": "tags", "type": "text", "list": true}}
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--default", "null", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestFieldUpdateReadsTheFieldsListToSendItsDefaultAsAnArray(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.fields["entity-1"] = []map[string]any{{"id": "field-1", "graphqlFieldName": "tags", "type": "text", "list": true}}
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--type", "text", "--default", `["a"]`, "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	input := fake.mutations[0]["input"].(map[string]any)
+	if want := []any{"a"}; !reflect.DeepEqual(input["defaultValue"], want) {
+		t.Fatalf("sent %#v, want %#v", input["defaultValue"], want)
+	}
+}
+
+func TestFieldUpdateHasNoListFlag(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "field", "update", "--app", "app-a-000", "--id", "field-1", "--list", "--json")
+	if got.exit == exitOK || !strings.Contains(got.stdout+got.stderr, "unknown flag: --list") {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestModelShowMarksAListField(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entities["app-a-000"] = append(fake.entities["app-a-000"], map[string]any{"id": "entity-1", "name": "Ticket"})
+	fake.fields["entity-1"] = []map[string]any{
+		{"id": "field-1", "graphqlFieldName": "tags", "type": "text", "list": true},
+		{"id": "field-2", "graphqlFieldName": "note", "type": "text", "list": false},
+	}
+	got := fake.run(t, "model", "show", "--app", "app-a-000")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	types := map[string]string{}
+	for _, line := range strings.Split(got.stdout, "\n") {
+		if words := strings.Fields(line); len(words) == 6 {
+			types[words[0]] = words[1]
+		}
+	}
+	if types["tags"] != "list-of-text" || types["note"] != "text" {
+		t.Fatalf("types %v in %q", types, got.stdout)
+	}
+}
+
 func TestEnumCreateSendsItsValuesWithAnOptionalGraphQLName(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	got := fake.run(t, "enum", "create", "--app", "app-a-000", "--name", "Status", "--values", "In progress,N/A=NOT_APPLICABLE", "--json")

@@ -362,6 +362,7 @@ input CreateFieldInput {
 	graphqlFieldName: String
 	isLifecycle: Boolean
 	isParent: Boolean
+	list: Boolean
 	maxFileBytes: Float
 	name: String
 	notNull: Boolean
@@ -621,6 +622,7 @@ type Field {
 	id: ID!
 	isLifecycle: Boolean!
 	isParent: Boolean!
+	list: Boolean!
 	maxFileBytes: Float
 	name: String
 	notNull: Boolean!

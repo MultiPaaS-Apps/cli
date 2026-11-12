@@ -530,6 +530,7 @@ func TestImportStatusWithoutIncludeDeletedDoesNotFindADeletedImport(t *testing.T
 func TestImportCommandsUseTheApplicationScope(t *testing.T) {
 	fake := projectFake(t)
 	fake.seedImport("import-9", "draft")
+	fake.reissued = map[string]any{"reissued": 0, "skipped": 0}
 	path := writeExport(t, t.TempDir(), "tenants.jsonl", "{\"id\":\"acct-17\",\"name\":\"Acme\"}\n")
 	commands := [][]string{
 		{"import", "create"},
@@ -537,6 +538,8 @@ func TestImportCommandsUseTheApplicationScope(t *testing.T) {
 		{"import", "check", "--import", "import-9", "--wait=false"},
 		{"import", "run", "--import", "import-9", "--wait=false"},
 		{"import", "status", "--import", "import-9"},
+		{"import", "invitations", "--import", "import-9"},
+		{"import", "reissue", "--import", "import-9"},
 		{"import", "delete", "--import", "import-9"},
 	}
 	for _, args := range commands {
@@ -547,6 +550,242 @@ func TestImportCommandsUseTheApplicationScope(t *testing.T) {
 		if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/"+importApp {
 			t.Fatalf("%v: scope %q", args, last)
 		}
+	}
+}
+
+func seedLapsed(fake *fakeMultiPaaS) {
+	row := func(id, email, tenant, importID string, roles ...string) map[string]any {
+		names := []map[string]any{}
+		for _, role := range roles {
+			names = append(names, map[string]any{"id": "role-" + role, "name": role})
+		}
+		var imp any
+		if importID != "" {
+			imp = map[string]any{"id": importID}
+		}
+		return map[string]any{
+			"id": id, "email": email, "kind": "import", "status": "expired", "expiresAt": "2026-10-20T00:00:00.000Z",
+			"appTenant": map[string]any{"id": tenant, "name": "Tenant " + tenant}, "roles": names, "dataImport": imp,
+		}
+	}
+	live := row("inv-4", "dee@example.com", "tenant-1", "import-1", "Member")
+	live["status"] = "pending"
+	email := row("inv-5", "eve@example.com", "tenant-1", "import-1", "Member")
+	email["kind"] = "email"
+	fake.invitationRows = []map[string]any{
+		row("inv-1", "ann@example.com", "tenant-1", "import-1", "Member", "Admin"),
+		row("inv-2", "bob@example.com", "tenant-2", "import-2", "Member"),
+		row("inv-3", "cy@example.com", "tenant-1", "", "Member"),
+		live, email,
+	}
+}
+
+func lapsedEmails(t *testing.T, stdout string) []string {
+	t.Helper()
+	var printed struct {
+		Invitations []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation
+	}
+	decode(t, stdout, &printed)
+	emails := []string{}
+	for _, invitation := range printed.Invitations {
+		emails = append(emails, invitation.Email)
+	}
+	return emails
+}
+
+func TestImportInvitationsByImportAsksForLapsedImportRowsOfThatImport(t *testing.T) {
+	fake := projectFake(t)
+	seedLapsed(fake)
+
+	got := fake.run(t, "import", "invitations", "--app", importApp, "--import", "import-1")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if want := []map[string]any{{"kind": "import", "status": "expired", "dataImportId": "import-1"}}; !reflect.DeepEqual(fake.invitationWheres, want) {
+		t.Fatalf("where %v, want %v", fake.invitationWheres, want)
+	}
+	lines := strings.Split(strings.TrimSpace(got.stdout), "\n")
+	if len(lines) != 3 || !regexp.MustCompile(`^EMAIL\s+TENANT\s+ROLE\s+EXPIRED$`).MatchString(lines[0]) ||
+		!regexp.MustCompile(`^ann@example\.com\s+Tenant tenant-1\s+Member,Admin\s+2026-10-20T00:00:00\.000Z$`).MatchString(lines[1]) ||
+		lines[2] != "1 lapsed" {
+		t.Fatalf("output: %s", got.stdout)
+	}
+}
+
+func TestImportInvitationsByTenantReachesRowsThatRecordNoImport(t *testing.T) {
+	fake := projectFake(t)
+	seedLapsed(fake)
+
+	got := fake.run(t, "import", "invitations", "--app", importApp, "--tenant", "tenant-1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if want := []map[string]any{{"kind": "import", "status": "expired", "appTenantId": "tenant-1"}}; !reflect.DeepEqual(fake.invitationWheres, want) {
+		t.Fatalf("where %v, want %v", fake.invitationWheres, want)
+	}
+	if emails := lapsedEmails(t, got.stdout); !reflect.DeepEqual(emails, []string{"ann@example.com", "cy@example.com"}) {
+		t.Fatalf("emails %v", emails)
+	}
+}
+
+func TestImportInvitationsWithBothFlagsSendsBothIds(t *testing.T) {
+	fake := projectFake(t)
+	seedLapsed(fake)
+
+	got := fake.run(t, "import", "invitations", "--app", importApp, "--import", "import-1", "--tenant", "tenant-1", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if want := []map[string]any{{"kind": "import", "status": "expired", "dataImportId": "import-1", "appTenantId": "tenant-1"}}; !reflect.DeepEqual(fake.invitationWheres, want) {
+		t.Fatalf("where %v, want %v", fake.invitationWheres, want)
+	}
+}
+
+func TestImportInvitationsRefusesWithoutAnImportOrATenant(t *testing.T) {
+	fake := projectFake(t)
+	seedLapsed(fake)
+	got := fake.run(t, "import", "invitations", "--app", importApp)
+	if got.exit == exitOK || !strings.Contains(got.stdout+got.stderr, "at least one of the flags in the group [import tenant] is required") {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if len(fake.invitationWheres) != 0 {
+		t.Fatalf("a refused command reached the server: %v", fake.invitationWheres)
+	}
+}
+
+func TestImportReissueRefusesWithoutAnImportOrATenant(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "import", "reissue", "--app", importApp)
+	if got.exit == exitOK || !strings.Contains(got.stdout+got.stderr, "at least one of the flags in the group [import tenant] is required") {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("a refused command reached the server: %v", fake.mutations)
+	}
+}
+
+func TestImportReissueByImportSendsOnlyTheImportAndPrintsTheCounts(t *testing.T) {
+	fake := projectFake(t)
+	fake.reissued = map[string]any{"reissued": 2, "skipped": 1}
+
+	got := fake.run(t, "import", "reissue", "--app", importApp, "--import", "import-1")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if want := []map[string]any{{"input": map[string]any{"dataImportId": "import-1"}}}; !reflect.DeepEqual(fake.mutations, want) {
+		t.Fatalf("mutations %v, want %v", fake.mutations, want)
+	}
+	if want := "reissued 2, skipped 1\nskipped invitations have a deleted tenant or role, or a role you do not hold\n"; got.stdout != want {
+		t.Fatalf("output %q, want %q", got.stdout, want)
+	}
+}
+
+func TestImportReissueByTenantWithNothingSkippedPrintsOneLine(t *testing.T) {
+	fake := projectFake(t)
+	fake.reissued = map[string]any{"reissued": 3, "skipped": 0}
+
+	got := fake.run(t, "import", "reissue", "--app", importApp, "--tenant", "tenant-1")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if want := []map[string]any{{"input": map[string]any{"appTenantId": "tenant-1"}}}; !reflect.DeepEqual(fake.mutations, want) {
+		t.Fatalf("mutations %v, want %v", fake.mutations, want)
+	}
+	if got.stdout != "reissued 3, skipped 0\n" {
+		t.Fatalf("output %q", got.stdout)
+	}
+}
+
+func TestImportReissueJSONIsTheCounts(t *testing.T) {
+	fake := projectFake(t)
+	fake.reissued = map[string]any{"reissued": 2, "skipped": 1}
+
+	got := fake.run(t, "import", "reissue", "--app", importApp, "--import", "import-1", "--tenant", "tenant-1", "--json")
+	var printed struct{ Reissued, Skipped int }
+	decode(t, got.stdout, &printed)
+	if got.exit != exitOK || printed.Reissued != 2 || printed.Skipped != 1 {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	if want := []map[string]any{{"input": map[string]any{"dataImportId": "import-1", "appTenantId": "tenant-1"}}}; !reflect.DeepEqual(fake.mutations, want) {
+		t.Fatalf("mutations %v, want %v", fake.mutations, want)
+	}
+}
+
+func TestImportReissueKeepsTheServersNotFoundForATenantOutsideTheEnvironment(t *testing.T) {
+	fake := projectFake(t)
+	fake.refuseImport = [2]string{"NOT_FOUND", "appTenant not found"}
+
+	got := fake.run(t, "import", "reissue", "--app", importApp, "--tenant", "tenant-9", "--json")
+	var printed struct{ Error cliError }
+	decode(t, got.stdout, &printed)
+	if got.exit != exitRefused || printed.Error.Code != "NOT_FOUND" || printed.Error.Message != "appTenant not found" {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+}
+
+func TestImportReissueKeepsTheServersValidationRefusalForNeitherId(t *testing.T) {
+	fake := projectFake(t)
+
+	got := fake.run(t, "import", "reissue", "--app", importApp, "--import", "", "--json")
+	var printed struct{ Error cliError }
+	decode(t, got.stdout, &printed)
+	wantFields := []fieldError{{Field: "dataImportId", Rule: "required", Message: "Give dataImportId, appTenantId or both."}}
+	if got.exit != exitRefused || printed.Error.Code != "VALIDATION" || printed.Error.Message != "validation failed for field: dataImportId" ||
+		!reflect.DeepEqual(printed.Error.FieldErrors, wantFields) {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+}
+
+func TestImportStatusPrintsTheInvitationCountsAndTheReissueHintWhenSomeLapsed(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "imported").invitations = map[string]any{"pending": 3, "accepted": 4, "lapsed": 2}
+
+	got := fake.run(t, "import", "status", "--app", importApp, "--import", "import-1")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s%s", got.exit, got.stdout, got.stderr)
+	}
+	want := "import import-1 imported\ninvitations: 3 pending, 4 accepted, 2 lapsed\nrun \"multipaas import reissue --app app-a-000 --import import-1\" to re-issue the lapsed ones\n"
+	if got.stdout != want {
+		t.Fatalf("output %q, want %q", got.stdout, want)
+	}
+}
+
+func TestImportStatusReissueHintCarriesTheEnvItRanWith(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "imported").invitations = map[string]any{"pending": 0, "accepted": 0, "lapsed": 2}
+
+	got := fake.run(t, "import", "status", "--app", importApp, "--env", "env-default", "--import", "import-1")
+	want := "import import-1 imported\ninvitations: 0 pending, 0 accepted, 2 lapsed\nrun \"multipaas import reissue --app app-a-000 --env env-default --import import-1\" to re-issue the lapsed ones\n"
+	if got.exit != exitOK || got.stdout != want {
+		t.Fatalf("exit %d output %q, want %q", got.exit, got.stdout, want)
+	}
+}
+
+func TestImportStatusOfADeletedImportPrintsNoReissueHint(t *testing.T) {
+	fake := projectFake(t)
+	imp := fake.seedImport("import-1", "imported")
+	imp.invitations = map[string]any{"pending": 0, "accepted": 1, "lapsed": 2}
+	imp.deletedAt = "2026-10-25T09:30:00.000Z"
+
+	got := fake.run(t, "import", "status", "--app", importApp, "--import", "import-1", "--include-deleted")
+	want := "import import-1 imported deleted 2026-10-25T09:30:00.000Z\ninvitations: 0 pending, 1 accepted, 2 lapsed\n"
+	if got.exit != exitOK || got.stdout != want {
+		t.Fatalf("exit %d output %q, want %q", got.exit, got.stdout, want)
+	}
+}
+
+func TestImportStatusPrintsNoHintWhenNothingLapsedAndNoInvitationsLineWhenThereAreNone(t *testing.T) {
+	fake := projectFake(t)
+	fake.seedImport("import-1", "imported").invitations = map[string]any{"pending": 3, "accepted": 4, "lapsed": 0}
+	fake.seedImport("import-2", "imported")
+
+	withCounts := fake.run(t, "import", "status", "--app", importApp, "--import", "import-1")
+	if want := "import import-1 imported\ninvitations: 3 pending, 4 accepted, 0 lapsed\n"; withCounts.exit != exitOK || withCounts.stdout != want {
+		t.Fatalf("output %q, want %q", withCounts.stdout, want)
+	}
+	none := fake.run(t, "import", "status", "--app", importApp, "--import", "import-2")
+	if want := "import import-2 imported\n"; none.exit != exitOK || none.stdout != want {
+		t.Fatalf("output %q, want %q", none.stdout, want)
 	}
 }
 

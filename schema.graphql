@@ -152,6 +152,10 @@ type Application {
 type ApplicationInvitation {
 	appTenant: AppTenant
 	createdAt: DateTime!
+"""
+The import that wrote this invitation; null when the invitation names none or you cannot read the import.
+"""
+	dataImport: DataImport
 	email: String!
 	expiresAt: DateTime!
 	groups: [AccessGroup!]!
@@ -409,6 +413,10 @@ When the import was deleted; null while it is live.
 	files: [DataImportFile!]!
 	finishedAt: DateTime
 	id: ID!
+"""
+Counts of the membership invitations this import wrote. Imports run before they were recorded show zeros.
+"""
+	invitations: DataImportInvitationCounts!
 	problemCount: Int
 """
 A 15-minute download link for the full report, when it was too large to keep inline.
@@ -447,6 +455,15 @@ type DataImportFileUpload {
 	importFile: DataImportFile!
 	uploadHeaders: [Header!]!
 	uploadUrl: String!
+}
+
+type DataImportInvitationCounts {
+	accepted: Int!
+"""
+Unaccepted 7 days after the run or the last re-issue; reissueImportInvitations re-issues them.
+"""
+	lapsed: Int!
+	pending: Int!
 }
 
 type DataImportPage {
@@ -674,6 +691,16 @@ type ImportProblem {
 	sourceId: String
 }
 
+input InvitationFilter {
+	appTenantId: ID
+"""
+The import that wrote the invitation.
+"""
+	dataImportId: ID
+	kind: InvitationKind
+	status: ApplicationInvitationStatus
+}
+
 enum InvitationKind {
 	email
 	import
@@ -855,6 +882,12 @@ Marks an open invitation deleted: its link stops working and sign-in no longer a
 		oauthClientId: ID!
 	): ApiToken!
 	issueRealtimeTicket: RealtimeTicket!
+"""
+Re-issues an import's or a tenant's lapsed membership invitations. No email is sent.
+"""
+	reissueImportInvitations(
+		input: ReissueImportInvitationsInput!
+	): ReissueImportInvitationsResult!
 	removeAccessGroupMember(
 		id: ID!
 	): AccessGroupMember!
@@ -1256,6 +1289,7 @@ type Query {
 	groupRoleAssignments: [GroupRoleAssignment!]!
 	invitations(
 		page: PageInput!
+		where: InvitationFilter
 	): ApplicationInvitationPage!
 	me: User
 	members(
@@ -1500,6 +1534,26 @@ type RecordVersion {
 type RecordVersionPage {
 	items: [RecordVersion!]!
 	pageInfo: PageInfo!
+}
+
+input ReissueImportInvitationsInput {
+	appTenantId: ID
+	dataImportId: ID
+}
+
+type ReissueImportInvitationsResult {
+"""
+The import whose invitations were re-issued; null when re-issued by tenant alone.
+"""
+	dataImport: DataImport
+"""
+Lapsed invitations extended 7 days from now.
+"""
+	reissued: Int!
+"""
+Lapsed invitations left as they are: the tenant or role is gone, or you do not hold the role.
+"""
+	skipped: Int!
 }
 
 input RemoveEnvironmentInput {

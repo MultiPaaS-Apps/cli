@@ -21,6 +21,10 @@ bindings:
     type: map[string]any
   AddDataImportFileInput:
     type: map[string]any
+  InvitationFilter:
+    type: map[string]any
+  ReissueImportInvitationsInput:
+    type: map[string]any
   SubmitFeedbackInput:
     type: map[string]any
   JSON:

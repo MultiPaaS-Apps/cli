@@ -97,6 +97,9 @@ type fakeMultiPaaS struct {
 	refuseImport     [2]string              // an import mutation is refused with this code and message
 	refuseRead       [2]string              // a DataImport read is refused with this code and message
 	refuseReadFields []map[string]any       // when set, a refused DataImport read is a VALIDATION refusal naming these fields
+	invitationRows   []map[string]any       // the invitations ImportInvitations lists, filtered by the where it is sent
+	invitationWheres []map[string]any       // the where of every ImportInvitations read
+	reissued         map[string]any         // what ReissueImportInvitations answers: reissued and skipped
 	failReport       bool                   // GET /report answers HTTP 500
 	reportLines      []map[string]any       // GET /report serves these, one JSON line each
 	statusQueue      map[string][]string    // import id -> the statuses its later DataImport reads answer
@@ -530,6 +533,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageRoles(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
+	case "ImportInvitations", "ReissueImportInvitations":
+		f.importInvitations(w, operation, parts, variables)
 	case "SubmitFeedback":
 		f.submitFeedback(w, parts, variables)
 	case "FeedbackSetting":

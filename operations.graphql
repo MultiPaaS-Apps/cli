@@ -504,6 +504,11 @@ fragment DataImportParts on DataImport {
     key
     count
   }
+  invitations {
+    pending
+    accepted
+    lapsed
+  }
   files {
     ...DataImportFileParts
   }
@@ -579,6 +584,39 @@ query DataImport($id: ID!, $includeDeleted: Boolean!) {
   # @genqlient(pointer: true)
   dataImport(id: $id, includeDeleted: $includeDeleted) {
     ...DataImportParts
+  }
+}
+
+query ImportInvitations($page: PageInput!, $where: InvitationFilter!) {
+  invitations(page: $page, where: $where) {
+    items {
+      id
+      email
+      expiresAt
+      # @genqlient(pointer: true)
+      appTenant {
+        id
+        name
+      }
+      roles {
+        id
+        name
+      }
+      # @genqlient(pointer: true)
+      dataImport {
+        id
+      }
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+mutation ReissueImportInvitations($input: ReissueImportInvitationsInput!) {
+  reissueImportInvitations(input: $input) {
+    reissued
+    skipped
   }
 }
 

@@ -517,6 +517,11 @@ func (v *CheckDataImportCheckDataImport) GetCounts() []DataImportPartsCountsData
 	return v.DataImportParts.Counts
 }
 
+// GetInvitations returns CheckDataImportCheckDataImport.Invitations, and is useful for accessing the field via an interface.
+func (v *CheckDataImportCheckDataImport) GetInvitations() DataImportPartsInvitationsDataImportInvitationCounts {
+	return v.DataImportParts.Invitations
+}
+
 // GetFiles returns CheckDataImportCheckDataImport.Files, and is useful for accessing the field via an interface.
 func (v *CheckDataImportCheckDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
 	return v.DataImportParts.Files
@@ -569,6 +574,8 @@ type __premarshalCheckDataImportCheckDataImport struct {
 
 	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
 
+	Invitations DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
+
 	Files []DataImportPartsFilesDataImportFile `json:"files"`
 
 	StartedAt *string `json:"startedAt"`
@@ -595,6 +602,7 @@ func (v *CheckDataImportCheckDataImport) __premarshalJSON() (*__premarshalCheckD
 	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
 	retval.Problems = v.DataImportParts.Problems
 	retval.Counts = v.DataImportParts.Counts
+	retval.Invitations = v.DataImportParts.Invitations
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
@@ -1200,6 +1208,11 @@ func (v *CreateDataImportCreateDataImport) GetCounts() []DataImportPartsCountsDa
 	return v.DataImportParts.Counts
 }
 
+// GetInvitations returns CreateDataImportCreateDataImport.Invitations, and is useful for accessing the field via an interface.
+func (v *CreateDataImportCreateDataImport) GetInvitations() DataImportPartsInvitationsDataImportInvitationCounts {
+	return v.DataImportParts.Invitations
+}
+
 // GetFiles returns CreateDataImportCreateDataImport.Files, and is useful for accessing the field via an interface.
 func (v *CreateDataImportCreateDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
 	return v.DataImportParts.Files
@@ -1254,6 +1267,8 @@ type __premarshalCreateDataImportCreateDataImport struct {
 
 	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
 
+	Invitations DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
+
 	Files []DataImportPartsFilesDataImportFile `json:"files"`
 
 	StartedAt *string `json:"startedAt"`
@@ -1280,6 +1295,7 @@ func (v *CreateDataImportCreateDataImport) __premarshalJSON() (*__premarshalCrea
 	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
 	retval.Problems = v.DataImportParts.Problems
 	retval.Counts = v.DataImportParts.Counts
+	retval.Invitations = v.DataImportParts.Invitations
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
@@ -2169,6 +2185,11 @@ func (v *DataImportDataImport) GetCounts() []DataImportPartsCountsDataImportCoun
 	return v.DataImportParts.Counts
 }
 
+// GetInvitations returns DataImportDataImport.Invitations, and is useful for accessing the field via an interface.
+func (v *DataImportDataImport) GetInvitations() DataImportPartsInvitationsDataImportInvitationCounts {
+	return v.DataImportParts.Invitations
+}
+
 // GetFiles returns DataImportDataImport.Files, and is useful for accessing the field via an interface.
 func (v *DataImportDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
 	return v.DataImportParts.Files
@@ -2221,6 +2242,8 @@ type __premarshalDataImportDataImport struct {
 
 	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
 
+	Invitations DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
+
 	Files []DataImportPartsFilesDataImportFile `json:"files"`
 
 	StartedAt *string `json:"startedAt"`
@@ -2247,6 +2270,7 @@ func (v *DataImportDataImport) __premarshalJSON() (*__premarshalDataImportDataIm
 	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
 	retval.Problems = v.DataImportParts.Problems
 	retval.Counts = v.DataImportParts.Counts
+	retval.Invitations = v.DataImportParts.Invitations
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
@@ -2334,9 +2358,11 @@ type DataImportParts struct {
 	ProblemReportUrl *string                                `json:"problemReportUrl"`
 	Problems         []DataImportPartsProblemsImportProblem `json:"problems"`
 	Counts           []DataImportPartsCountsDataImportCount `json:"counts"`
-	Files            []DataImportPartsFilesDataImportFile   `json:"files"`
-	StartedAt        *string                                `json:"startedAt"`
-	FinishedAt       *string                                `json:"finishedAt"`
+	// Counts of the membership invitations this import wrote. Imports run before they were recorded show zeros.
+	Invitations DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
+	Files       []DataImportPartsFilesDataImportFile                 `json:"files"`
+	StartedAt   *string                                              `json:"startedAt"`
+	FinishedAt  *string                                              `json:"finishedAt"`
 	// When the import was deleted; null while it is live.
 	DeletedAt *string `json:"deletedAt"`
 }
@@ -2358,6 +2384,11 @@ func (v *DataImportParts) GetProblems() []DataImportPartsProblemsImportProblem {
 
 // GetCounts returns DataImportParts.Counts, and is useful for accessing the field via an interface.
 func (v *DataImportParts) GetCounts() []DataImportPartsCountsDataImportCount { return v.Counts }
+
+// GetInvitations returns DataImportParts.Invitations, and is useful for accessing the field via an interface.
+func (v *DataImportParts) GetInvitations() DataImportPartsInvitationsDataImportInvitationCounts {
+	return v.Invitations
+}
 
 // GetFiles returns DataImportParts.Files, and is useful for accessing the field via an interface.
 func (v *DataImportParts) GetFiles() []DataImportPartsFilesDataImportFile { return v.Files }
@@ -2459,6 +2490,23 @@ func (v *DataImportPartsFilesDataImportFile) __premarshalJSON() (*__premarshalDa
 	return &retval, nil
 }
 
+// DataImportPartsInvitationsDataImportInvitationCounts includes the requested fields of the GraphQL type DataImportInvitationCounts.
+type DataImportPartsInvitationsDataImportInvitationCounts struct {
+	Pending  int `json:"pending"`
+	Accepted int `json:"accepted"`
+	// Unaccepted 7 days after the run or the last re-issue; reissueImportInvitations re-issues them.
+	Lapsed int `json:"lapsed"`
+}
+
+// GetPending returns DataImportPartsInvitationsDataImportInvitationCounts.Pending, and is useful for accessing the field via an interface.
+func (v *DataImportPartsInvitationsDataImportInvitationCounts) GetPending() int { return v.Pending }
+
+// GetAccepted returns DataImportPartsInvitationsDataImportInvitationCounts.Accepted, and is useful for accessing the field via an interface.
+func (v *DataImportPartsInvitationsDataImportInvitationCounts) GetAccepted() int { return v.Accepted }
+
+// GetLapsed returns DataImportPartsInvitationsDataImportInvitationCounts.Lapsed, and is useful for accessing the field via an interface.
+func (v *DataImportPartsInvitationsDataImportInvitationCounts) GetLapsed() int { return v.Lapsed }
+
 // DataImportPartsProblemsImportProblem includes the requested fields of the GraphQL type ImportProblem.
 type DataImportPartsProblemsImportProblem struct {
 	File     string  `json:"file"`
@@ -2526,6 +2574,11 @@ func (v *DeleteDataImportDeleteDataImport) GetCounts() []DataImportPartsCountsDa
 	return v.DataImportParts.Counts
 }
 
+// GetInvitations returns DeleteDataImportDeleteDataImport.Invitations, and is useful for accessing the field via an interface.
+func (v *DeleteDataImportDeleteDataImport) GetInvitations() DataImportPartsInvitationsDataImportInvitationCounts {
+	return v.DataImportParts.Invitations
+}
+
 // GetFiles returns DeleteDataImportDeleteDataImport.Files, and is useful for accessing the field via an interface.
 func (v *DeleteDataImportDeleteDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
 	return v.DataImportParts.Files
@@ -2580,6 +2633,8 @@ type __premarshalDeleteDataImportDeleteDataImport struct {
 
 	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
 
+	Invitations DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
+
 	Files []DataImportPartsFilesDataImportFile `json:"files"`
 
 	StartedAt *string `json:"startedAt"`
@@ -2606,6 +2661,7 @@ func (v *DeleteDataImportDeleteDataImport) __premarshalJSON() (*__premarshalDele
 	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
 	retval.Problems = v.DataImportParts.Problems
 	retval.Counts = v.DataImportParts.Counts
+	retval.Invitations = v.DataImportParts.Invitations
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
@@ -3734,6 +3790,125 @@ type FieldsResponse struct {
 // GetFields returns FieldsResponse.Fields, and is useful for accessing the field via an interface.
 func (v *FieldsResponse) GetFields() FieldsFieldsFieldPage { return v.Fields }
 
+// ImportInvitationsInvitationsApplicationInvitationPage includes the requested fields of the GraphQL type ApplicationInvitationPage.
+type ImportInvitationsInvitationsApplicationInvitationPage struct {
+	Items    []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation `json:"items"`
+	PageInfo ImportInvitationsInvitationsApplicationInvitationPagePageInfo                     `json:"pageInfo"`
+}
+
+// GetItems returns ImportInvitationsInvitationsApplicationInvitationPage.Items, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPage) GetItems() []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation {
+	return v.Items
+}
+
+// GetPageInfo returns ImportInvitationsInvitationsApplicationInvitationPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPage) GetPageInfo() ImportInvitationsInvitationsApplicationInvitationPagePageInfo {
+	return v.PageInfo
+}
+
+// ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation includes the requested fields of the GraphQL type ApplicationInvitation.
+type ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation struct {
+	Id        string                                                                                     `json:"id"`
+	Email     string                                                                                     `json:"email"`
+	ExpiresAt string                                                                                     `json:"expiresAt"`
+	AppTenant *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant  `json:"appTenant"`
+	Roles     []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole `json:"roles"`
+	// The import that wrote this invitation; null when the invitation names none or you cannot read the import.
+	DataImport *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationDataImport `json:"dataImport"`
+}
+
+// GetId returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Id, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetId() string {
+	return v.Id
+}
+
+// GetEmail returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Email, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetEmail() string {
+	return v.Email
+}
+
+// GetExpiresAt returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.ExpiresAt, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetExpiresAt() string {
+	return v.ExpiresAt
+}
+
+// GetAppTenant returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.AppTenant, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetAppTenant() *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant {
+	return v.AppTenant
+}
+
+// GetRoles returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Roles, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetRoles() []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole {
+	return v.Roles
+}
+
+// GetDataImport returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.DataImport, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetDataImport() *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationDataImport {
+	return v.DataImport
+}
+
+// ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant includes the requested fields of the GraphQL type AppTenant.
+type ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant.Id, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant) GetId() string {
+	return v.Id
+}
+
+// GetName returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant.Name, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant) GetName() string {
+	return v.Name
+}
+
+// ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationDataImport includes the requested fields of the GraphQL type DataImport.
+type ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationDataImport struct {
+	Id string `json:"id"`
+}
+
+// GetId returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationDataImport.Id, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationDataImport) GetId() string {
+	return v.Id
+}
+
+// ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole includes the requested fields of the GraphQL type Role.
+type ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole.Id, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole) GetId() string {
+	return v.Id
+}
+
+// GetName returns ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole.Name, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole) GetName() string {
+	return v.Name
+}
+
+// ImportInvitationsInvitationsApplicationInvitationPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type ImportInvitationsInvitationsApplicationInvitationPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns ImportInvitationsInvitationsApplicationInvitationPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsInvitationsApplicationInvitationPagePageInfo) GetHasMore() bool {
+	return v.HasMore
+}
+
+// ImportInvitationsResponse is returned by ImportInvitations on success.
+type ImportInvitationsResponse struct {
+	Invitations ImportInvitationsInvitationsApplicationInvitationPage `json:"invitations"`
+}
+
+// GetInvitations returns ImportInvitationsResponse.Invitations, and is useful for accessing the field via an interface.
+func (v *ImportInvitationsResponse) GetInvitations() ImportInvitationsInvitationsApplicationInvitationPage {
+	return v.Invitations
+}
+
 // LatestModelRevisionModelRevisionsModelRevisionPage includes the requested fields of the GraphQL type ModelRevisionPage.
 type LatestModelRevisionModelRevisionsModelRevisionPage struct {
 	Items []LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision `json:"items"`
@@ -4706,6 +4881,35 @@ type RecordsResponse struct {
 
 // GetRecords returns RecordsResponse.Records, and is useful for accessing the field via an interface.
 func (v *RecordsResponse) GetRecords() RecordsRecordsRecordPage { return v.Records }
+
+// ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult includes the requested fields of the GraphQL type ReissueImportInvitationsResult.
+type ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult struct {
+	// Lapsed invitations extended 7 days from now.
+	Reissued int `json:"reissued"`
+	// Lapsed invitations left as they are: the tenant or role is gone, or you do not hold the role.
+	Skipped int `json:"skipped"`
+}
+
+// GetReissued returns ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult.Reissued, and is useful for accessing the field via an interface.
+func (v *ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult) GetReissued() int {
+	return v.Reissued
+}
+
+// GetSkipped returns ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult.Skipped, and is useful for accessing the field via an interface.
+func (v *ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult) GetSkipped() int {
+	return v.Skipped
+}
+
+// ReissueImportInvitationsResponse is returned by ReissueImportInvitations on success.
+type ReissueImportInvitationsResponse struct {
+	// Re-issues an import's or a tenant's lapsed membership invitations. No email is sent.
+	ReissueImportInvitations ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult `json:"reissueImportInvitations"`
+}
+
+// GetReissueImportInvitations returns ReissueImportInvitationsResponse.ReissueImportInvitations, and is useful for accessing the field via an interface.
+func (v *ReissueImportInvitationsResponse) GetReissueImportInvitations() ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult {
+	return v.ReissueImportInvitations
+}
 
 // RemoveDataImportFileRemoveDataImportFileDataImport includes the requested fields of the GraphQL type DataImport.
 type RemoveDataImportFileRemoveDataImportFileDataImport struct {
@@ -6009,6 +6213,11 @@ func (v *RunDataImportRunDataImport) GetCounts() []DataImportPartsCountsDataImpo
 	return v.DataImportParts.Counts
 }
 
+// GetInvitations returns RunDataImportRunDataImport.Invitations, and is useful for accessing the field via an interface.
+func (v *RunDataImportRunDataImport) GetInvitations() DataImportPartsInvitationsDataImportInvitationCounts {
+	return v.DataImportParts.Invitations
+}
+
 // GetFiles returns RunDataImportRunDataImport.Files, and is useful for accessing the field via an interface.
 func (v *RunDataImportRunDataImport) GetFiles() []DataImportPartsFilesDataImportFile {
 	return v.DataImportParts.Files
@@ -6061,6 +6270,8 @@ type __premarshalRunDataImportRunDataImport struct {
 
 	Counts []DataImportPartsCountsDataImportCount `json:"counts"`
 
+	Invitations DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
+
 	Files []DataImportPartsFilesDataImportFile `json:"files"`
 
 	StartedAt *string `json:"startedAt"`
@@ -6087,6 +6298,7 @@ func (v *RunDataImportRunDataImport) __premarshalJSON() (*__premarshalRunDataImp
 	retval.ProblemReportUrl = v.DataImportParts.ProblemReportUrl
 	retval.Problems = v.DataImportParts.Problems
 	retval.Counts = v.DataImportParts.Counts
+	retval.Invitations = v.DataImportParts.Invitations
 	retval.Files = v.DataImportParts.Files
 	retval.StartedAt = v.DataImportParts.StartedAt
 	retval.FinishedAt = v.DataImportParts.FinishedAt
@@ -7405,6 +7617,18 @@ func (v *__FieldsInput) GetEntityId() string { return v.EntityId }
 // GetPage returns __FieldsInput.Page, and is useful for accessing the field via an interface.
 func (v *__FieldsInput) GetPage() PageInput { return v.Page }
 
+// __ImportInvitationsInput is used internally by genqlient
+type __ImportInvitationsInput struct {
+	Page  PageInput      `json:"page"`
+	Where map[string]any `json:"where"`
+}
+
+// GetPage returns __ImportInvitationsInput.Page, and is useful for accessing the field via an interface.
+func (v *__ImportInvitationsInput) GetPage() PageInput { return v.Page }
+
+// GetWhere returns __ImportInvitationsInput.Where, and is useful for accessing the field via an interface.
+func (v *__ImportInvitationsInput) GetWhere() map[string]any { return v.Where }
+
 // __ModelRevisionsInput is used internally by genqlient
 type __ModelRevisionsInput struct {
 	Page PageInput `json:"page"`
@@ -7496,6 +7720,14 @@ func (v *__RecordsInput) GetOrderBy() *RecordOrderInput { return v.OrderBy }
 
 // GetCursor returns __RecordsInput.Cursor, and is useful for accessing the field via an interface.
 func (v *__RecordsInput) GetCursor() *string { return v.Cursor }
+
+// __ReissueImportInvitationsInput is used internally by genqlient
+type __ReissueImportInvitationsInput struct {
+	Input map[string]any `json:"input"`
+}
+
+// GetInput returns __ReissueImportInvitationsInput.Input, and is useful for accessing the field via an interface.
+func (v *__ReissueImportInvitationsInput) GetInput() map[string]any { return v.Input }
 
 // __RemoveDataImportFileInput is used internally by genqlient
 type __RemoveDataImportFileInput struct {
@@ -8112,6 +8344,11 @@ fragment DataImportParts on DataImport {
 		key
 		count
 	}
+	invitations {
+		pending
+		accepted
+		lapsed
+	}
 	files {
 		... DataImportFileParts
 	}
@@ -8460,6 +8697,11 @@ fragment DataImportParts on DataImport {
 	counts {
 		key
 		count
+	}
+	invitations {
+		pending
+		accepted
+		lapsed
 	}
 	files {
 		... DataImportFileParts
@@ -8899,6 +9141,11 @@ fragment DataImportParts on DataImport {
 		key
 		count
 	}
+	invitations {
+		pending
+		accepted
+		lapsed
+	}
 	files {
 		... DataImportFileParts
 	}
@@ -8972,6 +9219,11 @@ fragment DataImportParts on DataImport {
 	counts {
 		key
 		count
+	}
+	invitations {
+		pending
+		accepted
+		lapsed
 	}
 	files {
 		... DataImportFileParts
@@ -9346,6 +9598,60 @@ func Fields(
 	}
 
 	data_ = &FieldsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by ImportInvitations.
+const ImportInvitations_Operation = `
+query ImportInvitations ($page: PageInput!, $where: InvitationFilter!) {
+	invitations(page: $page, where: $where) {
+		items {
+			id
+			email
+			expiresAt
+			appTenant {
+				id
+				name
+			}
+			roles {
+				id
+				name
+			}
+			dataImport {
+				id
+			}
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+`
+
+func ImportInvitations(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	page PageInput,
+	where map[string]any,
+) (data_ *ImportInvitationsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ImportInvitations",
+		Query:  ImportInvitations_Operation,
+		Variables: &__ImportInvitationsInput{
+			Page:  page,
+			Where: where,
+		},
+	}
+
+	data_ = &ImportInvitationsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -9839,6 +10145,41 @@ func RecordsCount(
 	}
 
 	data_ = &RecordsCountResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by ReissueImportInvitations.
+const ReissueImportInvitations_Operation = `
+mutation ReissueImportInvitations ($input: ReissueImportInvitationsInput!) {
+	reissueImportInvitations(input: $input) {
+		reissued
+		skipped
+	}
+}
+`
+
+func ReissueImportInvitations(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input map[string]any,
+) (data_ *ReissueImportInvitationsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ReissueImportInvitations",
+		Query:  ReissueImportInvitations_Operation,
+		Variables: &__ReissueImportInvitationsInput{
+			Input: input,
+		},
+	}
+
+	data_ = &ReissueImportInvitationsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -10498,6 +10839,11 @@ fragment DataImportParts on DataImport {
 	counts {
 		key
 		count
+	}
+	invitations {
+		pending
+		accepted
+		lapsed
 	}
 	files {
 		... DataImportFileParts

@@ -67,6 +67,7 @@ type fakeMultiPaaS struct {
 	refuseRecords                []map[string]any            // when set, every records read is refused as VALIDATION with these fieldErrors
 	afterRecordsPage             func(f *fakeMultiPaaS)      // when set, runs after each Records page is answered
 	omitNextCursor               bool                        // Records pages carry no nextCursor
+	cursorCycle                  []string                    // when set, the nth Records page's nextCursor is cursorCycle[n mod len] and the sixth page ends the list
 	lastQuery                    string                      // the query text of the GraphQL request being answered
 	oauthClients                 []map[string]any            // the application's sign-in clients
 	appIdentities                []map[string]any            // the application's app identities
@@ -493,6 +494,12 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			rows[i] = withFiles(row)
 		}
 		page := recordPage(rows, variables)
+		if len(f.cursorCycle) > 0 {
+			n := len(f.recordReads) - 1
+			info := page["pageInfo"].(map[string]any)
+			info["nextCursor"] = f.cursorCycle[n%len(f.cursorCycle)]
+			info["hasMore"] = n < 5
+		}
 		if f.omitNextCursor {
 			page["pageInfo"].(map[string]any)["nextCursor"] = nil
 		}

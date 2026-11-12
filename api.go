@@ -326,6 +326,7 @@ func pages[T any](fetch func(PageInput) ([]T, bool, error)) ([]T, error) {
 func cursorPages[T any](fetch func(page PageInput, cursor *string) ([]T, bool, *string, error)) ([]T, error) {
 	all := []T{}
 	var cursor *string
+	sent := map[string]bool{}
 	for {
 		items, hasMore, next, err := fetch(PageInput{Page: 0, PageSize: maxPageSize}, cursor)
 		if err != nil {
@@ -338,6 +339,10 @@ func cursorPages[T any](fetch func(page PageInput, cursor *string) ([]T, bool, *
 		if next == nil {
 			return nil, fmt.Errorf("the server said more records follow but sent no cursor for them")
 		}
+		if sent[*next] {
+			return nil, fmt.Errorf("the server sent a cursor it already sent, so the walk would repeat pages")
+		}
+		sent[*next] = true
 		cursor = next
 	}
 }

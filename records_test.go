@@ -200,6 +200,32 @@ func TestRecordsListRefusesAServerThatSaysMoreFollowWithoutACursor(t *testing.T)
 	}
 }
 
+func TestRecordsListStopsWhenTheServerRepeatsACursor(t *testing.T) {
+	for name, tc := range map[string]struct {
+		cycle []string
+		reads int
+	}{
+		"the same cursor twice": {cycle: []string{"same"}, reads: 2},
+		"a cycle A, B, A":       {cycle: []string{"A", "B"}, reads: 3},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fake := projectFake(t)
+			for i := range 101 {
+				fake.records["entity-1"] = append(fake.records["entity-1"], map[string]any{"id": fmt.Sprintf("record-%d", i), "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"})
+			}
+			fake.cursorCycle = tc.cycle
+			got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json")
+			assertFailure(t, got, exitRefused, "CLI_ERROR")
+			if !strings.Contains(got.stdout, "already sent") {
+				t.Fatalf("printed %s", got.stdout)
+			}
+			if len(fake.recordReads) != tc.reads {
+				t.Fatalf("read %d pages, want %d", len(fake.recordReads), tc.reads)
+			}
+		})
+	}
+}
+
 func TestRecordDataThatIsNotJSONSendsNothing(t *testing.T) {
 	fake := projectFake(t)
 	got := fake.run(t, "records", "create", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--data", `{"field-1":`, "--json")

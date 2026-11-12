@@ -71,20 +71,20 @@ func recordsList(command commandFunc) *cobra.Command {
 			total := counted.Records.TotalCount
 			return map[string]int{"count": total}, func(out io.Writer) { fmt.Fprintln(out, total) }, nil
 		}
-		list, err := pages(func(page PageInput) ([]RecordParts, bool, error) {
+		list, err := cursorPages(func(page PageInput, cursor *string) ([]RecordParts, bool, *string, error) {
 			var listed *RecordsResponse
 			err := s.call(ctx, scope, func(client graphql.Client) (err error) {
-				listed, err = Records(ctx, client, target.entityID, page, reference, recordScope, whereJSON, order)
+				listed, err = Records(ctx, client, target.entityID, page, reference, recordScope, whereJSON, order, cursor)
 				return err
 			})
 			if err != nil {
-				return nil, false, err
+				return nil, false, nil, err
 			}
 			found := []RecordParts{}
 			for _, item := range listed.Records.Items {
 				found = append(found, item.RecordParts)
 			}
-			return found, listed.Records.PageInfo.HasMore, nil
+			return found, listed.Records.PageInfo.HasMore, listed.Records.PageInfo.NextCursor, nil
 		})
 		return list, func(out io.Writer) {
 			table(out, "ID\tVERSION\tUPDATED\tDATA", list, func(r RecordParts) string {

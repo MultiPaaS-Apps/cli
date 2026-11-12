@@ -153,6 +153,79 @@ func TestRecordsListCollectsEveryPage(t *testing.T) {
 	}
 }
 
+func TestRecordsListWalksByCursorListingEachExistingRecordOnceAndNotOneCreatedBehindIt(t *testing.T) {
+	fake := projectFake(t)
+	for i := range 101 {
+		fake.records["entity-1"] = append(fake.records["entity-1"], map[string]any{"id": fmt.Sprintf("record-%d", i), "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"})
+	}
+	added := false
+	fake.afterRecordsPage = func(f *fakeMultiPaaS) {
+		if !added {
+			added = true
+			f.records["entity-1"] = append([]map[string]any{{"id": "record-new", "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"}}, f.records["entity-1"]...)
+		}
+	}
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json")
+	var records []RecordParts
+	decode(t, got.stdout, &records)
+	ids := map[string]bool{}
+	for _, record := range records {
+		if ids[record.Id] {
+			t.Fatalf("listed %s twice", record.Id)
+		}
+		ids[record.Id] = true
+	}
+	if len(records) != 101 || ids["record-new"] {
+		t.Fatalf("listed %d records, record-new listed: %v", len(records), ids["record-new"])
+	}
+	reads := fake.recordReads
+	if len(reads) != 2 || reads[0].variables["cursor"] != nil || reads[1].variables["cursor"] != "after:record-99" {
+		t.Fatalf("reads %v", reads)
+	}
+	if page := reads[1].variables["page"].(map[string]any); page["page"] != float64(0) {
+		t.Fatalf("second read asked for page %v", page["page"])
+	}
+}
+
+func TestRecordsListRefusesAServerThatSaysMoreFollowWithoutACursor(t *testing.T) {
+	fake := projectFake(t)
+	for i := range 101 {
+		fake.records["entity-1"] = append(fake.records["entity-1"], map[string]any{"id": fmt.Sprintf("record-%d", i), "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"})
+	}
+	fake.omitNextCursor = true
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "sent no cursor") {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsListStopsWhenTheServerRepeatsACursor(t *testing.T) {
+	for name, tc := range map[string]struct {
+		cycle []string
+		reads int
+	}{
+		"the same cursor twice": {cycle: []string{"same"}, reads: 2},
+		"a cycle A, B, A":       {cycle: []string{"A", "B"}, reads: 3},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fake := projectFake(t)
+			for i := range 101 {
+				fake.records["entity-1"] = append(fake.records["entity-1"], map[string]any{"id": fmt.Sprintf("record-%d", i), "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"})
+			}
+			fake.cursorCycle = tc.cycle
+			got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--json")
+			assertFailure(t, got, exitRefused, "CLI_ERROR")
+			if !strings.Contains(got.stdout, "already sent") {
+				t.Fatalf("printed %s", got.stdout)
+			}
+			if len(fake.recordReads) != tc.reads {
+				t.Fatalf("read %d pages, want %d", len(fake.recordReads), tc.reads)
+			}
+		})
+	}
+}
+
 func TestRecordDataThatIsNotJSONSendsNothing(t *testing.T) {
 	fake := projectFake(t)
 	got := fake.run(t, "records", "create", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1", "--data", `{"field-1":`, "--json")

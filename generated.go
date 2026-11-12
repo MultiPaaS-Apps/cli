@@ -4689,10 +4689,15 @@ func (v *RecordsRecordsRecordPageItemsRecord) __premarshalJSON() (*__premarshalR
 // RecordsRecordsRecordPagePageInfo includes the requested fields of the GraphQL type PageInfo.
 type RecordsRecordsRecordPagePageInfo struct {
 	HasMore bool `json:"hasMore"`
+	// Pass as `cursor` to get the next page. Only `records` issues one: null on every other list and on an empty page.
+	NextCursor *string `json:"nextCursor"`
 }
 
 // GetHasMore returns RecordsRecordsRecordPagePageInfo.HasMore, and is useful for accessing the field via an interface.
 func (v *RecordsRecordsRecordPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// GetNextCursor returns RecordsRecordsRecordPagePageInfo.NextCursor, and is useful for accessing the field via an interface.
+func (v *RecordsRecordsRecordPagePageInfo) GetNextCursor() *string { return v.NextCursor }
 
 // RecordsResponse is returned by Records on success.
 type RecordsResponse struct {
@@ -7468,6 +7473,7 @@ type __RecordsInput struct {
 	Scope     RecordScope           `json:"scope"`
 	Where     json.RawMessage       `json:"where"`
 	OrderBy   *RecordOrderInput     `json:"orderBy"`
+	Cursor    *string               `json:"cursor"`
 }
 
 // GetEntityId returns __RecordsInput.EntityId, and is useful for accessing the field via an interface.
@@ -7487,6 +7493,9 @@ func (v *__RecordsInput) GetWhere() json.RawMessage { return v.Where }
 
 // GetOrderBy returns __RecordsInput.OrderBy, and is useful for accessing the field via an interface.
 func (v *__RecordsInput) GetOrderBy() *RecordOrderInput { return v.OrderBy }
+
+// GetCursor returns __RecordsInput.Cursor, and is useful for accessing the field via an interface.
+func (v *__RecordsInput) GetCursor() *string { return v.Cursor }
 
 // __RemoveDataImportFileInput is used internally by genqlient
 type __RemoveDataImportFileInput struct {
@@ -9732,13 +9741,14 @@ func Record(
 
 // The query executed by Records.
 const Records_Operation = `
-query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput, $scope: RecordScope, $where: JSON, $orderBy: RecordOrderInput) {
-	records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where, orderBy: $orderBy) {
+query Records ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput, $scope: RecordScope, $where: JSON, $orderBy: RecordOrderInput, $cursor: String) {
+	records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where, orderBy: $orderBy, cursor: $cursor) {
 		items {
 			... RecordParts
 		}
 		pageInfo {
 			hasMore
+			nextCursor
 		}
 	}
 }
@@ -9770,6 +9780,7 @@ func Records(
 	scope RecordScope,
 	where json.RawMessage,
 	orderBy *RecordOrderInput,
+	cursor *string,
 ) (data_ *RecordsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "Records",
@@ -9781,6 +9792,7 @@ func Records(
 			Scope:     scope,
 			Where:     where,
 			OrderBy:   orderBy,
+			Cursor:    cursor,
 		},
 	}
 

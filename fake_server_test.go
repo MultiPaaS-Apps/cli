@@ -65,6 +65,9 @@ type fakeMultiPaaS struct {
 	recordScopes                 []string                    // the scope variable of every Records read ("" when absent)
 	recordReads                  []recordRead                // every Records and RecordsCount request received
 	refuseRecords                []map[string]any            // when set, every records read is refused as VALIDATION with these fieldErrors
+	afterRecordsPage             func(f *fakeMultiPaaS)      // when set, runs after each Records page is answered
+	omitNextCursor               bool                        // Records pages carry no nextCursor
+	cursorCycle                  []string                    // when set, the nth Records page's nextCursor is cursorCycle[n mod len] and the sixth page ends the list
 	lastQuery                    string                      // the query text of the GraphQL request being answered
 	oauthClients                 []map[string]any            // the application's sign-in clients
 	appIdentities                []map[string]any            // the application's app identities
@@ -490,7 +493,20 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		for i, row := range rows {
 			rows[i] = withFiles(row)
 		}
-		writeData(w, map[string]any{"records": pageOf(rows, variables)})
+		page := recordPage(rows, variables)
+		if len(f.cursorCycle) > 0 {
+			n := len(f.recordReads) - 1
+			info := page["pageInfo"].(map[string]any)
+			info["nextCursor"] = f.cursorCycle[n%len(f.cursorCycle)]
+			info["hasMore"] = n < 5
+		}
+		if f.omitNextCursor {
+			page["pageInfo"].(map[string]any)["nextCursor"] = nil
+		}
+		writeData(w, map[string]any{"records": page})
+		if f.afterRecordsPage != nil {
+			f.afterRecordsPage(f)
+		}
 	case "Record":
 		i := slices.IndexFunc(f.records[variables["entityId"].(string)], func(r map[string]any) bool {
 			return r["id"] == variables["id"] && recordInScope(r, parts, false)
@@ -765,6 +781,26 @@ func pageOf(rows []map[string]any, variables map[string]any) map[string]any {
 	size, _ := input["pageSize"].(float64)
 	start, end := min(int(number*size), len(rows)), min(int((number+1)*size), len(rows))
 	return map[string]any{"items": append([]map[string]any{}, rows[start:end]...), "pageInfo": map[string]any{"hasMore": end < len(rows)}}
+}
+
+// recordPage is a page of records as the server pages them: after the cursor's record when one is given, else by
+// page number, with a nextCursor naming the page's last record.
+func recordPage(rows []map[string]any, variables map[string]any) map[string]any {
+	input, _ := variables["page"].(map[string]any)
+	number, _ := input["page"].(float64)
+	size, _ := input["pageSize"].(float64)
+	start := int(number * size)
+	if cursor, ok := variables["cursor"].(string); ok {
+		start = slices.IndexFunc(rows, func(r map[string]any) bool { return "after:"+r["id"].(string) == cursor }) + 1
+	}
+	start = min(start, len(rows))
+	end := min(start+int(size), len(rows))
+	items := append([]map[string]any{}, rows[start:end]...)
+	var next any
+	if len(items) > 0 {
+		next = "after:" + items[len(items)-1]["id"].(string)
+	}
+	return map[string]any{"items": items, "pageInfo": map[string]any{"hasMore": end < len(rows), "nextCursor": next}}
 }
 
 // hasRevision is whether id is one of app's API versions, rev-1 to rev-N.

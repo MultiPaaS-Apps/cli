@@ -2355,13 +2355,14 @@ type DataImportParts struct {
 	Status       string `json:"status"`
 	ProblemCount int    `json:"problemCount"`
 	// A 15-minute download link for the full report, when it was too large to keep inline.
-	ProblemReportUrl *string                                              `json:"problemReportUrl"`
-	Problems         []DataImportPartsProblemsImportProblem               `json:"problems"`
-	Counts           []DataImportPartsCountsDataImportCount               `json:"counts"`
-	Invitations      DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
-	Files            []DataImportPartsFilesDataImportFile                 `json:"files"`
-	StartedAt        *string                                              `json:"startedAt"`
-	FinishedAt       *string                                              `json:"finishedAt"`
+	ProblemReportUrl *string                                `json:"problemReportUrl"`
+	Problems         []DataImportPartsProblemsImportProblem `json:"problems"`
+	Counts           []DataImportPartsCountsDataImportCount `json:"counts"`
+	// Counts of the membership invitations this import wrote. Imports run before they were recorded show zeros.
+	Invitations DataImportPartsInvitationsDataImportInvitationCounts `json:"invitations"`
+	Files       []DataImportPartsFilesDataImportFile                 `json:"files"`
+	StartedAt   *string                                              `json:"startedAt"`
+	FinishedAt  *string                                              `json:"finishedAt"`
 	// When the import was deleted; null while it is live.
 	DeletedAt *string `json:"deletedAt"`
 }
@@ -2493,7 +2494,8 @@ func (v *DataImportPartsFilesDataImportFile) __premarshalJSON() (*__premarshalDa
 type DataImportPartsInvitationsDataImportInvitationCounts struct {
 	Pending  int `json:"pending"`
 	Accepted int `json:"accepted"`
-	Lapsed   int `json:"lapsed"`
+	// Unaccepted 7 days after the run or the last re-issue; reissueImportInvitations re-issues them.
+	Lapsed int `json:"lapsed"`
 }
 
 // GetPending returns DataImportPartsInvitationsDataImportInvitationCounts.Pending, and is useful for accessing the field via an interface.
@@ -3806,11 +3808,12 @@ func (v *ImportInvitationsInvitationsApplicationInvitationPage) GetPageInfo() Im
 
 // ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation includes the requested fields of the GraphQL type ApplicationInvitation.
 type ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation struct {
-	Id         string                                                                                     `json:"id"`
-	Email      string                                                                                     `json:"email"`
-	ExpiresAt  string                                                                                     `json:"expiresAt"`
-	AppTenant  *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant  `json:"appTenant"`
-	Roles      []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole `json:"roles"`
+	Id        string                                                                                     `json:"id"`
+	Email     string                                                                                     `json:"email"`
+	ExpiresAt string                                                                                     `json:"expiresAt"`
+	AppTenant *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationAppTenant  `json:"appTenant"`
+	Roles     []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationRolesRole `json:"roles"`
+	// The import that wrote this invitation; null when the invitation names none or you cannot read the import.
 	DataImport *ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitationDataImport `json:"dataImport"`
 }
 
@@ -4881,8 +4884,10 @@ func (v *RecordsResponse) GetRecords() RecordsRecordsRecordPage { return v.Recor
 
 // ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult includes the requested fields of the GraphQL type ReissueImportInvitationsResult.
 type ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult struct {
+	// Lapsed invitations extended 7 days from now.
 	Reissued int `json:"reissued"`
-	Skipped  int `json:"skipped"`
+	// Lapsed invitations left as they are: the tenant or role is gone, or you do not hold the role.
+	Skipped int `json:"skipped"`
 }
 
 // GetReissued returns ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult.Reissued, and is useful for accessing the field via an interface.
@@ -4897,6 +4902,7 @@ func (v *ReissueImportInvitationsReissueImportInvitationsReissueImportInvitation
 
 // ReissueImportInvitationsResponse is returned by ReissueImportInvitations on success.
 type ReissueImportInvitationsResponse struct {
+	// Re-issues an import's or a tenant's lapsed membership invitations. No email is sent.
 	ReissueImportInvitations ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult `json:"reissueImportInvitations"`
 }
 

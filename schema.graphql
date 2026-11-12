@@ -152,6 +152,9 @@ type Application {
 type ApplicationInvitation {
 	appTenant: AppTenant
 	createdAt: DateTime!
+"""
+The import that wrote this invitation; null when the invitation names none or you cannot read the import.
+"""
 	dataImport: DataImport
 	email: String!
 	expiresAt: DateTime!
@@ -410,6 +413,9 @@ When the import was deleted; null while it is live.
 	files: [DataImportFile!]!
 	finishedAt: DateTime
 	id: ID!
+"""
+Counts of the membership invitations this import wrote. Imports run before they were recorded show zeros.
+"""
 	invitations: DataImportInvitationCounts!
 	problemCount: Int
 """
@@ -453,6 +459,9 @@ type DataImportFileUpload {
 
 type DataImportInvitationCounts {
 	accepted: Int!
+"""
+Unaccepted 7 days after the run or the last re-issue; reissueImportInvitations re-issues them.
+"""
 	lapsed: Int!
 	pending: Int!
 }
@@ -684,6 +693,9 @@ type ImportProblem {
 
 input InvitationFilter {
 	appTenantId: ID
+"""
+The import that wrote the invitation.
+"""
 	dataImportId: ID
 	kind: InvitationKind
 	status: ApplicationInvitationStatus
@@ -870,6 +882,9 @@ Marks an open invitation deleted: its link stops working and sign-in no longer a
 		oauthClientId: ID!
 	): ApiToken!
 	issueRealtimeTicket: RealtimeTicket!
+"""
+Re-issues an import's or a tenant's lapsed membership invitations. No email is sent.
+"""
 	reissueImportInvitations(
 		input: ReissueImportInvitationsInput!
 	): ReissueImportInvitationsResult!
@@ -1527,7 +1542,17 @@ input ReissueImportInvitationsInput {
 }
 
 type ReissueImportInvitationsResult {
+"""
+The import whose invitations were re-issued; null when re-issued by tenant alone.
+"""
+	dataImport: DataImport
+"""
+Lapsed invitations extended 7 days from now.
+"""
 	reissued: Int!
+"""
+Lapsed invitations left as they are: the tenant or role is gone, or you do not hold the role.
+"""
 	skipped: Int!
 }
 

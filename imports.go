@@ -55,7 +55,7 @@ type plannedFile struct {
 
 func importCommands(command commandFunc) *cobra.Command {
 	return group("import", "Load an application's data from export files",
-		importCreate(command), importAdd(command), importCheck(command), importRun(command), importStatus(command), importDelete(command))
+		importCreate(command), importAdd(command), importCheck(command), importRun(command), importStatus(command), importInvitations(command), importReissue(command), importDelete(command))
 }
 
 func importCreate(command commandFunc) *cobra.Command {
@@ -95,7 +95,7 @@ func importCreate(command commandFunc) *cobra.Command {
 				return nil, nil, partiallyCreated(err, importID, added)
 			}
 		}
-		return shownImport(created)
+		return shownImport(created, appID, envID)
 	})
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
@@ -185,7 +185,7 @@ func importStatus(command commandFunc) *cobra.Command {
 		if current, err = fullReport(ctx, current); err != nil {
 			return nil, nil, err
 		}
-		return shownImport(current)
+		return shownImport(current, appID, envID)
 	})
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
@@ -193,6 +193,117 @@ func importStatus(command commandFunc) *cobra.Command {
 	cmd.Flags().BoolVar(&includeDeleted, "include-deleted", false, "find the import even if it was deleted")
 	_ = cmd.MarkFlagRequired("import")
 	return cmd
+}
+
+const lapsedWindowHelp = `An imported membership is claimed at the person's next sign-in, within 7 days of the import run or of its last
+re-issue. After that it lapses unclaimed.
+
+Name the import with --import. Memberships from imports run before imports recorded their invitations carry no import,
+so --import does not match them; name their tenant with --tenant.`
+
+const reissueRulesHelp = `A re-issue gives every membership it re-issues another 7 days from now and sends no email. With --import alone, a
+lapsed membership whose tenant or role is deleted, or whose role you do not hold, is skipped and stays lapsed. A deleted
+import is refused as not found; name its tenant with --tenant instead. With --tenant, a tenant that is deleted, unknown
+or outside the environment is refused as not found, and a membership whose role is deleted or whose role you do not hold
+is skipped. With both flags, the tenant must be live and in the import's environment.`
+
+func importInvitations(command commandFunc) *cobra.Command {
+	var appID, envID, importID, tenantID string
+	cmd := command("invitations", "List the lapsed import invitations of an import or a tenant", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		scope, err := s.scopeIn(ctx, appID, envID)
+		if err != nil {
+			return nil, nil, err
+		}
+		where := map[string]any{"kind": "import", "status": "expired"}
+		if importID != "" {
+			where["dataImportId"] = importID
+		}
+		if tenantID != "" {
+			where["appTenantId"] = tenantID
+		}
+		lapsed, err := pages(func(page PageInput) ([]ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation, bool, error) {
+			var listed *ImportInvitationsResponse
+			err := s.call(ctx, scope, func(client graphql.Client) (err error) {
+				listed, err = ImportInvitations(ctx, client, page, where)
+				return err
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			return listed.Invitations.Items, listed.Invitations.PageInfo.HasMore, nil
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		return map[string]any{"invitations": lapsed}, func(out io.Writer) { printLapsed(out, lapsed) }, nil
+	})
+	cmd.Long = "List the import invitations that lapsed unclaimed, for an import or a tenant. A tenant id that matches no tenant lists none.\n\n" + lapsedWindowHelp
+	importTargetFlags(cmd, &appID, &envID, &importID, &tenantID)
+	return cmd
+}
+
+func importReissue(command commandFunc) *cobra.Command {
+	var appID, envID, importID, tenantID string
+	cmd := command("reissue", "Re-issue the lapsed import invitations of an import or a tenant: re-issued ones are claimed at the user's next sign-in within 7 days", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		scope, err := s.scopeIn(ctx, appID, envID)
+		if err != nil {
+			return nil, nil, err
+		}
+		input := map[string]any{}
+		if importID != "" {
+			input["dataImportId"] = importID
+		}
+		if tenantID != "" {
+			input["appTenantId"] = tenantID
+		}
+		var result ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult
+		err = s.call(ctx, scope, func(client graphql.Client) error {
+			response, err := ReissueImportInvitations(ctx, client, input)
+			if err == nil {
+				result = response.ReissueImportInvitations
+			}
+			return err
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		return result, func(out io.Writer) { printReissued(out, result) }, nil
+	})
+	cmd.Long = "Re-issue the lapsed import invitations of an import or a tenant, so each re-issued one is claimed at the user's next sign-in within 7 days.\n\n" + lapsedWindowHelp + "\n\n" + reissueRulesHelp
+	importTargetFlags(cmd, &appID, &envID, &importID, &tenantID)
+	return cmd
+}
+
+// importTargetFlags are the flags that choose which import invitations a command reaches: at least one of
+// --import and --tenant.
+func importTargetFlags(cmd *cobra.Command, appID, envID, importID, tenantID *string) {
+	appFlag(cmd, appID)
+	envFlagFromProject(cmd, appID, envID, nil)
+	cmd.Flags().StringVar(importID, "import", "", "the import's id")
+	cmd.Flags().StringVar(tenantID, "tenant", "", "the tenant's id; reaches invitations from imports run before they recorded their import and, for reissue, those of a deleted import")
+	cmd.MarkFlagsOneRequired("import", "tenant")
+}
+
+func printLapsed(out io.Writer, lapsed []ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) {
+	table(out, "EMAIL\tTENANT\tROLE\tEXPIRED", lapsed, func(i ImportInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) string {
+		tenant := ""
+		if i.AppTenant != nil {
+			tenant = i.AppTenant.Name
+		}
+		roles := []string{}
+		for _, role := range i.Roles {
+			roles = append(roles, role.Name)
+		}
+		return fmt.Sprintf("%s\t%s\t%s\t%s", i.Email, tenant, strings.Join(roles, ","), i.ExpiresAt)
+	})
+	fmt.Fprintf(out, "%d lapsed\n", len(lapsed))
+}
+
+func printReissued(out io.Writer, result ReissueImportInvitationsReissueImportInvitationsReissueImportInvitationsResult) {
+	fmt.Fprintf(out, "reissued %d, skipped %d\n", result.Reissued, result.Skipped)
+	if result.Skipped > 0 {
+		fmt.Fprintln(out, "skipped invitations have a deleted tenant or role, or a role you do not hold")
+	}
 }
 
 func importDelete(command commandFunc) *cobra.Command {
@@ -213,7 +324,7 @@ func importDelete(command commandFunc) *cobra.Command {
 		if err != nil {
 			return nil, nil, err
 		}
-		return shownImport(deleted)
+		return shownImport(deleted, appID, envID)
 	})
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
@@ -247,7 +358,7 @@ func importStep(command commandFunc, use, short string, request func(context.Con
 		if current, err = fullReport(ctx, current); err != nil {
 			return nil, nil, err
 		}
-		return shownImport(current)
+		return shownImport(current, appID, envID)
 	})
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
@@ -660,11 +771,11 @@ func partiallyCreated(err error, importID string, added []string) error {
 		"%s Import %s was created and holds %s.", failure.Message, importID, held)}
 }
 
-func shownImport(current DataImportParts) (any, func(io.Writer), error) {
-	return map[string]DataImportParts{"import": current}, func(out io.Writer) { printImport(out, current) }, nil
+func shownImport(current DataImportParts, appID, envID string) (any, func(io.Writer), error) {
+	return map[string]DataImportParts{"import": current}, func(out io.Writer) { printImport(out, current, appID, envID) }, nil
 }
 
-func printImport(out io.Writer, current DataImportParts) {
+func printImport(out io.Writer, current DataImportParts, appID, envID string) {
 	deleted := ""
 	if current.DeletedAt != nil {
 		deleted = " deleted " + *current.DeletedAt
@@ -681,6 +792,19 @@ func printImport(out io.Writer, current DataImportParts) {
 		table(out, "KEY\tCOUNT", current.Counts, func(c DataImportPartsCountsDataImportCount) string {
 			return fmt.Sprintf("%s\t%d", c.Key, c.Count)
 		})
+	}
+	if inv := current.Invitations; inv.Pending+inv.Accepted+inv.Lapsed > 0 {
+		fmt.Fprintf(out, "invitations: %d pending, %d accepted, %d lapsed\n", inv.Pending, inv.Accepted, inv.Lapsed)
+		if inv.Lapsed > 0 && current.DeletedAt == nil {
+			command := "multipaas import reissue"
+			if appID != "" {
+				command += " --app " + appID
+			}
+			if envID != "" {
+				command += " --env " + envID
+			}
+			fmt.Fprintf(out, "run \"%s --import %s\" to re-issue the lapsed ones\n", command, current.Id)
+		}
 	}
 	for _, problem := range current.Problems {
 		line, field, sourceID := "-", "", ""

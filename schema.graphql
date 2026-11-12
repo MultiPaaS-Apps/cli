@@ -152,6 +152,7 @@ type Application {
 type ApplicationInvitation {
 	appTenant: AppTenant
 	createdAt: DateTime!
+	dataImport: DataImport
 	email: String!
 	expiresAt: DateTime!
 	groups: [AccessGroup!]!
@@ -409,6 +410,7 @@ When the import was deleted; null while it is live.
 	files: [DataImportFile!]!
 	finishedAt: DateTime
 	id: ID!
+	invitations: DataImportInvitationCounts!
 	problemCount: Int
 """
 A 15-minute download link for the full report, when it was too large to keep inline.
@@ -447,6 +449,12 @@ type DataImportFileUpload {
 	importFile: DataImportFile!
 	uploadHeaders: [Header!]!
 	uploadUrl: String!
+}
+
+type DataImportInvitationCounts {
+	accepted: Int!
+	lapsed: Int!
+	pending: Int!
 }
 
 type DataImportPage {
@@ -674,6 +682,13 @@ type ImportProblem {
 	sourceId: String
 }
 
+input InvitationFilter {
+	appTenantId: ID
+	dataImportId: ID
+	kind: InvitationKind
+	status: ApplicationInvitationStatus
+}
+
 enum InvitationKind {
 	email
 	import
@@ -855,6 +870,9 @@ Marks an open invitation deleted: its link stops working and sign-in no longer a
 		oauthClientId: ID!
 	): ApiToken!
 	issueRealtimeTicket: RealtimeTicket!
+	reissueImportInvitations(
+		input: ReissueImportInvitationsInput!
+	): ReissueImportInvitationsResult!
 	removeAccessGroupMember(
 		id: ID!
 	): AccessGroupMember!
@@ -1256,6 +1274,7 @@ type Query {
 	groupRoleAssignments: [GroupRoleAssignment!]!
 	invitations(
 		page: PageInput!
+		where: InvitationFilter
 	): ApplicationInvitationPage!
 	me: User
 	members(
@@ -1500,6 +1519,16 @@ type RecordVersion {
 type RecordVersionPage {
 	items: [RecordVersion!]!
 	pageInfo: PageInfo!
+}
+
+input ReissueImportInvitationsInput {
+	appTenantId: ID
+	dataImportId: ID
+}
+
+type ReissueImportInvitationsResult {
+	reissued: Int!
+	skipped: Int!
 }
 
 input RemoveEnvironmentInput {

@@ -43,6 +43,8 @@ multipaas import add --import <import id> --kind records --entity <entity id> --
 multipaas import check --import <import id>                    # waits, then prints every problem by file and line
 multipaas import run --import <import id>                      # only after a clean check; all or nothing
 multipaas import status --import <import id> [--include-deleted]
+multipaas import invitations --import <import id>              # the lapsed ones; --tenant <tenant id> reaches imports run before they recorded theirs
+multipaas import reissue --import <import id>                  # re-issued ones are claimed at the next sign-in within 7 days; --tenant reaches a deleted import's
 multipaas import delete --import <import id>                   # not while checking or importing; nothing it holds is removed
 multipaas oauth-client create --name "My app" --redirect-uri http://localhost:5173/callback
 multipaas deployers create --app <app id> --name "CI"      # prints the deployer's client ID and secret, once
@@ -61,7 +63,7 @@ The model commands are `model show`, `entity create|update|retire`, `enum create
 
 In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `versions diff` shows what changed between two API versions, breaking, dangerous and added, from the pin to the newest unless `--from` and `--to` say otherwise. `records list|get|create|update|retire` read and write an entity's records in an app-tenant, or with `--app-wide` the application's app-wide records (instead of `--tenant`), with `--data` a JSON object keyed by field id. `records upload` sends a file for a file field and prints its id, which `records create` or `update` then sets as that field's value in `--data`; `records get` and `list` show each file's name, size and a link that works for 15 minutes. `records list` takes `--where`, a JSON object of conditions keyed by field id, or `id`, `createdAt` or `updatedAt`, `--order-by` one field, and `--count` to print only how many match. `records update --expected-version` updates only if the record is still at that version, its `version` from `records get` or `list`, and otherwise is refused with `CONFLICT`. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`. `app-identity list|create|secret add|secret revoke|secret list|retire` manage your app's own identities, which needs `application.manage_oauth`: an app identity's client ID and secret let your own code call the API for a tenant via OAuth client credentials. `deployers create|list|retire` manage the credentials CI uses, which needs `access.manage.application`. With `MULTIPAAS_CLIENT_ID` and `MULTIPAAS_CLIENT_SECRET` set, the CLI acts as that deployer instead of your sign-in, and never reads or writes your saved sign-in. A deployer can create environments and remove only those it created, and in them create app-tenants and app identities, and give those app identities, never a person, roles without `model.edit`. It can't change the model or reach any other environment. `login` and `logout` are refused while the two are set. `apps create` makes an application, which needs `client.applications.create`, and makes you its App manager. `tenants create` makes an app-tenant to test in, which needs `access.manage.application`.
 
-`import create|add|check|run|status|delete` load an application's existing data from export files; see [Import](#import).
+`import create|add|check|run|status|invitations|reissue|delete` load an application's existing data from export files; see [Import](#import).
 
 `feedback send|list|show|settings` report a bug or feature request to MultiPaaS and follow the status of your reports; see [Feedback](#feedback).
 
@@ -127,8 +129,14 @@ Each shell, and any agent started from it, uses its own profile, so two shells c
 result: read `status`. They stop waiting after 20 minutes and exit 1 with `IMPORT_STILL_RUNNING`; run
 `import status` later. A failed check is `check-failed`, with its problems; a data problem names its file, and its line when it is about a row. A run
 writes everything or nothing; it is `imported` with counts, or `import-failed` with problems. Imported users
-are not emailed. They join their tenants at their next sign-in within 7 days of the run; after that
-they must be invited.
+are not emailed. They join their tenants at their next sign-in within 7 days of the run. After that they lapse:
+`import status` shows the pending, accepted and lapsed counts, and `import invitations` lists the
+lapsed ones. `import reissue` gives every membership it re-issues another 7 days from now, with no email. With `--import`
+alone, `import reissue` skips a membership whose tenant or role is deleted, or whose role you do not hold, and it stays
+lapsed. With `--tenant`, `import reissue` refuses a tenant that is deleted, unknown or outside the environment as not
+found, and skips a membership whose role is deleted or not held. Each command takes `--import`, `--tenant`, or both, and
+needs at least one. `--tenant` reaches the memberships of imports run before imports recorded their invitations, and,
+for `import reissue`, those of a deleted import, which `import reissue --import` refuses as not found.
 
 `import delete` marks an import deleted, and is refused with `DATA_IMPORT_STATE` while the import is checking or
 importing. Nothing is removed: its files stay, and so does any data it imported. A deleted import can't be
@@ -137,7 +145,8 @@ changed, and `import status` finds it only with `--include-deleted`.
 With `--json`, `import create`, `check`, `run`, `status` and `delete` print `{"import": {...}}`, and `import add` prints
 `{"importFile": {...}}`. An import holds `id`, `status`, `problemCount`, `problems` (each with `file`, `line`,
 `sourceId`, `field`, `code` and `message`), `counts` (each a `key` and a `count`), `files`, `startedAt`,
-`finishedAt` and `deletedAt` (set once the import is deleted). `add --kind records` needs `--entity`, the entity's id from `model show`.
+`finishedAt`, `deletedAt` (set once the import is deleted) and `invitations` (`pending`, `accepted` and `lapsed` counts). `add --kind records` needs `--entity`, the entity's id from `model show`.
+`import invitations` prints `{"invitations": [...]}` and `import reissue` prints `{"reissued": n, "skipped": m}`.
 
 ## Feedback
 

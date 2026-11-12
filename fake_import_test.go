@@ -20,7 +20,67 @@ type fakeImport struct {
 	problemCount int
 	reportURL    any
 	counts       []map[string]any
-	deletedAt    any // nil while live, else the time it was deleted
+	invitations  map[string]any // pending, accepted and lapsed counts; nil reads as all zero
+	deletedAt    any            // nil while live, else the time it was deleted
+}
+
+// importInvitations answers the lapsed-invitation list and the re-issue. A list returns the seeded rows that match
+// every key of the where it was sent, and records that where; a re-issue records its input and answers reissued.
+func (f *fakeMultiPaaS) importInvitations(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	if appOf(parts) == "" && !strings.HasPrefix(parts[0], "env:") {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	if operation == "ReissueImportInvitations" {
+		f.mutations = append(f.mutations, variables)
+		if input, _ := variables["input"].(map[string]any); len(input) == 0 {
+			graphQLValidation(w, "validation failed for field: dataImportId", []map[string]any{
+				{"field": "dataImportId", "rule": "required", "message": "Give dataImportId, appTenantId or both."},
+			})
+			return
+		}
+		if f.refuseImport[0] != "" {
+			graphQLRefusal(w, f.refuseImport[0], f.refuseImport[1])
+			return
+		}
+		writeData(w, map[string]any{"reissueImportInvitations": f.reissued})
+		return
+	}
+	where, _ := variables["where"].(map[string]any)
+	f.invitationWheres = append(f.invitationWheres, where)
+	matching := []map[string]any{}
+	for _, row := range f.invitationRows {
+		if invitationMatches(row, where) {
+			matching = append(matching, row)
+		}
+	}
+	writeData(w, map[string]any{"invitations": pageOf(matching, variables)})
+}
+
+func invitationMatches(row, where map[string]any) bool {
+	for key, want := range where {
+		switch key {
+		case "kind", "status":
+			if row[key] != want {
+				return false
+			}
+		case "dataImportId":
+			if idOf(row["dataImport"]) != want {
+				return false
+			}
+		case "appTenantId":
+			if idOf(row["appTenant"]) != want {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// idOf is the id of a seeded object, nil for a null one.
+func idOf(object any) any {
+	fields, _ := object.(map[string]any)
+	return fields["id"]
 }
 
 // fakeUpload is what a presigned PUT received.
@@ -159,8 +219,13 @@ func (f *fakeMultiPaaS) importView(id string) map[string]any {
 	if imp.counts != nil {
 		counts = imp.counts
 	}
+	invitations := map[string]any{"pending": 0, "accepted": 0, "lapsed": 0}
+	if imp.invitations != nil {
+		invitations = imp.invitations
+	}
 	return map[string]any{
-		"id": id, "status": imp.status, "problemCount": imp.problemCount, "problemReportUrl": imp.reportURL,
+		"invitations": invitations,
+		"id":          id, "status": imp.status, "problemCount": imp.problemCount, "problemReportUrl": imp.reportURL,
 		"problems": problems, "counts": counts, "files": files, "startedAt": nil, "finishedAt": nil,
 		"deletedAt": imp.deletedAt,
 	}

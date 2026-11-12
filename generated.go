@@ -1712,6 +1712,9 @@ func (v *CreateFieldCreateField) GetRequired() bool { return v.FieldParts.Requir
 // GetNotNull returns CreateFieldCreateField.NotNull, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetNotNull() bool { return v.FieldParts.NotNull }
 
+// GetList returns CreateFieldCreateField.List, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetList() bool { return v.FieldParts.List }
+
 // GetDefaultValue returns CreateFieldCreateField.DefaultValue, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
 
@@ -1779,6 +1782,8 @@ type __premarshalCreateFieldCreateField struct {
 
 	NotNull bool `json:"notNull"`
 
+	List bool `json:"list"`
+
 	DefaultValue *json.RawMessage `json:"defaultValue"`
 
 	EnumValues []string `json:"enumValues"`
@@ -1813,6 +1818,7 @@ func (v *CreateFieldCreateField) __premarshalJSON() (*__premarshalCreateFieldCre
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.NotNull = v.FieldParts.NotNull
+	retval.List = v.FieldParts.List
 	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -3319,6 +3325,9 @@ func (v *FieldField) GetRequired() bool { return v.FieldParts.Required }
 // GetNotNull returns FieldField.NotNull, and is useful for accessing the field via an interface.
 func (v *FieldField) GetNotNull() bool { return v.FieldParts.NotNull }
 
+// GetList returns FieldField.List, and is useful for accessing the field via an interface.
+func (v *FieldField) GetList() bool { return v.FieldParts.List }
+
 // GetDefaultValue returns FieldField.DefaultValue, and is useful for accessing the field via an interface.
 func (v *FieldField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
 
@@ -3384,6 +3393,8 @@ type __premarshalFieldField struct {
 
 	NotNull bool `json:"notNull"`
 
+	List bool `json:"list"`
+
 	DefaultValue *json.RawMessage `json:"defaultValue"`
 
 	EnumValues []string `json:"enumValues"`
@@ -3418,6 +3429,7 @@ func (v *FieldField) __premarshalJSON() (*__premarshalFieldField, error) {
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.NotNull = v.FieldParts.NotNull
+	retval.List = v.FieldParts.List
 	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -3438,6 +3450,7 @@ type FieldParts struct {
 	MaxFileBytes     *float64                    `json:"maxFileBytes"`
 	Required         bool                        `json:"required"`
 	NotNull          bool                        `json:"notNull"`
+	List             bool                        `json:"list"`
 	DefaultValue     *json.RawMessage            `json:"defaultValue"`
 	EnumValues       []string                    `json:"enumValues"`
 	EnumType         *FieldPartsEnumType         `json:"enumType"`
@@ -3470,6 +3483,9 @@ func (v *FieldParts) GetRequired() bool { return v.Required }
 
 // GetNotNull returns FieldParts.NotNull, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetNotNull() bool { return v.NotNull }
+
+// GetList returns FieldParts.List, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetList() bool { return v.List }
 
 // GetDefaultValue returns FieldParts.DefaultValue, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetDefaultValue() *json.RawMessage { return v.DefaultValue }
@@ -3581,6 +3597,9 @@ func (v *FieldsFieldsFieldPageItemsField) GetRequired() bool { return v.FieldPar
 // GetNotNull returns FieldsFieldsFieldPageItemsField.NotNull, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetNotNull() bool { return v.FieldParts.NotNull }
 
+// GetList returns FieldsFieldsFieldPageItemsField.List, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetList() bool { return v.FieldParts.List }
+
 // GetDefaultValue returns FieldsFieldsFieldPageItemsField.DefaultValue, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetDefaultValue() *json.RawMessage {
 	return v.FieldParts.DefaultValue
@@ -3652,6 +3671,8 @@ type __premarshalFieldsFieldsFieldPageItemsField struct {
 
 	NotNull bool `json:"notNull"`
 
+	List bool `json:"list"`
+
 	DefaultValue *json.RawMessage `json:"defaultValue"`
 
 	EnumValues []string `json:"enumValues"`
@@ -3686,6 +3707,7 @@ func (v *FieldsFieldsFieldPageItemsField) __premarshalJSON() (*__premarshalField
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.NotNull = v.FieldParts.NotNull
+	retval.List = v.FieldParts.List
 	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -5291,6 +5313,9 @@ func (v *RetireFieldRetireField) GetRequired() bool { return v.FieldParts.Requir
 // GetNotNull returns RetireFieldRetireField.NotNull, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetNotNull() bool { return v.FieldParts.NotNull }
 
+// GetList returns RetireFieldRetireField.List, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetList() bool { return v.FieldParts.List }
+
 // GetDefaultValue returns RetireFieldRetireField.DefaultValue, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
 
@@ -5358,6 +5383,8 @@ type __premarshalRetireFieldRetireField struct {
 
 	NotNull bool `json:"notNull"`
 
+	List bool `json:"list"`
+
 	DefaultValue *json.RawMessage `json:"defaultValue"`
 
 	EnumValues []string `json:"enumValues"`
@@ -5392,6 +5419,7 @@ func (v *RetireFieldRetireField) __premarshalJSON() (*__premarshalRetireFieldRet
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.NotNull = v.FieldParts.NotNull
+	retval.List = v.FieldParts.List
 	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -6684,6 +6712,9 @@ func (v *UpdateFieldUpdateField) GetRequired() bool { return v.FieldParts.Requir
 // GetNotNull returns UpdateFieldUpdateField.NotNull, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetNotNull() bool { return v.FieldParts.NotNull }
 
+// GetList returns UpdateFieldUpdateField.List, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetList() bool { return v.FieldParts.List }
+
 // GetDefaultValue returns UpdateFieldUpdateField.DefaultValue, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
 
@@ -6751,6 +6782,8 @@ type __premarshalUpdateFieldUpdateField struct {
 
 	NotNull bool `json:"notNull"`
 
+	List bool `json:"list"`
+
 	DefaultValue *json.RawMessage `json:"defaultValue"`
 
 	EnumValues []string `json:"enumValues"`
@@ -6785,6 +6818,7 @@ func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpd
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
 	retval.NotNull = v.FieldParts.NotNull
+	retval.List = v.FieldParts.List
 	retval.DefaultValue = v.FieldParts.DefaultValue
 	retval.EnumValues = v.FieldParts.EnumValues
 	retval.EnumType = v.FieldParts.EnumType
@@ -8652,6 +8686,7 @@ fragment FieldParts on Field {
 	maxFileBytes
 	required
 	notNull
+	list
 	defaultValue
 	enumValues
 	enumType {
@@ -9202,6 +9237,7 @@ fragment FieldParts on Field {
 	maxFileBytes
 	required
 	notNull
+	list
 	defaultValue
 	enumValues
 	enumType {
@@ -9267,6 +9303,7 @@ fragment FieldParts on Field {
 	maxFileBytes
 	required
 	notNull
+	list
 	defaultValue
 	enumValues
 	enumType {
@@ -10184,6 +10221,7 @@ fragment FieldParts on Field {
 	maxFileBytes
 	required
 	notNull
+	list
 	defaultValue
 	enumValues
 	enumType {
@@ -10824,6 +10862,7 @@ fragment FieldParts on Field {
 	maxFileBytes
 	required
 	notNull
+	list
 	defaultValue
 	enumValues
 	enumType {

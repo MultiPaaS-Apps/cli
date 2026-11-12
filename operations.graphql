@@ -98,6 +98,7 @@ fragment FieldParts on Field {
   maxFileBytes
   required
   notNull
+  list
   # @genqlient(pointer: true)
   defaultValue
   enumValues

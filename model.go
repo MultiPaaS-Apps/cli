@@ -51,7 +51,7 @@ func modelCommands(command commandFunc) []*cobra.Command {
 		{flag: "parent", field: "isParent", usage: "a reference to the record's parent", kind: "bool"},
 		{flag: "max-file-bytes", field: "maxFileBytes", usage: "a file field's maximum size in bytes (default: 512 MiB)", kind: "int"},
 	}
-	fieldType := option{flag: "type", field: "type", usage: "text, number, boolean, timestamp, enum (needs --enum-type), reference, related or file"}
+	fieldType := option{flag: "type", field: "type", usage: "text, number, boolean, timestamp, enum (needs --enum-type), reference, related or file; --list makes a text or enum field hold a list"}
 	return []*cobra.Command{
 		group("model", "An application's model", modelShow(command)),
 		group("entity", "Declare, change and retire entities",
@@ -84,6 +84,7 @@ func modelCommands(command commandFunc) []*cobra.Command {
 				{flag: "entity", field: "entityId", usage: "the entity's id (from model show)", required: true},
 				{flag: fieldType.flag, field: fieldType.field, usage: fieldType.usage, required: true},
 				{flag: "lifecycle", field: "isLifecycle", usage: "the entity's lifecycle field", kind: "bool"},
+				{flag: "list", field: "list", usage: "hold a list of values; only with --type text or enum, and set only when the field is added", kind: "bool"},
 			}, fieldOptions...)...),
 			change(command, "update", "Change a field", "field", updateField, append([]option{fieldID, fieldType,
 				{flag: "clear-default", field: "defaultValue", usage: "remove the field's default (refused while the field is not null)", kind: "null", excludes: "default"},
@@ -268,7 +269,7 @@ func retireEnumType(ctx context.Context, client graphql.Client, input map[string
 
 func createField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
 	if given, ok := input["defaultValue"].(string); ok {
-		value, err := fieldDefault(input["type"].(string), given)
+		value, err := fieldDefault(input["type"].(string), given, input["list"] == true)
 		if err != nil {
 			return nil, err
 		}
@@ -283,11 +284,11 @@ func createField(ctx context.Context, client graphql.Client, input map[string]an
 
 func updateField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
 	if given, ok := input["defaultValue"].(string); ok {
-		fieldType, err := updatedFieldType(ctx, client, input)
+		fieldType, list, err := updatedFieldShape(ctx, client, input)
 		if err != nil {
 			return nil, err
 		}
-		value, err := fieldDefault(fieldType, given)
+		value, err := fieldDefault(fieldType, given, list)
 		if err != nil {
 			return nil, err
 		}
@@ -300,20 +301,21 @@ func updateField(ctx context.Context, client graphql.Client, input map[string]an
 	return &updated.UpdateField.FieldParts, nil
 }
 
-// updatedFieldType is the type the field has after the update: the --type given, else its current type.
-func updatedFieldType(ctx context.Context, client graphql.Client, input map[string]any) (string, error) {
-	if fieldType, ok := input["type"].(string); ok {
-		return fieldType, nil
-	}
+// updatedFieldShape is the type a --default must fit, the --type given or else the field's own, and whether the
+// field holds a list, which never changes.
+func updatedFieldShape(ctx context.Context, client graphql.Client, input map[string]any) (string, bool, error) {
 	fieldID := input["fieldId"].(string)
 	current, err := Field(ctx, client, fieldID)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	if current.Field == nil {
-		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no field " + fieldID + " in this application"}
+		return "", false, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no field " + fieldID + " in this application"}
 	}
-	return current.Field.Type, nil
+	if fieldType, ok := input["type"].(string); ok {
+		return fieldType, current.Field.List, nil
+	}
+	return current.Field.Type, current.Field.List, nil
 }
 
 func retireField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
@@ -326,7 +328,22 @@ func retireField(ctx context.Context, client graphql.Client, input map[string]an
 
 // fieldDefault is a --default value as the JSON value a field of fieldType stores. The platform refuses a default on
 // a file or related field, so the CLI refuses it without sending the change.
-func fieldDefault(fieldType, given string) (any, error) {
+func fieldDefault(fieldType, given string, list bool) (any, error) {
+	if list {
+		var elements []*string
+		refused := fmt.Errorf(`--default for a list field must be a JSON array of strings, such as '["a","b"]', not %q`, given)
+		if err := json.Unmarshal([]byte(given), &elements); err != nil || elements == nil {
+			return nil, refused
+		}
+		values := make([]string, len(elements))
+		for i, element := range elements {
+			if element == nil {
+				return nil, refused
+			}
+			values[i] = *element
+		}
+		return values, nil
+	}
 	switch fieldType {
 	case "number":
 		number, err := strconv.ParseFloat(given, 64)
@@ -627,6 +644,9 @@ func printModel(out io.Writer, shown shownModel) {
 		fmt.Fprintf(out, "\n%s (%s, managed %t)  %s\n", entity.Name, entity.GraphqlTypeName, entity.Managed, entity.Id)
 		table(out, "  FIELD\tTYPE\tREQUIRED\tNOT NULL\tDEFAULT\tID", entity.Fields, func(f FieldParts) string {
 			kind := f.Type
+			if f.List {
+				kind = "list-of-" + kind
+			}
 			if f.EnumType != nil {
 				kind += " " + f.EnumType.Name
 			}

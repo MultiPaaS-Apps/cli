@@ -339,13 +339,17 @@ query Records(
   $where: JSON
   # @genqlient(pointer: true)
   $orderBy: RecordOrderInput
+  # @genqlient(pointer: true)
+  $cursor: String
 ) {
-  records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where, orderBy: $orderBy) {
+  records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where, orderBy: $orderBy, cursor: $cursor) {
     items {
       ...RecordParts
     }
     pageInfo {
       hasMore
+      # @genqlient(pointer: true)
+      nextCursor
     }
   }
 }

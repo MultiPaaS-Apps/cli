@@ -1086,6 +1086,10 @@ input PageContextInput {
 
 type PageInfo {
 	hasMore: Boolean!
+"""
+Pass as `cursor` to get the next page. Only `records` issues one: null on every other list and on an empty page.
+"""
+	nextCursor: String
 	page: Int!
 	pageSize: Int!
 }
@@ -1313,6 +1317,10 @@ type Query {
 		recordId: ID!
 	): RecordVersionPage!
 	records(
+"""
+A `nextCursor` from this list: returns the page after it, under the same `orderBy`. `page.page` must be 0 with it.
+"""
+		cursor: String
 		entityId: ID!
 """
 One field to order by. Defaults to newest first.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -317,5 +318,26 @@ func pages[T any](fetch func(PageInput) ([]T, bool, error)) ([]T, error) {
 		if !hasMore {
 			return all, nil
 		}
+	}
+}
+
+// cursorPages collects every page of a cursor-paged query, asking for each page after the one before, so a record
+// added or removed mid-walk never shifts a page.
+func cursorPages[T any](fetch func(page PageInput, cursor *string) ([]T, bool, *string, error)) ([]T, error) {
+	all := []T{}
+	var cursor *string
+	for {
+		items, hasMore, next, err := fetch(PageInput{Page: 0, PageSize: maxPageSize}, cursor)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, items...)
+		if !hasMore {
+			return all, nil
+		}
+		if next == nil {
+			return nil, fmt.Errorf("the server said more records follow but sent no cursor for them")
+		}
+		cursor = next
 	}
 }

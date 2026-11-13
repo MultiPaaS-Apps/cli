@@ -2491,6 +2491,9 @@ func (v *DataImportPartsFilesDataImportFile) __premarshalJSON() (*__premarshalDa
 }
 
 // DataImportPartsInvitationsDataImportInvitationCounts includes the requested fields of the GraphQL type DataImportInvitationCounts.
+// The GraphQL type's documentation follows.
+//
+// An import's invitations: pending until accepted or lapsed 7 days after the run or the last re-issue.
 type DataImportPartsInvitationsDataImportInvitationCounts struct {
 	Pending  int `json:"pending"`
 	Accepted int `json:"accepted"`

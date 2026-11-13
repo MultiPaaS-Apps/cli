@@ -457,6 +457,9 @@ type DataImportFileUpload {
 	uploadUrl: String!
 }
 
+"""
+An import's invitations: pending until accepted or lapsed 7 days after the run or the last re-issue.
+"""
 type DataImportInvitationCounts {
 	accepted: Int!
 """
@@ -691,13 +694,25 @@ type ImportProblem {
 	sourceId: String
 }
 
+"""
+Every field is optional; an invitation matches when it matches every field given.
+"""
 input InvitationFilter {
+"""
+Every field is optional; an invitation matches when it matches every field given.
+"""
 	appTenantId: ID
 """
-The import that wrote the invitation.
+Every field is optional; an invitation matches when it matches every field given.
 """
 	dataImportId: ID
+"""
+Every field is optional; an invitation matches when it matches every field given.
+"""
 	kind: InvitationKind
+"""
+Every field is optional; an invitation matches when it matches every field given.
+"""
 	status: ApplicationInvitationStatus
 }
 
@@ -1536,8 +1551,17 @@ type RecordVersionPage {
 	pageInfo: PageInfo!
 }
 
+"""
+At least one of dataImportId and appTenantId. With both, only that tenant's invitations from that import.
+"""
 input ReissueImportInvitationsInput {
+"""
+At least one of dataImportId and appTenantId. With both, only that tenant's invitations from that import.
+"""
 	appTenantId: ID
+"""
+At least one of dataImportId and appTenantId. With both, only that tenant's invitations from that import.
+"""
 	dataImportId: ID
 }
 

@@ -1524,7 +1524,7 @@ input RecordOrderInput {
 
 type RecordPage {
 """
-Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging. Computed only when selected.
+Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging, skipping a record that stores no value in the field or stores one of another type. Computed only when selected.
 """
 	aggregate(
 		fields: [String!]!

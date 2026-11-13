@@ -357,6 +357,7 @@ input CreateEnumTypeInput {
 
 input CreateEnvironmentInput {
 	name: String!
+	redirectUris: [EnvironmentRedirectInput!]
 }
 
 input CreateFieldInput {
@@ -501,6 +502,7 @@ input DeleteInvitationInput {
 
 input DenyOAuthAuthorizationInput {
 	clientId: ID!
+	environment: ID
 	redirectUri: String!
 	state: String
 }
@@ -576,7 +578,21 @@ type Environment {
 	id: ID!
 	isDefault: Boolean!
 	name: String!
+	redirectUriSets: [EnvironmentRedirectUris!]!
+	redirectUris(
+		oauthClientId: ID!
+	): [String!]!
 	updatedAt: DateTime!
+}
+
+input EnvironmentRedirectInput {
+	oauthClientId: ID!
+	uris: [String!]!
+}
+
+type EnvironmentRedirectUris {
+	oauthClientId: ID!
+	uris: [String!]!
 }
 
 type Feedback {
@@ -1002,6 +1018,9 @@ Registers a file for a record's file field and signs its upload. Write the retur
 	): AiTurn!
 	setEnvironmentDeletionProtection(
 		input: SetEnvironmentDeletionProtectionInput!
+	): Environment!
+	setEnvironmentRedirectUris(
+		input: SetEnvironmentRedirectUrisInput!
 	): Environment!
 	setFeedbackSetting(
 		autoSend: Boolean!
@@ -1658,6 +1677,12 @@ input SendPromptInput {
 input SetEnvironmentDeletionProtectionInput {
 	id: ID!
 	protected: Boolean!
+}
+
+input SetEnvironmentRedirectUrisInput {
+	id: ID!
+	oauthClientId: ID!
+	uris: [String!]!
 }
 
 union SharePrincipal =AccessGroup | User

@@ -804,6 +804,30 @@ mutation SetEnvironmentDeletionProtection($input: SetEnvironmentDeletionProtecti
   }
 }
 
+mutation SetEnvironmentRedirectUris($input: SetEnvironmentRedirectUrisInput!) {
+  setEnvironmentRedirectUris(input: $input) {
+    ...EnvironmentParts
+    redirectUriSets {
+      oauthClientId
+      uris
+    }
+  }
+}
+
+query EnvironmentRedirectUriSets {
+  me {
+    application {
+      environments {
+        id
+        redirectUriSets {
+          oauthClientId
+          uris
+        }
+      }
+    }
+  }
+}
+
 mutation RemoveEnvironment($input: RemoveEnvironmentInput!) {
   removeEnvironment(input: $input) {
     id

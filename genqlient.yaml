@@ -17,6 +17,8 @@ bindings:
     type: map[string]any
   UpdateEnumTypeInput:
     type: map[string]any
+  CreateEnvironmentInput:
+    type: map[string]any
   CreateConstraintInput:
     type: map[string]any
   AddDataImportFileInput:

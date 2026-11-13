@@ -1682,13 +1682,6 @@ func (v *CreateEnvironmentCreateEnvironment) __premarshalJSON() (*__premarshalCr
 	return &retval, nil
 }
 
-type CreateEnvironmentInput struct {
-	Name string `json:"name"`
-}
-
-// GetName returns CreateEnvironmentInput.Name, and is useful for accessing the field via an interface.
-func (v *CreateEnvironmentInput) GetName() string { return v.Name }
-
 // CreateEnvironmentResponse is returned by CreateEnvironment on success.
 type CreateEnvironmentResponse struct {
 	CreateEnvironment CreateEnvironmentCreateEnvironment `json:"createEnvironment"`
@@ -3104,6 +3097,66 @@ func (v *EnvironmentParts) GetIsDefault() bool { return v.IsDefault }
 
 // GetDeletionProtected returns EnvironmentParts.DeletionProtected, and is useful for accessing the field via an interface.
 func (v *EnvironmentParts) GetDeletionProtected() bool { return v.DeletionProtected }
+
+// EnvironmentRedirectUriSetsMeUser includes the requested fields of the GraphQL type User.
+type EnvironmentRedirectUriSetsMeUser struct {
+	Application EnvironmentRedirectUriSetsMeUserApplication `json:"application"`
+}
+
+// GetApplication returns EnvironmentRedirectUriSetsMeUser.Application, and is useful for accessing the field via an interface.
+func (v *EnvironmentRedirectUriSetsMeUser) GetApplication() EnvironmentRedirectUriSetsMeUserApplication {
+	return v.Application
+}
+
+// EnvironmentRedirectUriSetsMeUserApplication includes the requested fields of the GraphQL type Application.
+type EnvironmentRedirectUriSetsMeUserApplication struct {
+	Environments []EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment `json:"environments"`
+}
+
+// GetEnvironments returns EnvironmentRedirectUriSetsMeUserApplication.Environments, and is useful for accessing the field via an interface.
+func (v *EnvironmentRedirectUriSetsMeUserApplication) GetEnvironments() []EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment {
+	return v.Environments
+}
+
+// EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment includes the requested fields of the GraphQL type Environment.
+type EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment struct {
+	Id              string                                                                                                     `json:"id"`
+	RedirectUriSets []EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris `json:"redirectUriSets"`
+}
+
+// GetId returns EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment) GetId() string {
+	return v.Id
+}
+
+// GetRedirectUriSets returns EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment.RedirectUriSets, and is useful for accessing the field via an interface.
+func (v *EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironment) GetRedirectUriSets() []EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris {
+	return v.RedirectUriSets
+}
+
+// EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris includes the requested fields of the GraphQL type EnvironmentRedirectUris.
+type EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris struct {
+	OauthClientId string   `json:"oauthClientId"`
+	Uris          []string `json:"uris"`
+}
+
+// GetOauthClientId returns EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris.OauthClientId, and is useful for accessing the field via an interface.
+func (v *EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris) GetOauthClientId() string {
+	return v.OauthClientId
+}
+
+// GetUris returns EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris.Uris, and is useful for accessing the field via an interface.
+func (v *EnvironmentRedirectUriSetsMeUserApplicationEnvironmentsEnvironmentRedirectUriSetsEnvironmentRedirectUris) GetUris() []string {
+	return v.Uris
+}
+
+// EnvironmentRedirectUriSetsResponse is returned by EnvironmentRedirectUriSets on success.
+type EnvironmentRedirectUriSetsResponse struct {
+	Me EnvironmentRedirectUriSetsMeUser `json:"me"`
+}
+
+// GetMe returns EnvironmentRedirectUriSetsResponse.Me, and is useful for accessing the field via an interface.
+func (v *EnvironmentRedirectUriSetsResponse) GetMe() EnvironmentRedirectUriSetsMeUser { return v.Me }
 
 // EnvironmentsMeUser includes the requested fields of the GraphQL type User.
 type EnvironmentsMeUser struct {
@@ -6469,6 +6522,134 @@ func (v *SetEnvironmentDeletionProtectionSetEnvironmentDeletionProtectionEnviron
 	return &retval, nil
 }
 
+type SetEnvironmentRedirectUrisInput struct {
+	Id            string   `json:"id"`
+	OauthClientId string   `json:"oauthClientId"`
+	Uris          []string `json:"uris"`
+}
+
+// GetId returns SetEnvironmentRedirectUrisInput.Id, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisInput) GetId() string { return v.Id }
+
+// GetOauthClientId returns SetEnvironmentRedirectUrisInput.OauthClientId, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisInput) GetOauthClientId() string { return v.OauthClientId }
+
+// GetUris returns SetEnvironmentRedirectUrisInput.Uris, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisInput) GetUris() []string { return v.Uris }
+
+// SetEnvironmentRedirectUrisResponse is returned by SetEnvironmentRedirectUris on success.
+type SetEnvironmentRedirectUrisResponse struct {
+	SetEnvironmentRedirectUris SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment `json:"setEnvironmentRedirectUris"`
+}
+
+// GetSetEnvironmentRedirectUris returns SetEnvironmentRedirectUrisResponse.SetEnvironmentRedirectUris, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisResponse) GetSetEnvironmentRedirectUris() SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment {
+	return v.SetEnvironmentRedirectUris
+}
+
+// SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment includes the requested fields of the GraphQL type Environment.
+type SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment struct {
+	EnvironmentParts `json:"-"`
+	RedirectUriSets  []SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris `json:"redirectUriSets"`
+}
+
+// GetRedirectUriSets returns SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment.RedirectUriSets, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) GetRedirectUriSets() []SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris {
+	return v.RedirectUriSets
+}
+
+// GetId returns SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) GetId() string {
+	return v.EnvironmentParts.Id
+}
+
+// GetName returns SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment.Name, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) GetName() string {
+	return v.EnvironmentParts.Name
+}
+
+// GetIsDefault returns SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment.IsDefault, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) GetIsDefault() bool {
+	return v.EnvironmentParts.IsDefault
+}
+
+// GetDeletionProtected returns SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment.DeletionProtected, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) GetDeletionProtected() bool {
+	return v.EnvironmentParts.DeletionProtected
+}
+
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnvironmentParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalSetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment struct {
+	RedirectUriSets []SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris `json:"redirectUriSets"`
+
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	IsDefault bool `json:"isDefault"`
+
+	DeletionProtected bool `json:"deletionProtected"`
+}
+
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment) __premarshalJSON() (*__premarshalSetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment, error) {
+	var retval __premarshalSetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironment
+
+	retval.RedirectUriSets = v.RedirectUriSets
+	retval.Id = v.EnvironmentParts.Id
+	retval.Name = v.EnvironmentParts.Name
+	retval.IsDefault = v.EnvironmentParts.IsDefault
+	retval.DeletionProtected = v.EnvironmentParts.DeletionProtected
+	return &retval, nil
+}
+
+// SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris includes the requested fields of the GraphQL type EnvironmentRedirectUris.
+type SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris struct {
+	OauthClientId string   `json:"oauthClientId"`
+	Uris          []string `json:"uris"`
+}
+
+// GetOauthClientId returns SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris.OauthClientId, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris) GetOauthClientId() string {
+	return v.OauthClientId
+}
+
+// GetUris returns SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris.Uris, and is useful for accessing the field via an interface.
+func (v *SetEnvironmentRedirectUrisSetEnvironmentRedirectUrisEnvironmentRedirectUriSetsEnvironmentRedirectUris) GetUris() []string {
+	return v.Uris
+}
+
 // SetFeedbackSettingResponse is returned by SetFeedbackSetting on success.
 type SetFeedbackSettingResponse struct {
 	SetFeedbackSetting SetFeedbackSettingSetFeedbackSetting `json:"setFeedbackSetting"`
@@ -7518,11 +7699,11 @@ func (v *__CreateEnumTypeInput) GetInput() map[string]any { return v.Input }
 
 // __CreateEnvironmentInput is used internally by genqlient
 type __CreateEnvironmentInput struct {
-	Input CreateEnvironmentInput `json:"input"`
+	Input map[string]any `json:"input"`
 }
 
 // GetInput returns __CreateEnvironmentInput.Input, and is useful for accessing the field via an interface.
-func (v *__CreateEnvironmentInput) GetInput() CreateEnvironmentInput { return v.Input }
+func (v *__CreateEnvironmentInput) GetInput() map[string]any { return v.Input }
 
 // __CreateFieldInput is used internally by genqlient
 type __CreateFieldInput struct {
@@ -7855,6 +8036,16 @@ type __SetEnvironmentDeletionProtectionInput struct {
 
 // GetInput returns __SetEnvironmentDeletionProtectionInput.Input, and is useful for accessing the field via an interface.
 func (v *__SetEnvironmentDeletionProtectionInput) GetInput() SetEnvironmentDeletionProtectionInput {
+	return v.Input
+}
+
+// __SetEnvironmentRedirectUrisInput is used internally by genqlient
+type __SetEnvironmentRedirectUrisInput struct {
+	Input SetEnvironmentRedirectUrisInput `json:"input"`
+}
+
+// GetInput returns __SetEnvironmentRedirectUrisInput.Input, and is useful for accessing the field via an interface.
+func (v *__SetEnvironmentRedirectUrisInput) GetInput() SetEnvironmentRedirectUrisInput {
 	return v.Input
 }
 
@@ -8900,7 +9091,7 @@ fragment EnvironmentParts on Environment {
 func CreateEnvironment(
 	ctx_ context.Context,
 	client_ graphql.Client,
-	input CreateEnvironmentInput,
+	input map[string]any,
 ) (data_ *CreateEnvironmentResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "CreateEnvironment",
@@ -9402,6 +9593,44 @@ func EnumTypes(
 	}
 
 	data_ = &EnumTypesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by EnvironmentRedirectUriSets.
+const EnvironmentRedirectUriSets_Operation = `
+query EnvironmentRedirectUriSets {
+	me {
+		application {
+			environments {
+				id
+				redirectUriSets {
+					oauthClientId
+					uris
+				}
+			}
+		}
+	}
+}
+`
+
+func EnvironmentRedirectUriSets(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *EnvironmentRedirectUriSetsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "EnvironmentRedirectUriSets",
+		Query:  EnvironmentRedirectUriSets_Operation,
+	}
+
+	data_ = &EnvironmentRedirectUriSetsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -10965,6 +11194,50 @@ func SetEnvironmentDeletionProtection(
 	}
 
 	data_ = &SetEnvironmentDeletionProtectionResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by SetEnvironmentRedirectUris.
+const SetEnvironmentRedirectUris_Operation = `
+mutation SetEnvironmentRedirectUris ($input: SetEnvironmentRedirectUrisInput!) {
+	setEnvironmentRedirectUris(input: $input) {
+		... EnvironmentParts
+		redirectUriSets {
+			oauthClientId
+			uris
+		}
+	}
+}
+fragment EnvironmentParts on Environment {
+	id
+	name
+	isDefault
+	deletionProtected
+}
+`
+
+func SetEnvironmentRedirectUris(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input SetEnvironmentRedirectUrisInput,
+) (data_ *SetEnvironmentRedirectUrisResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "SetEnvironmentRedirectUris",
+		Query:  SetEnvironmentRedirectUris_Operation,
+		Variables: &__SetEnvironmentRedirectUrisInput{
+			Input: input,
+		},
+	}
+
+	data_ = &SetEnvironmentRedirectUrisResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

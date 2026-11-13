@@ -217,6 +217,108 @@ func TestEnvsCreateThenListShowsIt(t *testing.T) {
 	assertFailure(t, fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "staging", "--json"), exitRefused, "VALIDATION")
 }
 
+func TestEnvsCreateRedirectURIs(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "pr-42", "--sign-in-client", "client-web",
+		"--redirect-uri", "https://pr42.example.com/callback", "--redirect-uri", "https://pr42.example.com/other", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"name": "pr-42", "redirectUris": []any{
+		map[string]any{"oauthClientId": "client-web", "uris": []any{"https://pr42.example.com/callback", "https://pr42.example.com/other"}},
+	}}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "plain", "--json")
+	if plain := fake.mutations[len(fake.mutations)-1]; !reflect.DeepEqual(plain, map[string]any{"input": map[string]any{"name": "plain"}}) {
+		t.Fatalf("a create without the flags sent %v", plain)
+	}
+}
+
+func TestEnvsCreateRedirectURIRequiresClient(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	for _, args := range [][]string{
+		{"--redirect-uri", "https://pr42.example.com/callback"},
+		{"--sign-in-client", "client-web"},
+	} {
+		got := fake.run(t, append([]string{"envs", "create", "--app", "app-a-000", "--name", "pr-42"}, args...)...)
+		if got.exit == exitOK || !strings.Contains(got.stderr, "sign-in-client") || !strings.Contains(got.stderr, "redirect-uri") {
+			t.Fatalf("%v: exit %d, stderr %q", args, got.exit, got.stderr)
+		}
+	}
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v", fake.mutations)
+	}
+}
+
+func TestEnvsRedirectURIsSetReplacesAndClears(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "pr-42", "--json")
+	set := fake.run(t, "envs", "redirect-uris", "set", "--app", "app-a-000", "--env", "env-new-2", "--sign-in-client", "client-web",
+		"--redirect-uri", "https://pr42.example.com/callback")
+	if set.exit != exitOK || set.stdout != "https://pr42.example.com/callback\n" {
+		t.Fatalf("exit %d: %q", set.exit, set.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"id": "env-new-2", "oauthClientId": "client-web", "uris": []any{"https://pr42.example.com/callback"}}}
+	if sent := fake.mutations[len(fake.mutations)-1]; !reflect.DeepEqual(sent, want) {
+		t.Fatalf("sent %v, want %v", sent, want)
+	}
+	cleared := fake.run(t, "envs", "redirect-uris", "set", "--app", "app-a-000", "--env", "env-new-2", "--sign-in-client", "client-web")
+	if cleared.exit != exitOK || cleared.stdout != "no redirect URIs\n" {
+		t.Fatalf("exit %d: %q", cleared.exit, cleared.stdout)
+	}
+	want = map[string]any{"input": map[string]any{"id": "env-new-2", "oauthClientId": "client-web", "uris": []any{}}}
+	if sent := fake.mutations[len(fake.mutations)-1]; !reflect.DeepEqual(sent, want) {
+		t.Fatalf("sent %v, want %v", sent, want)
+	}
+	assertFailure(t, fake.run(t, "envs", "redirect-uris", "set", "--app", "app-a-000", "--env", "env-missing", "--sign-in-client", "client-web", "--json"), exitRefused, "NOT_FOUND")
+}
+
+func TestEnvsRedirectURIsList(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "pr-42", "--sign-in-client", "client-web",
+		"--redirect-uri", "https://pr42.example.com/callback", "--redirect-uri", "https://pr42.example.com/other")
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "pr-43", "--sign-in-client", "client-web",
+		"--redirect-uri", "https://pr43.example.com/callback")
+	got := fake.run(t, "envs", "redirect-uris", "list", "--app", "app-a-000", "--env", "env-new-2")
+	if got.exit != exitOK || got.stdout != "client-web\thttps://pr42.example.com/callback\nclient-web\thttps://pr42.example.com/other\n" {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	asJSON := fake.run(t, "envs", "redirect-uris", "list", "--app", "app-a-000", "--env", "env-new-3", "--json")
+	if compact(asJSON.stdout) != `[{"oauthClientId":"client-web","uris":["https://pr43.example.com/callback"]}]` {
+		t.Fatalf("json %s", asJSON.stdout)
+	}
+}
+
+func TestEnvsRedirectURIsListUnknownEnvironmentIsNotFound(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "envs", "redirect-uris", "list", "--app", "app-a-000", "--env", "env-missing", "--json")
+	assertFailure(t, got, exitRefused, "NOT_FOUND")
+	if !strings.Contains(got.stdout+got.stderr, "environment not found") {
+		t.Fatalf("output %q %q", got.stdout, got.stderr)
+	}
+}
+
+func TestEnvsRedirectURIsSetAsDeployer(t *testing.T) {
+	fake := deployerFake(t)
+	got := fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "pr-9", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	set := fake.run(t, "envs", "redirect-uris", "set", "--app", "app-a-000", "--env", "env-new-2", "--sign-in-client", "client-web",
+		"--redirect-uri", "https://pr9.example.com/callback", "--json")
+	if set.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", set.exit, set.stdout, set.stderr)
+	}
+	if fake.scopes[len(fake.scopes)-1] != "app:app-a-000" || fake.deployerMints == 0 {
+		t.Fatalf("scopes %v, mints %d", fake.scopes, fake.deployerMints)
+	}
+	if _, err := os.Stat(credentialsPath(t)); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("credentials file: %v", err)
+	}
+}
+
 func TestEnvsProtectUnprotectAndRemoveAnEnvironment(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")

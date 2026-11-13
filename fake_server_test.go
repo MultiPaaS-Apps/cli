@@ -134,6 +134,19 @@ type fakeEnv struct {
 	isDefault bool
 	// protectionSet says a protect or unprotect has run; until then the default environment is protected and the rest are not.
 	protectionSet, protected bool
+	// redirects is each sign-in client's callback URLs in this environment, by oauth client id.
+	redirects map[string][]any
+}
+
+// redirectSets lists the non-empty callback sets, as the API does.
+func (e fakeEnv) redirectSets() []map[string]any {
+	sets := []map[string]any{}
+	for _, client := range slices.Sorted(maps.Keys(e.redirects)) {
+		if len(e.redirects[client]) > 0 {
+			sets = append(sets, map[string]any{"oauthClientId": client, "uris": e.redirects[client]})
+		}
+	}
+	return sets
 }
 
 func (e fakeEnv) deletionProtected() bool {
@@ -407,7 +420,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			apps = f.tenantsInEnvironment(parts[1], f.defaultEnvironment(parts[1]))
 		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
-	case "Environments", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "RemoveEnvironment":
+	case "Environments", "EnvironmentRedirectUriSets", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "SetEnvironmentRedirectUris", "RemoveEnvironment":
 		f.manageEnvironments(w, operation, appOf(parts), variables)
 	case "ScopedAppTenant":
 		scopedApp := f.scopedApps[parts[len(parts)-1]]
@@ -1305,19 +1318,20 @@ func removalRefusal(e fakeEnv) (reason, message string) {
 // manageEnvironments shares these steps with the server, in order: an application in scope, then
 // access.manage.application for a change, then the change. Names are unique within an application.
 func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app string, variables map[string]any) {
-	if operation != "Environments" {
+	changes := operation != "Environments" && operation != "EnvironmentRedirectUriSets"
+	if changes {
 		f.mutations = append(f.mutations, variables)
 	}
-	if app == "" || (operation != "Environments" && f.noManageApp) {
+	if app == "" || (changes && f.noManageApp) {
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
 		return
 	}
 	shown := func(e fakeEnv) map[string]any {
-		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.deletionProtected()}
+		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.deletionProtected(), "redirectUriSets": e.redirectSets()}
 	}
 	input, _ := variables["input"].(map[string]any)
 	name, _ := input["name"].(string)
-	if operation != "Environments" && slices.ContainsFunc(f.environments[app], func(e fakeEnv) bool { return e.name == name }) {
+	if (operation == "CreateEnvironment" || operation == "RenameEnvironment") && slices.ContainsFunc(f.environments[app], func(e fakeEnv) bool { return e.name == name }) {
 		graphQLRefusal(w, "VALIDATION", "an environment with this name already exists")
 		return
 	}
@@ -1325,6 +1339,14 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 	case "CreateEnvironment":
 		f.envsMinted[app] = max(f.envsMinted[app], len(f.environments[app])) + 1
 		created := fakeEnv{id: fmt.Sprintf("env-new-%d", f.envsMinted[app]), name: name}
+		if sets, _ := input["redirectUris"].([]any); len(sets) > 0 {
+			created.redirects = map[string][]any{}
+			for _, set := range sets {
+				entry, _ := set.(map[string]any)
+				client, _ := entry["oauthClientId"].(string)
+				created.redirects[client], _ = entry["uris"].([]any)
+			}
+		}
 		f.environments[app] = append(f.environments[app], created)
 		writeData(w, map[string]any{"createEnvironment": shown(created)})
 	case "RenameEnvironment":
@@ -1344,6 +1366,24 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 		f.environments[app][i].protectionSet = true
 		f.environments[app][i].protected, _ = input["protected"].(bool)
 		writeData(w, map[string]any{"setEnvironmentDeletionProtection": shown(f.environments[app][i])})
+	case "SetEnvironmentRedirectUris":
+		i := slices.IndexFunc(f.environments[app], func(e fakeEnv) bool { return e.id == input["id"] })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "environment not found")
+			return
+		}
+		if f.environments[app][i].redirects == nil {
+			f.environments[app][i].redirects = map[string][]any{}
+		}
+		client, _ := input["oauthClientId"].(string)
+		f.environments[app][i].redirects[client], _ = input["uris"].([]any)
+		writeData(w, map[string]any{"setEnvironmentRedirectUris": shown(f.environments[app][i])})
+	case "EnvironmentRedirectUriSets":
+		listed := []map[string]any{}
+		for _, e := range f.environments[app] {
+			listed = append(listed, map[string]any{"id": e.id, "redirectUriSets": e.redirectSets()})
+		}
+		writeData(w, map[string]any{"me": map[string]any{"application": map[string]any{"environments": listed}}})
 	case "RemoveEnvironment":
 		if f.removeNoData {
 			writeData(w, nil)

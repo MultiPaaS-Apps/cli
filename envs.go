@@ -14,7 +14,8 @@ import (
 // app-tenants, app-wide records and imports; the model is shared.
 func envsCommands(command commandFunc) *cobra.Command {
 	return group("envs", "An application's environments", envsList(command), envsCreate(command), envsRename(command),
-		envsProtection(command, "protect", true), envsProtection(command, "unprotect", false), envsRemove(command))
+		envsProtection(command, "protect", true), envsProtection(command, "unprotect", false), envsRemove(command),
+		envsRedirectURIs(command))
 }
 
 func envsList(command commandFunc) *cobra.Command {
@@ -53,11 +54,16 @@ func (s *session) environmentsIn(ctx context.Context, scope string) ([]Environme
 // envsCreate needs a developer to hold access.manage.application on the application, and the server makes them the
 // new environment's App manager. A deployer needs no permission and holds no role in the environment it creates.
 func envsCreate(command commandFunc) *cobra.Command {
-	var appID, name string
+	var appID, name, signInClient string
+	var redirectURIs []string
 	cmd := command("create", "Create an environment to test your app in", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var created EnvironmentParts
+		input := map[string]any{"name": name}
+		if len(redirectURIs) > 0 {
+			input["redirectUris"] = []map[string]any{{"oauthClientId": signInClient, "uris": redirectURIs}}
+		}
 		err := s.inApp(ctx, appID, func(client graphql.Client) error {
-			response, err := CreateEnvironment(ctx, client, CreateEnvironmentInput{Name: name})
+			response, err := CreateEnvironment(ctx, client, input)
 			if err == nil {
 				created = response.CreateEnvironment.EnvironmentParts
 			}
@@ -70,6 +76,95 @@ func envsCreate(command commandFunc) *cobra.Command {
 	appFlag(cmd, &appID)
 	cmd.Flags().StringVar(&name, "name", "", "the environment's name")
 	_ = cmd.MarkFlagRequired("name")
+	cmd.Flags().StringVar(&signInClient, "sign-in-client", "", "the sign-in client (oauth client id) the --redirect-uri values are for")
+	cmd.Flags().StringArrayVar(&redirectURIs, "redirect-uri", nil, "a callback URL this environment accepts for --sign-in-client (repeatable)")
+	cmd.MarkFlagsRequiredTogether("sign-in-client", "redirect-uri")
+	return cmd
+}
+
+// envsRedirectURIs holds the callback URLs an environment accepts for a sign-in client, on top of the client's own.
+func envsRedirectURIs(command commandFunc) *cobra.Command {
+	return group("redirect-uris", "The sign-in callback URLs an environment accepts", envsRedirectURIsSet(command), envsRedirectURIsList(command))
+}
+
+type redirectURISet struct {
+	OauthClientID string   `json:"oauthClientId"`
+	Uris          []string `json:"uris"`
+}
+
+func envsRedirectURIsSet(command commandFunc) *cobra.Command {
+	var appID, envID, signInClient string
+	var redirectURIs []string
+	cmd := command("set", "Replace the callback URLs a sign-in client accepts in this environment", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		set := redirectURISet{OauthClientID: signInClient, Uris: []string{}}
+		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+			uris := redirectURIs
+			if uris == nil {
+				uris = []string{}
+			}
+			response, err := SetEnvironmentRedirectUris(ctx, client, SetEnvironmentRedirectUrisInput{Id: envID, OauthClientId: signInClient, Uris: uris})
+			if err != nil {
+				return err
+			}
+			for _, item := range response.SetEnvironmentRedirectUris.RedirectUriSets {
+				if item.OauthClientId == signInClient {
+					set.Uris = item.Uris
+				}
+			}
+			return nil
+		})
+		return set, func(out io.Writer) {
+			if len(set.Uris) == 0 {
+				fmt.Fprintln(out, "no redirect URIs")
+			}
+			for _, uri := range set.Uris {
+				fmt.Fprintln(out, uri)
+			}
+		}, err
+	})
+	cmd.Long = "Replaces the callback URLs a sign-in client accepts in this environment, on top of the client's own list. " +
+		"Pass no --redirect-uri to clear them. A deployer may do this only in environments it created."
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&envID, "env", "", "the environment's id (from envs list)")
+	cmd.Flags().StringVar(&signInClient, "sign-in-client", "", "the sign-in client (oauth client id) the callback URLs are for")
+	cmd.Flags().StringArrayVar(&redirectURIs, "redirect-uri", nil, "a callback URL this environment accepts for --sign-in-client (repeatable)")
+	for _, flag := range []string{"env", "sign-in-client"} {
+		_ = cmd.MarkFlagRequired(flag)
+	}
+	return cmd
+}
+
+func envsRedirectURIsList(command commandFunc) *cobra.Command {
+	var appID, envID string
+	cmd := command("list", "List the callback URLs each sign-in client accepts in this environment", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		sets := []redirectURISet{}
+		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+			response, err := EnvironmentRedirectUriSets(ctx, client)
+			if err != nil {
+				return err
+			}
+			for _, environment := range response.Me.Application.Environments {
+				if environment.Id != envID {
+					continue
+				}
+				for _, item := range environment.RedirectUriSets {
+					sets = append(sets, redirectURISet{OauthClientID: item.OauthClientId, Uris: item.Uris})
+				}
+				return nil
+			}
+			return &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "environment not found"}
+		})
+		return sets, func(out io.Writer) {
+			for _, set := range sets {
+				for _, uri := range set.Uris {
+					fmt.Fprintf(out, "%s\t%s\n", set.OauthClientID, uri)
+				}
+			}
+		}, err
+	})
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&envID, "env", "", "the environment's id (from envs list)")
+	_ = cmd.MarkFlagRequired("env")
 	return cmd
 }
 

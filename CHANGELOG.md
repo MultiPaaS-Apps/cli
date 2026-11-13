@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.5.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.4.0...v1.5.0) (2026-11-13)
+
+
+### Features
+
+* [MP-224] sign in unattended as a CI deployer and manage deployers ([#70](https://github.com/MultiPaaS-Apps/cli/issues/70)) ([2cee6fa](https://github.com/MultiPaaS-Apps/cli/commit/2cee6fa0ce4a356510de43dc5c2212841c19e248))
+* [MP-226] register an environment's sign-in callbacks from the CLI ([#78](https://github.com/MultiPaaS-Apps/cli/issues/78)) ([6bd0f66](https://github.com/MultiPaaS-Apps/cli/commit/6bd0f6658bb41b1c3cafbbd869f685dee3bdc4f3))
+* [MP-258] add --aggregate to records list ([#79](https://github.com/MultiPaaS-Apps/cli/issues/79)) ([e6ce2b7](https://github.com/MultiPaaS-Apps/cli/commit/e6ce2b78f66ce21ace3f14487d21560db0f35293))
+* [MP-259] walk records list by cursor ([#75](https://github.com/MultiPaaS-Apps/cli/issues/75)) ([d60a221](https://github.com/MultiPaaS-Apps/cli/commit/d60a2215aeb135c9ec2c076a50f2490294dc032d))
+* [MP-278] import create follows symlinks under files ([#71](https://github.com/MultiPaaS-Apps/cli/issues/71)) ([e80a227](https://github.com/MultiPaaS-Apps/cli/commit/e80a22789024cb45c3e1520d884975aec59e277f))
+* [MP-283] add list fields to field add, field update and model show ([#72](https://github.com/MultiPaaS-Apps/cli/issues/72)) ([e485ee9](https://github.com/MultiPaaS-Apps/cli/commit/e485ee9e4bb309cfedab3a986a16cde8a338f19c))
+* [MP-284] list and re-issue lapsed import invitations ([#74](https://github.com/MultiPaaS-Apps/cli/issues/74)) ([ac915d9](https://github.com/MultiPaaS-Apps/cli/commit/ac915d9f622d7f08989ce484ff1a7bfd3d860e56))
+
+
+### Bug Fixes
+
+* [MP-258] say which records --aggregate skips ([#80](https://github.com/MultiPaaS-Apps/cli/issues/80)) ([3f0ced8](https://github.com/MultiPaaS-Apps/cli/commit/3f0ced8c5d310124405c4818d25a10ee7424b358))
+* [MP-280] say in the --type-name help which names the generated API keeps for itself ([#68](https://github.com/MultiPaaS-Apps/cli/issues/68)) ([51653f6](https://github.com/MultiPaaS-Apps/cli/commit/51653f6199a7e96c8b488c76ea9f27ebc31b4ea0))
+* update the webapp-api schema ([#73](https://github.com/MultiPaaS-Apps/cli/issues/73)) ([cbd25a8](https://github.com/MultiPaaS-Apps/cli/commit/cbd25a8d7503b3ce114d19c820bdab265311372c))
+* update the webapp-api schema ([#76](https://github.com/MultiPaaS-Apps/cli/issues/76)) ([05495f8](https://github.com/MultiPaaS-Apps/cli/commit/05495f831ceb81a9efaaebc38c754406b1b89f2d))
+* update the webapp-api schema ([#77](https://github.com/MultiPaaS-Apps/cli/issues/77)) ([3a209ad](https://github.com/MultiPaaS-Apps/cli/commit/3a209ad580515dcdc5196224a4a5b05610c918b7))
+* update the webapp-api schema ([#81](https://github.com/MultiPaaS-Apps/cli/issues/81)) ([49c27bd](https://github.com/MultiPaaS-Apps/cli/commit/49c27bd46e5adf3d852d09ee6faf391e5b0248bd))
+
 ## [1.4.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.3.0...v1.4.0) (2026-11-09)
 
 

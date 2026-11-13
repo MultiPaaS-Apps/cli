@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/Khan/genqlient/graphql"
@@ -32,6 +33,7 @@ func recordsList(command commandFunc) *cobra.Command {
 	var target recordTarget
 	var parentField, parentRecord, where, orderBy string
 	var count bool
+	var aggregate []string
 	cmd := command("list", "List an entity's records, newest first unless --order-by says otherwise", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		var reference *RecordReferenceInput
 		if parentField != "" || parentRecord != "" {
@@ -55,6 +57,28 @@ func recordsList(command commandFunc) *cobra.Command {
 		order, err := orderByArg(orderBy)
 		if err != nil {
 			return nil, nil, err
+		}
+		if len(aggregate) > 0 {
+			if order != nil {
+				return nil, nil, fmt.Errorf("--aggregate takes no --order-by")
+			}
+			var result *RecordsAggregateResponse
+			err := s.call(ctx, scope, func(client graphql.Client) (err error) {
+				result, err = RecordsAggregate(ctx, client, target.entityID, PageInput{Page: 0, PageSize: 1}, reference, recordScope, whereJSON, aggregate, count)
+				return err
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			aggregates := result.Records.Aggregate
+			if !count {
+				return aggregates, func(out io.Writer) { fmt.Fprintln(out, string(aggregates)) }, nil
+			}
+			total := result.Records.TotalCount
+			return map[string]any{"count": total, "aggregate": aggregates}, func(out io.Writer) {
+				fmt.Fprintln(out, total)
+				fmt.Fprintln(out, string(aggregates))
+			}, nil
 		}
 		if count {
 			if order != nil {
@@ -106,6 +130,8 @@ func recordsList(command commandFunc) *cobra.Command {
 			return fmt.Errorf(`--where is empty: give a JSON object of conditions, like '{"FIELD_ID": {"eq": "value"}}', or leave --where off`)
 		case cmd.Flags().Changed("order-by") && orderBy == "":
 			return fmt.Errorf("--order-by is empty: give createdAt, updatedAt or a field id, or leave --order-by off for newest first")
+		case cmd.Flags().Changed("aggregate") && slices.Contains(aggregate, ""):
+			return fmt.Errorf("--aggregate is empty: give a number or timestamp field id, createdAt or updatedAt")
 		}
 		return nil
 	}
@@ -114,6 +140,7 @@ func recordsList(command commandFunc) *cobra.Command {
 	cmd.Flags().StringVar(&where, "where", "", `keep the records meeting every condition, as JSON keyed by field id or id, createdAt or updatedAt, like '{"FIELD_ID": {"lte": 5}}'; a related field takes {"some": {...}} or {"none": {...}} and a reference {"is": {...}}, keyed by the other entity's field ids, with {} for any record and never null`)
 	cmd.Flags().StringVar(&orderBy, "order-by", "", "order by createdAt, updatedAt or a field id, ascending unless it ends :desc; a reference, related, file or list field, or an enum field whose enum no longer exists, is refused")
 	cmd.Flags().BoolVar(&count, "count", false, "print how many records match instead of listing them")
+	cmd.Flags().StringArrayVar(&aggregate, "aggregate", nil, "print the sum (number fields only), min and max of this field over every matching record instead of listing them: a number or timestamp field id, createdAt or updatedAt; repeat for more fields, and add --count for the count too")
 	return cmd
 }
 

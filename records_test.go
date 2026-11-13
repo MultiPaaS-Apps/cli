@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"maps"
 	"reflect"
@@ -412,6 +413,63 @@ func TestRecordsListCountSendsWhere(t *testing.T) {
 	}
 	if sent := fake.recordReads[0].variables["where"]; !reflect.DeepEqual(sent, map[string]any{"f1": map[string]any{"lte": 2.0}}) {
 		t.Fatalf("count sent where %v", sent)
+	}
+}
+
+func TestRecordsListAggregate(t *testing.T) {
+	fake := projectFake(t)
+	fake.aggregate = json.RawMessage(`{"f1":{"sum":14,"min":2,"max":5},"createdAt":{"min":"2026-01-01T00:00:00.000Z","max":"2026-02-01T00:00:00.000Z"}}`)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1",
+		"--where", `{"f1": {"gte": 2}}`, "--aggregate", "f1", "--aggregate", "createdAt", "--json")
+	if got.exit != exitOK || len(fake.recordReads) != 1 || fake.recordReads[0].operation != "RecordsAggregate" {
+		t.Fatalf("exit %d after reads %v: %s", got.exit, fake.recordReads, got.stdout)
+	}
+	sent := fake.recordReads[0].variables
+	if !reflect.DeepEqual(sent["fields"], []any{"f1", "createdAt"}) || sent["count"] != false ||
+		!reflect.DeepEqual(sent["where"], map[string]any{"f1": map[string]any{"gte": 2.0}}) {
+		t.Fatalf("sent %v", sent)
+	}
+	if query := fake.recordReads[0].query; strings.Contains(query, "items") {
+		t.Fatalf("query %s", query)
+	}
+	if compact(got.stdout) != string(fake.aggregate) {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsListAggregateWithCount(t *testing.T) {
+	fake := projectFake(t)
+	for i := range 3 {
+		fake.records["entity-1"] = append(fake.records["entity-1"], map[string]any{"id": fmt.Sprintf("record-%d", i), "data": map[string]any{}, "createdAt": "x", "updatedAt": "x"})
+	}
+	fake.aggregate = json.RawMessage(`{"f1":{"sum":6,"min":1,"max":3}}`)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1",
+		"--aggregate", "f1", "--count", "--json")
+	if got.exit != exitOK || len(fake.recordReads) != 1 || fake.recordReads[0].variables["count"] != true {
+		t.Fatalf("exit %d after reads %v: %s", got.exit, fake.recordReads, got.stdout)
+	}
+	if compact(got.stdout) != `{"aggregate":{"f1":{"sum":6,"min":1,"max":3}},"count":3}` {
+		t.Fatalf("printed %s", got.stdout)
+	}
+}
+
+func TestRecordsListAggregateRefusesOrderBy(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1",
+		"--aggregate", "f1", "--order-by", "createdAt", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "--aggregate takes no --order-by") || len(fake.recordReads) != 0 {
+		t.Fatalf("printed %s after reads %v", got.stdout, fake.recordReads)
+	}
+}
+
+func TestRecordsListAggregateRefusesEmpty(t *testing.T) {
+	fake := projectFake(t)
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-a", "--entity", "entity-1",
+		"--aggregate", "", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "--aggregate is empty") || len(fake.recordReads) != 0 {
+		t.Fatalf("printed %s after reads %v", got.stdout, fake.recordReads)
 	}
 }
 

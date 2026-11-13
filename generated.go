@@ -4800,6 +4800,28 @@ var AllRecordScope = []RecordScope{
 	RecordScopeTenant,
 }
 
+// RecordsAggregateRecordsRecordPage includes the requested fields of the GraphQL type RecordPage.
+type RecordsAggregateRecordsRecordPage struct {
+	// How many records match, ignoring paging. Counted only when selected.
+	TotalCount int `json:"totalCount"`
+	// Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging. Computed only when selected.
+	Aggregate json.RawMessage `json:"aggregate"`
+}
+
+// GetTotalCount returns RecordsAggregateRecordsRecordPage.TotalCount, and is useful for accessing the field via an interface.
+func (v *RecordsAggregateRecordsRecordPage) GetTotalCount() int { return v.TotalCount }
+
+// GetAggregate returns RecordsAggregateRecordsRecordPage.Aggregate, and is useful for accessing the field via an interface.
+func (v *RecordsAggregateRecordsRecordPage) GetAggregate() json.RawMessage { return v.Aggregate }
+
+// RecordsAggregateResponse is returned by RecordsAggregate on success.
+type RecordsAggregateResponse struct {
+	Records RecordsAggregateRecordsRecordPage `json:"records"`
+}
+
+// GetRecords returns RecordsAggregateResponse.Records, and is useful for accessing the field via an interface.
+func (v *RecordsAggregateResponse) GetRecords() RecordsAggregateRecordsRecordPage { return v.Records }
+
 // RecordsCountRecordsRecordPage includes the requested fields of the GraphQL type RecordPage.
 type RecordsCountRecordsRecordPage struct {
 	// How many records match, ignoring paging. Counted only when selected.
@@ -7849,6 +7871,38 @@ func (v *__RecordInput) GetEntityId() string { return v.EntityId }
 // GetId returns __RecordInput.Id, and is useful for accessing the field via an interface.
 func (v *__RecordInput) GetId() string { return v.Id }
 
+// __RecordsAggregateInput is used internally by genqlient
+type __RecordsAggregateInput struct {
+	EntityId  string                `json:"entityId"`
+	Page      PageInput             `json:"page"`
+	Reference *RecordReferenceInput `json:"reference"`
+	Scope     RecordScope           `json:"scope"`
+	Where     json.RawMessage       `json:"where"`
+	Fields    []string              `json:"fields"`
+	Count     bool                  `json:"count"`
+}
+
+// GetEntityId returns __RecordsAggregateInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__RecordsAggregateInput) GetEntityId() string { return v.EntityId }
+
+// GetPage returns __RecordsAggregateInput.Page, and is useful for accessing the field via an interface.
+func (v *__RecordsAggregateInput) GetPage() PageInput { return v.Page }
+
+// GetReference returns __RecordsAggregateInput.Reference, and is useful for accessing the field via an interface.
+func (v *__RecordsAggregateInput) GetReference() *RecordReferenceInput { return v.Reference }
+
+// GetScope returns __RecordsAggregateInput.Scope, and is useful for accessing the field via an interface.
+func (v *__RecordsAggregateInput) GetScope() RecordScope { return v.Scope }
+
+// GetWhere returns __RecordsAggregateInput.Where, and is useful for accessing the field via an interface.
+func (v *__RecordsAggregateInput) GetWhere() json.RawMessage { return v.Where }
+
+// GetFields returns __RecordsAggregateInput.Fields, and is useful for accessing the field via an interface.
+func (v *__RecordsAggregateInput) GetFields() []string { return v.Fields }
+
+// GetCount returns __RecordsAggregateInput.Count, and is useful for accessing the field via an interface.
+func (v *__RecordsAggregateInput) GetCount() bool { return v.Count }
+
 // __RecordsCountInput is used internally by genqlient
 type __RecordsCountInput struct {
 	EntityId  string                `json:"entityId"`
@@ -10335,6 +10389,53 @@ func Records(
 	}
 
 	data_ = &RecordsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by RecordsAggregate.
+const RecordsAggregate_Operation = `
+query RecordsAggregate ($entityId: ID!, $page: PageInput!, $reference: RecordReferenceInput, $scope: RecordScope, $where: JSON, $fields: [String!]!, $count: Boolean!) {
+	records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where) {
+		totalCount @include(if: $count)
+		aggregate(fields: $fields)
+	}
+}
+`
+
+func RecordsAggregate(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+	page PageInput,
+	reference *RecordReferenceInput,
+	scope RecordScope,
+	where json.RawMessage,
+	fields []string,
+	count bool,
+) (data_ *RecordsAggregateResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RecordsAggregate",
+		Query:  RecordsAggregate_Operation,
+		Variables: &__RecordsAggregateInput{
+			EntityId:  entityId,
+			Page:      page,
+			Reference: reference,
+			Scope:     scope,
+			Where:     where,
+			Fields:    fields,
+			Count:     count,
+		},
+	}
+
+	data_ = &RecordsAggregateResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

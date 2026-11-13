@@ -367,6 +367,22 @@ query RecordsCount(
   }
 }
 
+query RecordsAggregate(
+  $entityId: ID!
+  $page: PageInput!
+  # @genqlient(pointer: true)
+  $reference: RecordReferenceInput
+  $scope: RecordScope
+  $where: JSON
+  $fields: [String!]!
+  $count: Boolean!
+) {
+  records(entityId: $entityId, page: $page, reference: $reference, scope: $scope, where: $where) {
+    totalCount @include(if: $count)
+    aggregate(fields: $fields)
+  }
+}
+
 mutation CreateRecord($input: CreateRecordInput!) {
   createRecord(input: $input) {
     ...RecordParts

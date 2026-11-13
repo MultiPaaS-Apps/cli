@@ -63,7 +63,8 @@ type fakeMultiPaaS struct {
 	failVersion                  bool                        // LatestModelRevision answers HTTP 500
 	records                      map[string][]map[string]any // entity id -> its live records, newest first; appWide marks the application's own
 	recordScopes                 []string                    // the scope variable of every Records read ("" when absent)
-	recordReads                  []recordRead                // every Records and RecordsCount request received
+	recordReads                  []recordRead                // every Records, RecordsCount and RecordsAggregate request received
+	aggregate                    json.RawMessage             // what RecordsAggregate answers as the aggregate
 	refuseRecords                []map[string]any            // when set, every records read is refused as VALIDATION with these fieldErrors
 	afterRecordsPage             func(f *fakeMultiPaaS)      // when set, runs after each Records page is answered
 	omitNextCursor               bool                        // Records pages carry no nextCursor
@@ -485,7 +486,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			}
 			writeData(w, map[string]any{"apiSchemaDiff": map[string]any{"breaking": change("FIELD_REMOVED"), "dangerous": []map[string]any{}, "added": change("FIELD_ADDED")}})
 		}
-	case "Records", "RecordsCount":
+	case "Records", "RecordsCount", "RecordsAggregate":
 		scope, _ := variables["scope"].(string)
 		f.recordScopes = append(f.recordScopes, scope)
 		f.recordReads = append(f.recordReads, recordRead{operation: operation, query: f.lastQuery, variables: variables})
@@ -501,6 +502,14 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			rows = slices.DeleteFunc(slices.Clone(rows), func(r map[string]any) bool {
 				return r["data"].(map[string]any)[reference["fieldId"].(string)] != reference["recordId"]
 			})
+		}
+		if operation == "RecordsAggregate" {
+			page := map[string]any{"aggregate": f.aggregate}
+			if variables["count"] == true {
+				page["totalCount"] = len(rows)
+			}
+			writeData(w, map[string]any{"records": page})
+			return
 		}
 		if operation == "RecordsCount" {
 			writeData(w, map[string]any{"records": map[string]any{"totalCount": len(rows)}})

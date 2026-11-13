@@ -1523,6 +1523,12 @@ input RecordOrderInput {
 }
 
 type RecordPage {
+"""
+Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging. Computed only when selected.
+"""
+	aggregate(
+		fields: [String!]!
+	): JSON!
 	items: [Record!]!
 	pageInfo: PageInfo!
 """

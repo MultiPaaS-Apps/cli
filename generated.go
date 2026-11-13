@@ -4804,7 +4804,7 @@ var AllRecordScope = []RecordScope{
 type RecordsAggregateRecordsRecordPage struct {
 	// How many records match, ignoring paging. Counted only when selected.
 	TotalCount int `json:"totalCount"`
-	// Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging. Computed only when selected.
+	// Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging, skipping a record that stores no value in the field or stores one of another type. Computed only when selected.
 	Aggregate json.RawMessage `json:"aggregate"`
 }
 

@@ -60,7 +60,7 @@ func projectCommands(command commandFunc) []*cobra.Command {
 func initProject(command commandFunc) *cobra.Command {
 	var appID, envID, tenantID, wanted string
 	cmd := command("init", "Write multipaas.json: the application, test app-tenant and API version an app is built on", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		tenants, err := s.testTenants(ctx, appID, envID)
+		tenants, err := s.testTenants(ctx, appID, envID, false)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -95,15 +95,15 @@ func initProject(command commandFunc) *cobra.Command {
 
 // testTenants lists the app-tenants init can choose from: only envID's when it is not "", else the default
 // environment's plus any app-tenant the developer holds a role at directly, whichever environment it is in.
-func (s *session) testTenants(ctx context.Context, appID, envID string) ([]appTenant, error) {
+func (s *session) testTenants(ctx context.Context, appID, envID string, includeRetired bool) ([]appTenant, error) {
 	if envID == "" {
-		return s.tenants(ctx, appID)
+		return s.tenants(ctx, appID, includeRetired)
 	}
 	scope, err := s.scopeIn(ctx, appID, envID)
 	if err != nil {
 		return nil, err
 	}
-	return s.tenantsAt(ctx, scope)
+	return s.tenantsAt(ctx, scope, includeRetired)
 }
 
 func pin(command commandFunc) *cobra.Command {

@@ -119,16 +119,22 @@ func run(args []string, env environment) int {
 	}), appsCreate(command))
 
 	var appID, envID string
+	var includeRetired bool
 	tenants := &cobra.Command{Use: "tenants", Short: "App-tenants you can reach"}
 	tenantsList := command("list", "List an application's app-tenants you can reach", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		list, err := s.testTenants(ctx, appID, envID)
+		list, err := s.testTenants(ctx, appID, envID, includeRetired)
 		return list, func(out io.Writer) {
+			if includeRetired {
+				table(out, "NAME\tID\tRETIRED", list, func(t appTenant) string { return t.Name + "\t" + t.ID + "\t" + t.RetiredAt })
+				return
+			}
 			table(out, "NAME\tID", list, func(t appTenant) string { return t.Name + "\t" + t.ID })
 		}, err
 	})
 	appFlag(tenantsList, &appID)
 	tenantsEnvFlag(tenantsList, &envID)
-	tenants.AddCommand(tenantsList, tenantsCreate(command))
+	tenantsList.Flags().BoolVar(&includeRetired, "include-retired", false, "list retired app-tenants too, each with when it was retired")
+	tenants.AddCommand(tenantsList, tenantsCreate(command), tenantsRetire(command))
 	root.AddCommand(apps, tenants, envsCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
@@ -191,6 +197,36 @@ func tenantsCreate(command commandFunc) *cobra.Command {
 	cmd.Flags().StringVar(&name, "name", "", "the app-tenant's name")
 	_ = cmd.MarkFlagRequired("name")
 	return cmd
+}
+
+// tenantsRetire retires an app-tenant: its members and every token for it stop working at once, and its records
+// stay. It needs access.manage.application, the same permission as tenants create, and finds the app-tenant only in
+// the environment it runs in.
+func tenantsRetire(command commandFunc) *cobra.Command {
+	var appID, envID, tenantID string
+	cmd := command("retire <app-tenant-id>", "Retire an app-tenant; its members and tokens stop working", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var retired retirement
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
+			response, err := DeactivateAppTenant(ctx, client, DeactivateAppTenantInput{Id: tenantID})
+			if err == nil {
+				retired = retirement{Retired: true, ID: response.DeactivateAppTenant.Id}
+			}
+			return err
+		})
+		return retired, func(out io.Writer) {
+			fmt.Fprintf(out, "app-tenant %s is retired; its members and tokens stop working now\n", retired.ID)
+		}, err
+	})
+	cmd.Args = oneID(&tenantID)
+	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
+	return cmd
+}
+
+// retirement is what tenants retire prints.
+type retirement struct {
+	Retired bool   `json:"retired"`
+	ID      string `json:"id"`
 }
 
 // cliError is a failure carrying its exit code and the code, message and field errors --json reports.

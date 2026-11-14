@@ -128,7 +128,7 @@ type chain struct {
 type entitlement struct{ clientID, clientName, applicationID, appTenantID string }
 
 // env is the environment an app-tenant lives in; the empty string reads as the default environment.
-type fakeRow struct{ id, name, env string }
+type fakeRow struct{ id, name, env, retiredAt string }
 
 type fakeEnv struct {
 	id, name  string
@@ -420,7 +420,12 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		} else if len(parts) >= 2 {
 			apps = f.tenantsInEnvironment(parts[1], f.defaultEnvironment(parts[1]))
 		}
+		if includeRetired, _ := variables["includeRetired"].(bool); !includeRetired {
+			apps = slices.DeleteFunc(apps, func(row fakeRow) bool { return row.retiredAt != "" })
+		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
+	case "DeactivateAppTenant":
+		f.deactivateAppTenant(w, parts, variables)
 	case "Environments", "EnvironmentRedirectUriSets", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "SetEnvironmentRedirectUris", "RemoveEnvironment":
 		f.manageEnvironments(w, operation, appOf(parts), variables)
 	case "ScopedAppTenant":
@@ -664,6 +669,9 @@ func page(rows []fakeRow, variables map[string]any) map[string]any {
 		item := map[string]any{"id": row.id, "name": row.name}
 		if row.env != "" {
 			item["environment"] = fakeEnvironment(row.env)
+		}
+		if row.retiredAt != "" {
+			item["retiredAt"] = row.retiredAt
 		}
 		items = append(items, item)
 	}
@@ -937,6 +945,46 @@ func (f *fakeMultiPaaS) createAppTenant(w http.ResponseWriter, parts []string, v
 	created := fakeRow{id: fmt.Sprintf("tenant-new-%d", len(f.tenants[app])+1), name: name}
 	f.tenants[app] = append(f.tenants[app], created)
 	writeData(w, map[string]any{"createAppTenant": map[string]any{"id": created.id, "name": created.name}})
+}
+
+// deactivateAppTenant shares these steps with the server, in order: an application in scope, then
+// access.manage.application, then a live app-tenant of the scope's own environment, then the retirement.
+func (f *fakeMultiPaaS) deactivateAppTenant(w http.ResponseWriter, parts []string, variables map[string]any) {
+	f.mutations = append(f.mutations, variables)
+	app := appOf(parts)
+	env, inEnv := strings.CutPrefix(parts[0], "env:")
+	if inEnv {
+		for candidate, envs := range f.environments {
+			if slices.ContainsFunc(envs, func(e fakeEnv) bool { return e.id == env }) {
+				app = candidate
+			}
+		}
+	}
+	if (app == "" && !inEnv) || f.noManageApp {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	if !inEnv {
+		env = f.defaultEnvironment(app)
+	}
+	id, _ := variables["input"].(map[string]any)["id"].(string)
+	var found *fakeRow
+	for i := range f.tenants[app] {
+		if row := &f.tenants[app][i]; row.id == id && cmp.Or(row.env, f.defaultEnvironment(app)) == env {
+			found = row
+		}
+	}
+	for i := range f.envTenants[env] {
+		if row := &f.envTenants[env][i]; row.id == id {
+			found = row
+		}
+	}
+	if found == nil || found.retiredAt != "" {
+		graphQLRefusal(w, "NOT_FOUND", "appTenant not found")
+		return
+	}
+	found.retiredAt = "2026-11-13T00:00:00Z"
+	writeData(w, map[string]any{"deactivateAppTenant": map[string]any{"id": id}})
 }
 
 // manageOAuth shares these steps with the server, in order: an application in scope

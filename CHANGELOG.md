@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.5.0...v1.6.0) (2026-11-14)
+
+
+### Features
+
+* [MP-225] add tenants retire and tenants list --include-retired ([#82](https://github.com/MultiPaaS-Apps/cli/issues/82)) ([df258be](https://github.com/MultiPaaS-Apps/cli/commit/df258beaa5f9ed64394abd94cdd91c6499ab27dc))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#83](https://github.com/MultiPaaS-Apps/cli/issues/83)) ([1dc2f9b](https://github.com/MultiPaaS-Apps/cli/commit/1dc2f9bbe19419c17fa018a8b53ae1ed648b4fb8))
+
 ## [1.5.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.4.0...v1.5.0) (2026-11-13)
 
 

@@ -30,11 +30,12 @@ query Applications($page: PageInput!) {
   }
 }
 
-query AppTenants($page: PageInput!) {
-  appTenants(page: $page) {
+query AppTenants($page: PageInput!, $includeRetired: Boolean!) {
+  appTenants(page: $page, includeRetired: $includeRetired) {
     items {
       id
       name
+      retiredAt
       # @genqlient(pointer: true)
       environment {
         id
@@ -57,6 +58,12 @@ mutation CreateAppTenant($input: CreateAppTenantInput!) {
   createAppTenant(input: $input) {
     id
     name
+  }
+}
+
+mutation DeactivateAppTenant($input: DeactivateAppTenantInput!) {
+  deactivateAppTenant(input: $input) {
+    id
   }
 }
 

@@ -523,6 +523,54 @@ func TestTenantsCreateWithoutManageApplicationIsRefusedUnauthorized(t *testing.T
 	}
 }
 
+func TestTenantsRetireRetiresOneAndListShowsItOnlyWhenAsked(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	var created struct{ AppTenant appTenant }
+	decode(t, fake.run(t, "tenants", "create", "--app", "app-a-000", "--env", "env-default", "--name", "Doomed", "--json").stdout, &created)
+	id := created.AppTenant.ID
+	fake.mutations = nil
+
+	got := fake.run(t, "tenants", "retire", id, "--app", "app-a-000", "--env", "env-default", "--json")
+	if compact(got.stdout) != `{"retired":true,"id":"`+id+`"}` {
+		t.Fatalf("retire %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"id": id}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "env:env-default" {
+		t.Fatalf("scope %q", last)
+	}
+
+	live := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--json")
+	if strings.Contains(live.stdout, id) {
+		t.Fatalf("a retired app-tenant is listed: %s", live.stdout)
+	}
+	all := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--include-retired", "--json")
+	want2 := `[{"id":"tenant-a","name":"Test"},{"id":"tenant-e","name":"Env tenant"},{"id":"` + id + `","name":"Doomed","retiredAt":"2026-11-13T00:00:00Z"}]`
+	if compact(all.stdout) != want2 {
+		t.Fatalf("list --include-retired %s, want %s", all.stdout, want2)
+	}
+}
+
+func TestTenantsRetireOfAMissingOrAlreadyRetiredTenantIsNotFound(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	assertFailure(t, fake.run(t, "tenants", "retire", "tenant-unknown", "--app", "app-a-000", "--env", "env-default", "--json"), exitRefused, "NOT_FOUND")
+	if got := fake.run(t, "tenants", "retire", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json"); got.exit != exitOK {
+		t.Fatalf("first retire %d: %s", got.exit, got.stdout)
+	}
+	assertFailure(t, fake.run(t, "tenants", "retire", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json"), exitRefused, "NOT_FOUND")
+}
+
+func TestTenantsRetireWithoutManageIsUnauthorized(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.noManageApp = true
+	assertFailure(t, fake.run(t, "tenants", "retire", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json"), exitRefused, "UNAUTHORIZED")
+	if got := fake.run(t, "tenants", "list", "--app", "app-a-000", "--json"); !strings.Contains(got.stdout, "tenant-e") {
+		t.Fatalf("a refused retire changed the list: %s", got.stdout)
+	}
+}
+
 func TestTenantsCreateForAnApplicationYouCannotReachIsNotFoundAndSendsNothing(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	assertFailure(t, fake.run(t, "tenants", "create", "--app", "app-unknown", "--name", "Dev test", "--json"), exitRefused, "NOT_FOUND")

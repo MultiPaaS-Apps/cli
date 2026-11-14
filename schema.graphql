@@ -132,6 +132,10 @@ The environment this app-tenant lives in.
 	environment: Environment
 	id: ID!
 	name: String!
+"""
+When this app-tenant was retired, or null while it is live.
+"""
+	retiredAt: DateTime
 	updatedAt: DateTime!
 }
 
@@ -1241,6 +1245,7 @@ type Query {
 		id: ID!
 	): AppTenant
 	appTenants(
+		includeRetired: Boolean
 		page: PageInput!
 	): AppTenantPage!
 	application(

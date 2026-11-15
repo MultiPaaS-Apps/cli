@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.6.0...v1.7.0) (2026-11-15)
+
+
+### Features
+
+* [MP-266] entity update --share-with-tenant ([#87](https://github.com/MultiPaaS-Apps/cli/issues/87)) ([de31a3f](https://github.com/MultiPaaS-Apps/cli/commit/de31a3ff7c923ca1202210bb2a3755c8c2db6709))
+* [MP-300] envs delete prints the erase date; envs remove is deprecated ([#85](https://github.com/MultiPaaS-Apps/cli/issues/85)) ([c93dc20](https://github.com/MultiPaaS-Apps/cli/commit/c93dc20b2d10489f4abc9eef069a988fa26011f2))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#86](https://github.com/MultiPaaS-Apps/cli/issues/86)) ([5bc0b46](https://github.com/MultiPaaS-Apps/cli/commit/5bc0b46a7a2fbb5627b1503835df1611b26a82ce))
+
 ## [1.6.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.5.0...v1.6.0) (2026-11-14)
 
 

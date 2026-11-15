@@ -19,7 +19,7 @@ type commandFunc func(use, short string, do func(context.Context, *session) (any
 
 // option is one input a model command takes: its flag, the input field it sets, its help, its kind
 // ("string", "bool", "int", "list", "values" for an enum's VALUE or VALUE=GRAPHQL_NAME entries, "null" for a switch that
-// clears its field, or "false" for one that sets it false), and a flag it can't be given with.
+// clears its field, "false" for one that sets it false, or "level" for a share level that sends null for off), and a flag it can't be given with.
 type option struct {
 	flag, field, usage, kind string
 	excludes                 string
@@ -59,12 +59,13 @@ func modelCommands(command commandFunc) []*cobra.Command {
 				option{flag: "name", field: "name", usage: "the entity's name", required: true},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its GraphQL type name (default: from the name), not one the generated API has for itself, such as Query, User or File"},
 				option{flag: "plural-name", field: "graphqlPluralName", usage: "its GraphQL plural name (default: from the name)"}),
-			change(command, "update", "Rename an entity or change whether it is managed", "entity", updateEntity,
+			change(command, "update", "Rename an entity, change whether it is managed, or share its new records with the app-tenant", "entity", updateEntity,
 				entityID,
 				option{flag: "name", field: "name", usage: "the entity's new name"},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its new GraphQL type name, not one the generated API has for itself, such as Query, User or File"},
 				option{flag: "plural-name", field: "graphqlPluralName", usage: "its new GraphQL plural name"},
-				option{flag: "managed", field: "managed", usage: "whether the entity is managed", kind: "bool"}),
+				option{flag: "managed", field: "managed", usage: "whether the entity is managed", kind: "bool"},
+				option{flag: "share-with-tenant", field: "shareNewRecordsWithTenant", usage: "share each new record with everyone in its app-tenant: view, edit, or off to stop", kind: "level"}),
 			change(command, "retire", "Retire an entity", "entity", retireEntity, entityID),
 		),
 		group("enum", "Declare, change and retire enum types",
@@ -182,6 +183,13 @@ func readInput(cmd *cobra.Command, options []option) map[string]any {
 		case "false":
 			if on, _ := cmd.Flags().GetBool(o.flag); on {
 				input[o.field] = false
+			}
+		case "level":
+			level, _ := cmd.Flags().GetString(o.flag)
+			if level == "off" {
+				input[o.field] = nil
+			} else {
+				input[o.field] = level
 			}
 		default:
 			input[o.field], _ = cmd.Flags().GetString(o.flag)
@@ -641,7 +649,7 @@ func (s *session) inEnv(ctx context.Context, appID, envID string, operation func
 func printModel(out io.Writer, shown shownModel) {
 	fmt.Fprintf(out, "API version %s\n", shown.APIVersion)
 	for _, entity := range shown.Entities {
-		fmt.Fprintf(out, "\n%s (%s, managed %t)  %s\n", entity.Name, entity.GraphqlTypeName, entity.Managed, entity.Id)
+		fmt.Fprintf(out, "\n%s (%s, managed %t%s)  %s\n", entity.Name, entity.GraphqlTypeName, entity.Managed, sharesNewRecords(entity.ShareNewRecordsWithTenant), entity.Id)
 		table(out, "  FIELD\tTYPE\tREQUIRED\tNOT NULL\tDEFAULT\tID", entity.Fields, func(f FieldParts) string {
 			kind := f.Type
 			if f.List {
@@ -664,6 +672,14 @@ func printModel(out io.Writer, shown shownModel) {
 		}
 	}
 	printEnums(out, shown.Enums)
+}
+
+// sharesNewRecords is the listing's note of the level each new record is shared with the app-tenant at, if any.
+func sharesNewRecords(level *RecordAccessLevel) string {
+	if level == nil {
+		return ""
+	}
+	return fmt.Sprintf(", shares new records: %s", *level)
 }
 
 // shownDefault is a field's default as JSON, so the text "3" and the number 3 print differently, or "-" when it has none.

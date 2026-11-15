@@ -516,3 +516,62 @@ func TestAChangeWhoseVersionCannotBeReadSaysSoInItsHumanOutput(t *testing.T) {
 		t.Fatalf("exit %d: %q", got.exit, got.stdout)
 	}
 }
+
+func TestEntityUpdateShareWithTenantSendsTheLevel(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "entity", "update", "--app", "app-a-000", "--id", "entity-1", "--share-with-tenant", "view", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"entityId": "entity-1", "shareNewRecordsWithTenant": "view"}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+}
+
+func TestEntityUpdateShareWithTenantOffSendsNull(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "entity", "update", "--app", "app-a-000", "--id", "entity-1", "--share-with-tenant", "off", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"entityId": "entity-1", "shareNewRecordsWithTenant": nil}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+}
+
+func TestModelShowJSONPrintsNullWhenTheEntityDoesNotShareNewRecords(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entities["app-a-000"] = append(fake.entities["app-a-000"], map[string]any{"id": "entity-1", "name": "Order", "managed": true})
+	got := fake.run(t, "model", "show", "--app", "app-a-000", "--json")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	var printed struct {
+		Entities []map[string]any `json:"entities"`
+	}
+	decode(t, got.stdout, &printed)
+	if len(printed.Entities) != 1 {
+		t.Fatalf("printed %s", got.stdout)
+	}
+	value, present := printed.Entities[0]["shareNewRecordsWithTenant"]
+	if !present || value != nil {
+		t.Fatalf("shareNewRecordsWithTenant is %v (present %t), want null: %s", value, present, got.stdout)
+	}
+	if text := fake.run(t, "model", "show", "--app", "app-a-000"); strings.Contains(text.stdout, "shares new records") {
+		t.Fatalf("shown %q", text.stdout)
+	}
+}
+
+func TestModelShowPrintsTheTenantShareLevel(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entities["app-a-000"] = append(fake.entities["app-a-000"], map[string]any{"id": "entity-1", "name": "Order", "managed": true, "shareNewRecordsWithTenant": "view"})
+	got := fake.run(t, "model", "show", "--app", "app-a-000")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if !strings.Contains(got.stdout, "managed true, shares new records: view)") {
+		t.Fatalf("shown %q", got.stdout)
+	}
+}

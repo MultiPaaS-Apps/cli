@@ -90,6 +90,8 @@ fragment EntityParts on Entity {
   graphqlTypeName
   graphqlPluralName
   managed
+  # @genqlient(pointer: true)
+  shareNewRecordsWithTenant
 }
 
 fragment FieldParts on Field {

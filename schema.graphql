@@ -544,6 +544,7 @@ type Entity {
 	id: ID!
 	managed: Boolean!
 	name: String!
+	shareNewRecordsWithTenant: RecordAccessLevel
 	updatedAt: DateTime!
 }
 
@@ -1808,6 +1809,7 @@ input UpdateEntityInput {
 	graphqlTypeName: String
 	managed: Boolean
 	name: String
+	shareNewRecordsWithTenant: RecordAccessLevel
 }
 
 input UpdateEnumTypeInput {

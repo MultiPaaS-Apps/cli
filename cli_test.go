@@ -398,6 +398,87 @@ func TestEnvsRemoveFailsWhenTheAnswerNamesNoEnvironment(t *testing.T) {
 	}
 }
 
+func TestEnvsDeleteSaysWhenTheDataIsErased(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	got := fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-new-2", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"deleted":true,"id":"env-new-2","destroysAt":"2026-11-21T12:00:00.000Z"}` {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	assertFailure(t, fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-new-2", "--json"), exitRefused, "NOT_FOUND")
+}
+
+func TestEnvsDeletePrintsTheEraseDate(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	got := fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-new-2")
+	if got.exit != exitOK || got.stdout != "environment env-new-2 is deleted and stops working now; its data is erased on 2026-11-21\n" {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+}
+
+func TestEnvsDeleteRefusesTheDefaultAndProtected(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	fake.run(t, "envs", "protect", "--app", "app-a-000", "--env", "env-new-2")
+	protected := fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-new-2", "--json")
+	assertFailure(t, protected, exitRefused, "FORBIDDEN")
+	assertReason(t, protected, "environment_protected")
+
+	fake.run(t, "envs", "unprotect", "--app", "app-a-000", "--env", "env-default")
+	refused := fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-default", "--json")
+	assertFailure(t, refused, exitRefused, "FORBIDDEN")
+	assertReason(t, refused, "environment_default")
+}
+
+func TestEnvsDeleteFailsWhenTheAnswerNamesNoEnvironment(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	fake.removeNoData = true
+	for _, args := range [][]string{{"--json"}, {}} {
+		got := fake.run(t, append([]string{"envs", "delete", "--app", "app-a-000", "--env", "env-new-2"}, args...)...)
+		if got.exit != exitRefused || strings.Contains(got.stdout, `"deleted":true`) || strings.Contains(got.stdout, "is deleted") {
+			t.Fatalf("%v: exit %d, want %d with no success output: %q", args, got.exit, exitRefused, got.stdout)
+		}
+	}
+	var failure struct{ Error struct{ Code string } }
+	decode(t, fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-new-2", "--json").stdout, &failure)
+	if failure.Error.Code != "CLI_ERROR" {
+		t.Fatalf("code %q, want CLI_ERROR", failure.Error.Code)
+	}
+}
+
+func TestEnvsDeleteSaysWhenTheEraseDateIsUnknown(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "second", "--json")
+	fake.deleteNoDate = true
+	asJSON := fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-new-2", "--json")
+	if asJSON.exit != exitOK || compact(asJSON.stdout) != `{"deleted":true,"id":"env-new-2","destroysAt":null}` {
+		t.Fatalf("exit %d: %q", asJSON.exit, asJSON.stdout)
+	}
+	human := fake.run(t, "envs", "delete", "--app", "app-a-000", "--env", "env-new-3")
+	if human.exit != exitOK || human.stdout != "environment env-new-3 is deleted and stops working now; the server did not say when its data is erased\n" {
+		t.Fatalf("exit %d: %q", human.exit, human.stdout)
+	}
+}
+
+func TestEnvsRemoveIsDeprecatedButUnchanged(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "envs", "create", "--app", "app-a-000", "--name", "test", "--json")
+	got := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-new-2", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"removed":true,"id":"env-new-2"}` {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	if !strings.Contains(got.stderr, `"envs remove" is deprecated: use "envs delete" instead`) {
+		t.Fatalf("stderr %q", got.stderr)
+	}
+	help := fake.run(t, "envs", "--help")
+	if strings.Contains(help.stdout, "remove") || !strings.Contains(help.stdout, "delete") {
+		t.Fatalf("help %q", help.stdout)
+	}
+}
+
 func assertReason(t *testing.T, got result, reason string) {
 	t.Helper()
 	var failure struct{ Error struct{ Reason string } }

@@ -857,6 +857,14 @@ mutation RemoveEnvironment($input: RemoveEnvironmentInput!) {
   }
 }
 
+mutation DeleteEnvironment($input: DeleteEnvironmentInput!) {
+  deleteEnvironment(input: $input) {
+    id
+    # @genqlient(pointer: true)
+    destroysAt
+  }
+}
+
 fragment DeployerParts on Deployer {
   id
   name

@@ -79,6 +79,7 @@ type fakeMultiPaaS struct {
 	noManageOAuth                bool                        // the signed-in user lacks application.manage_oauth
 	scopedEnvNull                bool                        // an app-tenant-level read returns the app-tenant's environment as null
 	removeNoData                 bool                        // removeEnvironment answers HTTP 200 with {"data":null} and no errors
+	deleteNoDate                 bool                        // deleteEnvironment answers without destroysAt
 	deployerID, deployerSecret   string                      // the deployer the fake knows; empty for none
 	envClientID, envClientSecret string                      // MULTIPAAS_CLIENT_ID and _SECRET the CLI runs with
 	deployerTokens               map[string]bool             // access tokens minted by the client-credentials grant
@@ -426,7 +427,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
 	case "DeactivateAppTenant":
 		f.deactivateAppTenant(w, parts, variables)
-	case "Environments", "EnvironmentRedirectUriSets", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "SetEnvironmentRedirectUris", "RemoveEnvironment":
+	case "Environments", "EnvironmentRedirectUriSets", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "SetEnvironmentRedirectUris", "RemoveEnvironment", "DeleteEnvironment":
 		f.manageEnvironments(w, operation, appOf(parts), variables)
 	case "ScopedAppTenant":
 		scopedApp := f.scopedApps[parts[len(parts)-1]]
@@ -1361,13 +1362,13 @@ func (f *fakeMultiPaaS) entitledToEnvironment(env string) bool {
 	return false
 }
 
-// removalRefusal is the server's reason and message for refusing a removal, default first, or "" when it is allowed.
+// removalRefusal is the server's reason and message for refusing a deletion, default first, or "" when it is allowed.
 func removalRefusal(e fakeEnv) (reason, message string) {
 	if e.isDefault {
-		return "environment_default", "The default environment can't be removed."
+		return "environment_default", "The default environment can't be deleted."
 	}
 	if e.deletionProtected() {
-		return "environment_protected", "This environment has deletion protection on. Turn it off before removing the environment."
+		return "environment_protected", "This environment has deletion protection on. Turn it off before deleting the environment."
 	}
 	return "", ""
 }
@@ -1441,7 +1442,7 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 			listed = append(listed, map[string]any{"id": e.id, "redirectUriSets": e.redirectSets()})
 		}
 		writeData(w, map[string]any{"me": map[string]any{"application": map[string]any{"environments": listed}}})
-	case "RemoveEnvironment":
+	case "RemoveEnvironment", "DeleteEnvironment":
 		if f.removeNoData {
 			writeData(w, nil)
 			return
@@ -1458,9 +1459,16 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 			})
 			return
 		}
-		removed := f.environments[app][i]
+		removed := shown(f.environments[app][i])
 		f.environments[app] = slices.Delete(f.environments[app], i, i+1)
-		writeData(w, map[string]any{"removeEnvironment": shown(removed)})
+		if operation == "DeleteEnvironment" {
+			if !f.deleteNoDate {
+				removed["destroysAt"] = "2026-11-21T12:00:00.000Z"
+			}
+			writeData(w, map[string]any{"deleteEnvironment": removed})
+			return
+		}
+		writeData(w, map[string]any{"removeEnvironment": removed})
 	default:
 		listed := []map[string]any{}
 		for _, e := range f.environments[app] {

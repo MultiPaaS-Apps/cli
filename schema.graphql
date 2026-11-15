@@ -500,6 +500,18 @@ input DeactivateUserInput {
 	id: ID!
 }
 
+"""
+Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
+"""
+interface Deletable {
+	deletedAt: DateTime
+	destroysAt: DateTime
+}
+
+input DeleteEnvironmentInput {
+	id: ID!
+}
+
 input DeleteInvitationInput {
 	invitationId: ID!
 }
@@ -576,9 +588,11 @@ input EnumValueInput {
 	value: String!
 }
 
-type Environment {
+type Environment implements Deletable{
 	createdAt: DateTime!
+	deletedAt: DateTime
 	deletionProtected: Boolean!
+	destroysAt: DateTime
 	id: ID!
 	isDefault: Boolean!
 	name: String!
@@ -900,6 +914,9 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	deleteDataImport(
 		importId: ID!
 	): DataImport!
+	deleteEnvironment(
+		input: DeleteEnvironmentInput!
+	): Environment!
 """
 Marks an open invitation deleted: its link stops working and sign-in no longer accepts it. Nothing is removed.
 """
@@ -935,7 +952,7 @@ Re-issues an import's or a tenant's lapsed membership invitations. No email is s
 	): DataImport!
 	removeEnvironment(
 		input: RemoveEnvironmentInput!
-	): Environment!
+	): Environment! @deprecated(reason: "Use deleteEnvironment.")
 	removeMember(
 		input: RemoveMemberInput!
 	): TenantMember!

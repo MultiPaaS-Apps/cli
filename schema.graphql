@@ -504,7 +504,13 @@ input DeactivateUserInput {
 Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
 """
 interface Deletable {
+"""
+Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
+"""
 	deletedAt: DateTime
+"""
+Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
+"""
 	destroysAt: DateTime
 }
 

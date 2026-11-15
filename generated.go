@@ -1467,6 +1467,11 @@ func (v *CreateEntityCreateEntity) GetGraphqlPluralName() string {
 // GetManaged returns CreateEntityCreateEntity.Managed, and is useful for accessing the field via an interface.
 func (v *CreateEntityCreateEntity) GetManaged() bool { return v.EntityParts.Managed }
 
+// GetShareNewRecordsWithTenant returns CreateEntityCreateEntity.ShareNewRecordsWithTenant, and is useful for accessing the field via an interface.
+func (v *CreateEntityCreateEntity) GetShareNewRecordsWithTenant() *RecordAccessLevel {
+	return v.EntityParts.ShareNewRecordsWithTenant
+}
+
 func (v *CreateEntityCreateEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -1502,6 +1507,8 @@ type __premarshalCreateEntityCreateEntity struct {
 	GraphqlPluralName string `json:"graphqlPluralName"`
 
 	Managed bool `json:"managed"`
+
+	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
 }
 
 func (v *CreateEntityCreateEntity) MarshalJSON() ([]byte, error) {
@@ -1520,6 +1527,7 @@ func (v *CreateEntityCreateEntity) __premarshalJSON() (*__premarshalCreateEntity
 	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
+	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
 	return &retval, nil
 }
 
@@ -2874,6 +2882,11 @@ func (v *EntitiesEntitiesEntityPageItemsEntity) GetGraphqlPluralName() string {
 // GetManaged returns EntitiesEntitiesEntityPageItemsEntity.Managed, and is useful for accessing the field via an interface.
 func (v *EntitiesEntitiesEntityPageItemsEntity) GetManaged() bool { return v.EntityParts.Managed }
 
+// GetShareNewRecordsWithTenant returns EntitiesEntitiesEntityPageItemsEntity.ShareNewRecordsWithTenant, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPageItemsEntity) GetShareNewRecordsWithTenant() *RecordAccessLevel {
+	return v.EntityParts.ShareNewRecordsWithTenant
+}
+
 func (v *EntitiesEntitiesEntityPageItemsEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -2909,6 +2922,8 @@ type __premarshalEntitiesEntitiesEntityPageItemsEntity struct {
 	GraphqlPluralName string `json:"graphqlPluralName"`
 
 	Managed bool `json:"managed"`
+
+	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
 }
 
 func (v *EntitiesEntitiesEntityPageItemsEntity) MarshalJSON() ([]byte, error) {
@@ -2927,6 +2942,7 @@ func (v *EntitiesEntitiesEntityPageItemsEntity) __premarshalJSON() (*__premarsha
 	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
+	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
 	return &retval, nil
 }
 
@@ -2948,11 +2964,12 @@ func (v *EntitiesResponse) GetEntities() EntitiesEntitiesEntityPage { return v.E
 
 // EntityParts includes the GraphQL fields of Entity requested by the fragment EntityParts.
 type EntityParts struct {
-	Id                string `json:"id"`
-	Name              string `json:"name"`
-	GraphqlTypeName   string `json:"graphqlTypeName"`
-	GraphqlPluralName string `json:"graphqlPluralName"`
-	Managed           bool   `json:"managed"`
+	Id                        string             `json:"id"`
+	Name                      string             `json:"name"`
+	GraphqlTypeName           string             `json:"graphqlTypeName"`
+	GraphqlPluralName         string             `json:"graphqlPluralName"`
+	Managed                   bool               `json:"managed"`
+	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
 }
 
 // GetId returns EntityParts.Id, and is useful for accessing the field via an interface.
@@ -2969,6 +2986,11 @@ func (v *EntityParts) GetGraphqlPluralName() string { return v.GraphqlPluralName
 
 // GetManaged returns EntityParts.Managed, and is useful for accessing the field via an interface.
 func (v *EntityParts) GetManaged() bool { return v.Managed }
+
+// GetShareNewRecordsWithTenant returns EntityParts.ShareNewRecordsWithTenant, and is useful for accessing the field via an interface.
+func (v *EntityParts) GetShareNewRecordsWithTenant() *RecordAccessLevel {
+	return v.ShareNewRecordsWithTenant
+}
 
 // EnumTypeParts includes the GraphQL fields of EnumType requested by the fragment EnumTypeParts.
 type EnumTypeParts struct {
@@ -4663,6 +4685,20 @@ func (v *PermissionCatalogResponse) GetPermissionCatalog() []PermissionCatalogPe
 	return v.PermissionCatalog
 }
 
+type RecordAccessLevel string
+
+const (
+	RecordAccessLevelEdit   RecordAccessLevel = "edit"
+	RecordAccessLevelManage RecordAccessLevel = "manage"
+	RecordAccessLevelView   RecordAccessLevel = "view"
+)
+
+var AllRecordAccessLevel = []RecordAccessLevel{
+	RecordAccessLevelEdit,
+	RecordAccessLevelManage,
+	RecordAccessLevelView,
+}
+
 type RecordOrderInput struct {
 	Direction SortDirection `json:"direction"`
 	Field     string        `json:"field"`
@@ -5453,6 +5489,11 @@ func (v *RetireEntityRetireEntity) GetGraphqlPluralName() string {
 // GetManaged returns RetireEntityRetireEntity.Managed, and is useful for accessing the field via an interface.
 func (v *RetireEntityRetireEntity) GetManaged() bool { return v.EntityParts.Managed }
 
+// GetShareNewRecordsWithTenant returns RetireEntityRetireEntity.ShareNewRecordsWithTenant, and is useful for accessing the field via an interface.
+func (v *RetireEntityRetireEntity) GetShareNewRecordsWithTenant() *RecordAccessLevel {
+	return v.EntityParts.ShareNewRecordsWithTenant
+}
+
 func (v *RetireEntityRetireEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -5488,6 +5529,8 @@ type __premarshalRetireEntityRetireEntity struct {
 	GraphqlPluralName string `json:"graphqlPluralName"`
 
 	Managed bool `json:"managed"`
+
+	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
 }
 
 func (v *RetireEntityRetireEntity) MarshalJSON() ([]byte, error) {
@@ -5506,6 +5549,7 @@ func (v *RetireEntityRetireEntity) __premarshalJSON() (*__premarshalRetireEntity
 	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
+	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
 	return &retval, nil
 }
 
@@ -6988,6 +7032,11 @@ func (v *UpdateEntityUpdateEntity) GetGraphqlPluralName() string {
 // GetManaged returns UpdateEntityUpdateEntity.Managed, and is useful for accessing the field via an interface.
 func (v *UpdateEntityUpdateEntity) GetManaged() bool { return v.EntityParts.Managed }
 
+// GetShareNewRecordsWithTenant returns UpdateEntityUpdateEntity.ShareNewRecordsWithTenant, and is useful for accessing the field via an interface.
+func (v *UpdateEntityUpdateEntity) GetShareNewRecordsWithTenant() *RecordAccessLevel {
+	return v.EntityParts.ShareNewRecordsWithTenant
+}
+
 func (v *UpdateEntityUpdateEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -7023,6 +7072,8 @@ type __premarshalUpdateEntityUpdateEntity struct {
 	GraphqlPluralName string `json:"graphqlPluralName"`
 
 	Managed bool `json:"managed"`
+
+	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
 }
 
 func (v *UpdateEntityUpdateEntity) MarshalJSON() ([]byte, error) {
@@ -7041,6 +7092,7 @@ func (v *UpdateEntityUpdateEntity) __premarshalJSON() (*__premarshalUpdateEntity
 	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
+	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
 	return &retval, nil
 }
 
@@ -9101,6 +9153,7 @@ fragment EntityParts on Entity {
 	graphqlTypeName
 	graphqlPluralName
 	managed
+	shareNewRecordsWithTenant
 }
 `
 
@@ -9661,6 +9714,7 @@ fragment EntityParts on Entity {
 	graphqlTypeName
 	graphqlPluralName
 	managed
+	shareNewRecordsWithTenant
 }
 `
 
@@ -10897,6 +10951,7 @@ fragment EntityParts on Entity {
 	graphqlTypeName
 	graphqlPluralName
 	managed
+	shareNewRecordsWithTenant
 }
 `
 
@@ -11587,6 +11642,7 @@ fragment EntityParts on Entity {
 	graphqlTypeName
 	graphqlPluralName
 	managed
+	shareNewRecordsWithTenant
 }
 `
 

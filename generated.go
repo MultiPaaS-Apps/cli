@@ -2714,6 +2714,35 @@ func (v *DeleteDataImportResponse) GetDeleteDataImport() DeleteDataImportDeleteD
 	return v.DeleteDataImport
 }
 
+// DeleteEnvironmentDeleteEnvironment includes the requested fields of the GraphQL type Environment.
+type DeleteEnvironmentDeleteEnvironment struct {
+	Id         string  `json:"id"`
+	DestroysAt *string `json:"destroysAt"`
+}
+
+// GetId returns DeleteEnvironmentDeleteEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *DeleteEnvironmentDeleteEnvironment) GetId() string { return v.Id }
+
+// GetDestroysAt returns DeleteEnvironmentDeleteEnvironment.DestroysAt, and is useful for accessing the field via an interface.
+func (v *DeleteEnvironmentDeleteEnvironment) GetDestroysAt() *string { return v.DestroysAt }
+
+type DeleteEnvironmentInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns DeleteEnvironmentInput.Id, and is useful for accessing the field via an interface.
+func (v *DeleteEnvironmentInput) GetId() string { return v.Id }
+
+// DeleteEnvironmentResponse is returned by DeleteEnvironment on success.
+type DeleteEnvironmentResponse struct {
+	DeleteEnvironment DeleteEnvironmentDeleteEnvironment `json:"deleteEnvironment"`
+}
+
+// GetDeleteEnvironment returns DeleteEnvironmentResponse.DeleteEnvironment, and is useful for accessing the field via an interface.
+func (v *DeleteEnvironmentResponse) GetDeleteEnvironment() DeleteEnvironmentDeleteEnvironment {
+	return v.DeleteEnvironment
+}
+
 // DeployerParts includes the GraphQL fields of Deployer requested by the fragment DeployerParts.
 // The GraphQL type's documentation follows.
 //
@@ -7873,6 +7902,14 @@ type __DeleteDataImportInput struct {
 // GetImportId returns __DeleteDataImportInput.ImportId, and is useful for accessing the field via an interface.
 func (v *__DeleteDataImportInput) GetImportId() string { return v.ImportId }
 
+// __DeleteEnvironmentInput is used internally by genqlient
+type __DeleteEnvironmentInput struct {
+	Input DeleteEnvironmentInput `json:"input"`
+}
+
+// GetInput returns __DeleteEnvironmentInput.Input, and is useful for accessing the field via an interface.
+func (v *__DeleteEnvironmentInput) GetInput() DeleteEnvironmentInput { return v.Input }
+
 // __DeployersInput is used internally by genqlient
 type __DeployersInput struct {
 	Id string `json:"id"`
@@ -9642,6 +9679,41 @@ func DeleteDataImport(
 	}
 
 	data_ = &DeleteDataImportResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteEnvironment.
+const DeleteEnvironment_Operation = `
+mutation DeleteEnvironment ($input: DeleteEnvironmentInput!) {
+	deleteEnvironment(input: $input) {
+		id
+		destroysAt
+	}
+}
+`
+
+func DeleteEnvironment(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input DeleteEnvironmentInput,
+) (data_ *DeleteEnvironmentResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteEnvironment",
+		Query:  DeleteEnvironment_Operation,
+		Variables: &__DeleteEnvironmentInput{
+			Input: input,
+		},
+	}
+
+	data_ = &DeleteEnvironmentResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

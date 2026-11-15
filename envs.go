@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ import (
 // app-tenants, app-wide records and imports; the model is shared.
 func envsCommands(command commandFunc) *cobra.Command {
 	return group("envs", "An application's environments", envsList(command), envsCreate(command), envsRename(command),
-		envsProtection(command, "protect", true), envsProtection(command, "unprotect", false), envsRemove(command),
+		envsProtection(command, "protect", true), envsProtection(command, "unprotect", false), envsDelete(command), envsRemove(command),
 		envsRedirectURIs(command))
 }
 
@@ -203,7 +204,52 @@ type removal struct {
 	ID      string `json:"id"`
 }
 
-// envsRemove removes the environment at once; the server erases its data in the background.
+type deletion struct {
+	Deleted    bool    `json:"deleted"`
+	ID         string  `json:"id"`
+	DestroysAt *string `json:"destroysAt"`
+}
+
+// envsDelete deletes an environment: it stops working at once, and its data is erased on the date the server answers.
+func envsDelete(command commandFunc) *cobra.Command {
+	var appID, envID string
+	cmd := command("delete", "Delete an environment; its data is erased 7 days later", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var deleted deletion
+		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+			response, err := DeleteEnvironment(ctx, client, DeleteEnvironmentInput{Id: envID})
+			if err != nil {
+				return err
+			}
+			if response.DeleteEnvironment.Id == "" {
+				return &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "the server's answer did not say which environment was deleted; run envs list to see whether it still exists"}
+			}
+			deleted = deletion{Deleted: true, ID: response.DeleteEnvironment.Id, DestroysAt: response.DeleteEnvironment.DestroysAt}
+			return nil
+		})
+		return deleted, func(out io.Writer) {
+			if deleted.DestroysAt == nil {
+				fmt.Fprintf(out, "environment %s is deleted and stops working now; the server did not say when its data is erased\n", deleted.ID)
+				return
+			}
+			fmt.Fprintf(out, "environment %s is deleted and stops working now; its data is erased on %s\n", deleted.ID, eraseDate(*deleted.DestroysAt))
+		}, err
+	})
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&envID, "env", "", "the environment's id (from envs list)")
+	_ = cmd.MarkFlagRequired("env")
+	return cmd
+}
+
+// eraseDate is the UTC day an ISO-8601 instant falls on, or the instant as given when it doesn't parse.
+func eraseDate(instant string) string {
+	t, err := time.Parse(time.RFC3339, instant)
+	if err != nil {
+		return instant
+	}
+	return t.UTC().Format("2006-01-02")
+}
+
+// envsRemove is the deprecated name for envsDelete: it deletes the environment and answers as it always did.
 func envsRemove(command commandFunc) *cobra.Command {
 	var appID, envID string
 	cmd := command("remove", "Remove an environment and erase its data for good", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
@@ -224,6 +270,16 @@ func envsRemove(command commandFunc) *cobra.Command {
 		}, err
 	})
 	appFlag(cmd, &appID)
+	cmd.Hidden = true
+	// Cobra's own Deprecated notice prints to the command's output, which run() sets to stdout, and would break --json.
+	previous := cmd.PreRunE
+	cmd.PreRunE = func(c *cobra.Command, args []string) error {
+		fmt.Fprintln(c.ErrOrStderr(), `"envs remove" is deprecated: use "envs delete" instead`)
+		if previous != nil {
+			return previous(c, args)
+		}
+		return nil
+	}
 	cmd.Flags().StringVar(&envID, "env", "", "the environment's id (from envs list)")
 	_ = cmd.MarkFlagRequired("env")
 	return cmd

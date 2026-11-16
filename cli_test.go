@@ -652,6 +652,117 @@ func TestTenantsRetireWithoutManageIsUnauthorized(t *testing.T) {
 	}
 }
 
+func TestTenantsDeleteSaysWhenTheDataIsDestroyed(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"deleted":true,"id":"tenant-e","destroysAt":"2026-12-15T12:00:00.000Z"}` {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	if got.stderr != "" {
+		t.Fatalf("stderr %q", got.stderr)
+	}
+	assertFailure(t, fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json"), exitRefused, "NOT_FOUND")
+}
+
+func TestTenantsDeletePrintsTheDestroyDate(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default")
+	if got.exit != exitOK || got.stdout != "app-tenant tenant-e is deleted; its members and tokens stop working now. Its data is destroyed on 2026-12-15\n" {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+}
+
+func TestTenantsDeleteSaysWhenTheDestroyDateIsUnknown(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.deleteNoDate = true
+	asJSON := fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json")
+	if asJSON.exit != exitOK || compact(asJSON.stdout) != `{"deleted":true,"id":"tenant-e","destroysAt":null}` {
+		t.Fatalf("exit %d: %q", asJSON.exit, asJSON.stdout)
+	}
+	human := fake.run(t, "tenants", "delete", "tenant-a", "--app", "app-a-000", "--env", "env-default")
+	if human.exit != exitOK || human.stdout != "app-tenant tenant-a is deleted; its members and tokens stop working now. The server did not say when its data is destroyed\n" {
+		t.Fatalf("exit %d: %q", human.exit, human.stdout)
+	}
+}
+
+func TestTenantsDeleteFailsWhenTheAnswerNamesNoTenant(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.removeNoData = true
+	for _, args := range [][]string{{"--json"}, {}} {
+		got := fake.run(t, append([]string{"tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default"}, args...)...)
+		if got.exit != exitRefused || strings.Contains(got.stdout, `"deleted":true`) || strings.Contains(got.stdout, "is deleted") {
+			t.Fatalf("%v: exit %d, want %d with no success output: %q", args, got.exit, exitRefused, got.stdout)
+		}
+	}
+	var failure struct{ Error struct{ Code string } }
+	decode(t, fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json").stdout, &failure)
+	if failure.Error.Code != "CLI_ERROR" {
+		t.Fatalf("code %q, want CLI_ERROR", failure.Error.Code)
+	}
+}
+
+func TestTenantsDeleteOfAMissingTenantIsNotFound(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	assertFailure(t, fake.run(t, "tenants", "delete", "tenant-unknown", "--app", "app-a-000", "--env", "env-default", "--json"), exitRefused, "NOT_FOUND")
+}
+
+func TestTenantsDeleteWithoutManageIsUnauthorized(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.noManageApp = true
+	assertFailure(t, fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json"), exitRefused, "UNAUTHORIZED")
+	if got := fake.run(t, "tenants", "list", "--app", "app-a-000", "--json"); !strings.Contains(got.stdout, "tenant-e") {
+		t.Fatalf("a refused delete changed the list: %s", got.stdout)
+	}
+}
+
+func TestTenantsListIncludeDeletedShowsBothDates(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json")
+	asJSON := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--include-deleted", "--json")
+	want := `[{"id":"tenant-a","name":"Test"},{"id":"tenant-e","name":"Env tenant","deletedAt":"2026-11-15T12:00:00.000Z","destroysAt":"2026-12-15T12:00:00.000Z"}]`
+	if asJSON.exit != exitOK || compact(asJSON.stdout) != want || asJSON.stderr != "" {
+		t.Fatalf("exit %d, stdout %s, stderr %q, want %s", asJSON.exit, asJSON.stdout, asJSON.stderr, want)
+	}
+	human := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--include-deleted")
+	for _, line := range []string{"NAME", "DELETED", "DESTROYED ON", "Env tenant", "2026-11-15", "2026-12-15"} {
+		if !strings.Contains(human.stdout, line) {
+			t.Fatalf("table lacks %q: %q", line, human.stdout)
+		}
+	}
+	live := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--json")
+	if strings.Contains(live.stdout, "tenant-e") {
+		t.Fatalf("a deleted app-tenant is listed without the flag: %s", live.stdout)
+	}
+}
+
+func TestTenantsRetireIsDeprecatedButUnchanged(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "tenants", "retire", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"retired":true,"id":"tenant-e"}` {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	if !strings.Contains(got.stderr, `"tenants retire" is deprecated: use "tenants delete" instead`) {
+		t.Fatalf("stderr %q", got.stderr)
+	}
+	help := fake.run(t, "tenants", "--help")
+	if strings.Contains(help.stdout, "retire") || !strings.Contains(help.stdout, "delete") {
+		t.Fatalf("help %q", help.stdout)
+	}
+}
+
+func TestTenantsListIncludeRetiredIsDeprecatedButUnchanged(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.run(t, "tenants", "delete", "tenant-e", "--app", "app-a-000", "--env", "env-default", "--json")
+	got := fake.run(t, "tenants", "list", "--app", "app-a-000", "--env", "env-default", "--include-retired", "--json")
+	want := `[{"id":"tenant-a","name":"Test"},{"id":"tenant-e","name":"Env tenant","retiredAt":"2026-11-15T12:00:00.000Z"}]`
+	if got.exit != exitOK || compact(got.stdout) != want {
+		t.Fatalf("exit %d: %s, want %s", got.exit, got.stdout, want)
+	}
+	if !strings.Contains(got.stderr, `"--include-retired" is deprecated: use "--include-deleted" instead`) {
+		t.Fatalf("stderr %q", got.stderr)
+	}
+}
+
 func TestTenantsCreateForAnApplicationYouCannotReachIsNotFoundAndSendsNothing(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	assertFailure(t, fake.run(t, "tenants", "create", "--app", "app-unknown", "--name", "Dev test", "--json"), exitRefused, "NOT_FOUND")

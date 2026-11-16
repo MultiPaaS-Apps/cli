@@ -119,22 +119,47 @@ func run(args []string, env environment) int {
 	}), appsCreate(command))
 
 	var appID, envID string
-	var includeRetired bool
+	var includeDeleted, includeRetired bool
 	tenants := &cobra.Command{Use: "tenants", Short: "App-tenants you can reach"}
 	tenantsList := command("list", "List an application's app-tenants you can reach", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		list, err := s.testTenants(ctx, appID, envID, includeRetired)
-		return list, func(out io.Writer) {
-			if includeRetired {
-				table(out, "NAME\tID\tRETIRED", list, func(t appTenant) string { return t.Name + "\t" + t.ID + "\t" + t.RetiredAt })
-				return
+		list, err := s.testTenants(ctx, appID, envID, includeDeleted, includeRetired)
+		for i := range list {
+			if !includeDeleted {
+				list[i].DeletedAt, list[i].DestroysAt = nil, nil
 			}
-			table(out, "NAME\tID", list, func(t appTenant) string { return t.Name + "\t" + t.ID })
+			if includeDeleted || !includeRetired {
+				list[i].RetiredAt = ""
+			}
+		}
+		return list, func(out io.Writer) {
+			switch {
+			case includeDeleted:
+				table(out, "NAME\tID\tDELETED\tDESTROYED ON", list, func(t appTenant) string {
+					return t.Name + "\t" + t.ID + "\t" + eraseDateOrBlank(t.DeletedAt) + "\t" + eraseDateOrBlank(t.DestroysAt)
+				})
+			case includeRetired:
+				table(out, "NAME\tID\tRETIRED", list, func(t appTenant) string { return t.Name + "\t" + t.ID + "\t" + t.RetiredAt })
+			default:
+				table(out, "NAME\tID", list, func(t appTenant) string { return t.Name + "\t" + t.ID })
+			}
 		}, err
 	})
 	appFlag(tenantsList, &appID)
 	tenantsEnvFlag(tenantsList, &envID)
+	tenantsList.Flags().BoolVar(&includeDeleted, "include-deleted", false, "list deleted app-tenants too, each with when it was deleted and when its data is destroyed")
 	tenantsList.Flags().BoolVar(&includeRetired, "include-retired", false, "list retired app-tenants too, each with when it was retired")
-	tenants.AddCommand(tenantsList, tenantsCreate(command), tenantsRetire(command))
+	_ = tenantsList.Flags().MarkHidden("include-retired")
+	previous := tenantsList.PreRunE
+	tenantsList.PreRunE = func(c *cobra.Command, args []string) error {
+		if includeRetired {
+			fmt.Fprintln(c.ErrOrStderr(), `"--include-retired" is deprecated: use "--include-deleted" instead`)
+		}
+		if previous != nil {
+			return previous(c, args)
+		}
+		return nil
+	}
+	tenants.AddCommand(tenantsList, tenantsCreate(command), tenantsDelete(command), tenantsRetire(command))
 	root.AddCommand(apps, tenants, envsCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
@@ -199,9 +224,47 @@ func tenantsCreate(command commandFunc) *cobra.Command {
 	return cmd
 }
 
-// tenantsRetire retires an app-tenant: its members and every token for it stop working at once, and its records
-// stay. It needs access.manage.application, the same permission as tenants create, and finds the app-tenant only in
-// the environment it runs in.
+// tenantsDelete deletes an app-tenant: its members and every token for it stop working at once, and its data is
+// destroyed on the date the server answers. It needs access.manage.application, the same permission as tenants
+// create, and finds the app-tenant only in the environment it runs in.
+func tenantsDelete(command commandFunc) *cobra.Command {
+	var appID, envID, tenantID string
+	cmd := command("delete <app-tenant-id>", "Delete an app-tenant; its data is destroyed 30 days later", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var deleted deletion
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
+			response, err := DeleteAppTenant(ctx, client, DeleteAppTenantInput{Id: tenantID})
+			if err != nil {
+				return err
+			}
+			if response.DeleteAppTenant.Id == "" {
+				return &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "the server's answer did not say which app-tenant was deleted; run tenants list to see whether it still exists"}
+			}
+			deleted = deletion{Deleted: true, ID: response.DeleteAppTenant.Id, DestroysAt: response.DeleteAppTenant.DestroysAt}
+			return nil
+		})
+		return deleted, func(out io.Writer) {
+			if deleted.DestroysAt == nil {
+				fmt.Fprintf(out, "app-tenant %s is deleted; its members and tokens stop working now. The server did not say when its data is destroyed\n", deleted.ID)
+				return
+			}
+			fmt.Fprintf(out, "app-tenant %s is deleted; its members and tokens stop working now. Its data is destroyed on %s\n", deleted.ID, eraseDate(*deleted.DestroysAt))
+		}, err
+	})
+	cmd.Args = oneID(&tenantID)
+	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
+	return cmd
+}
+
+// eraseDateOrBlank is eraseDate for a list cell: empty for a live app-tenant's missing date.
+func eraseDateOrBlank(instant *string) string {
+	if instant == nil {
+		return ""
+	}
+	return eraseDate(*instant)
+}
+
+// tenantsRetire is the deprecated name for tenantsDelete: it deletes the app-tenant and answers as it always did.
 func tenantsRetire(command commandFunc) *cobra.Command {
 	var appID, envID, tenantID string
 	cmd := command("retire <app-tenant-id>", "Retire an app-tenant; its members and tokens stop working", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
@@ -220,6 +283,16 @@ func tenantsRetire(command commandFunc) *cobra.Command {
 	cmd.Args = oneID(&tenantID)
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
+	cmd.Hidden = true
+	// Cobra's own Deprecated notice prints to the command's output, which run() sets to stdout, and would break --json.
+	previous := cmd.PreRunE
+	cmd.PreRunE = func(c *cobra.Command, args []string) error {
+		fmt.Fprintln(c.ErrOrStderr(), `"tenants retire" is deprecated: use "tenants delete" instead`)
+		if previous != nil {
+			return previous(c, args)
+		}
+		return nil
+	}
 	return cmd
 }
 

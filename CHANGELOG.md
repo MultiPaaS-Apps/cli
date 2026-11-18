@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.7.0...v1.8.0) (2026-11-18)
+
+
+### Features
+
+* [MP-301] add tenants delete with the destroy date ([#91](https://github.com/MultiPaaS-Apps/cli/issues/91)) ([bedef2c](https://github.com/MultiPaaS-Apps/cli/commit/bedef2cfbbcfa7714ca88c7967598c225d282815))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#89](https://github.com/MultiPaaS-Apps/cli/issues/89)) ([e68a784](https://github.com/MultiPaaS-Apps/cli/commit/e68a784b5103f44ec21276f3314dee2d526a8b88))
+
 ## [1.7.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.6.0...v1.7.0) (2026-11-15)
 
 

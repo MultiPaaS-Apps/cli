@@ -31,10 +31,12 @@ type app struct {
 }
 
 type appTenant struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	EnvironmentID string `json:"-"`
-	RetiredAt     string `json:"retiredAt,omitempty"`
+	ID            string  `json:"id"`
+	Name          string  `json:"name"`
+	EnvironmentID string  `json:"-"`
+	RetiredAt     string  `json:"retiredAt,omitempty"`
+	DeletedAt     *string `json:"deletedAt,omitempty"`
+	DestroysAt    *string `json:"destroysAt,omitempty"`
 }
 
 func (s *session) whoami(ctx context.Context) (signedIn, error) {
@@ -71,7 +73,7 @@ func (s *session) apps(ctx context.Context) ([]app, error) {
 }
 
 // tenants lists the app-tenants of appID the developer's entitlements reach, each once.
-func (s *session) tenants(ctx context.Context, appID string, includeRetired bool) ([]appTenant, error) {
+func (s *session) tenants(ctx context.Context, appID string, includeDeleted, includeRetired bool) ([]appTenant, error) {
 	entitlements, err := s.entitlements(ctx)
 	if err != nil {
 		return nil, err
@@ -79,7 +81,7 @@ func (s *session) tenants(ctx context.Context, appID string, includeRetired bool
 	tenants := []appTenant{}
 	found := false
 	for _, entitlement := range entitlements {
-		reached, ok, err := s.tenantsIn(ctx, entitlement, appID, includeRetired)
+		reached, ok, err := s.tenantsIn(ctx, entitlement, appID, includeDeleted, includeRetired)
 		if err != nil {
 			return nil, err
 		}
@@ -169,7 +171,7 @@ func (s *session) appsIn(ctx context.Context, entitlement MyTenantsMyTenantsTena
 }
 
 // tenantsIn lists appID's app-tenants one entitlement reaches, and whether it reaches appID at all.
-func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsTenantOption, appID string, includeRetired bool) ([]appTenant, bool, error) {
+func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsTenantOption, appID string, includeDeleted, includeRetired bool) ([]appTenant, bool, error) {
 	if entitlement.AppTenantId != "" {
 		if entitlement.ApplicationId != appID {
 			return nil, false, nil
@@ -185,16 +187,16 @@ func (s *session) tenantsIn(ctx context.Context, entitlement MyTenantsMyTenantsT
 	if err != nil || !slices.ContainsFunc(apps, func(candidate app) bool { return candidate.ID == appID }) {
 		return nil, false, err
 	}
-	tenants, err := s.tenantsAt(ctx, entitlement.Client.Id+"/"+appID, includeRetired)
+	tenants, err := s.tenantsAt(ctx, entitlement.Client.Id+"/"+appID, includeDeleted, includeRetired)
 	return tenants, true, err
 }
 
 // tenantsAt lists the app-tenants scope reaches: an application's default environment's, or one environment's.
-func (s *session) tenantsAt(ctx context.Context, scope string, includeRetired bool) ([]appTenant, error) {
+func (s *session) tenantsAt(ctx context.Context, scope string, includeDeleted, includeRetired bool) ([]appTenant, error) {
 	return pages(func(page PageInput) ([]appTenant, bool, error) {
 		var listed *AppTenantsResponse
 		err := s.call(ctx, scope, func(client graphql.Client) (err error) {
-			listed, err = AppTenants(ctx, client, page, includeRetired)
+			listed, err = AppTenants(ctx, client, page, includeDeleted, includeRetired)
 			return err
 		})
 		if err != nil {
@@ -206,7 +208,7 @@ func (s *session) tenantsAt(ctx context.Context, scope string, includeRetired bo
 			if item.Environment != nil {
 				environment = item.Environment.Id
 			}
-			reached = append(reached, appTenant{ID: item.Id, Name: item.Name, EnvironmentID: environment, RetiredAt: item.RetiredAt})
+			reached = append(reached, appTenant{ID: item.Id, Name: item.Name, EnvironmentID: environment, RetiredAt: item.RetiredAt, DeletedAt: item.DeletedAt, DestroysAt: item.DestroysAt})
 		}
 		return reached, listed.AppTenants.PageInfo.HasMore, nil
 	})

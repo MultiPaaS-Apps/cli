@@ -124,8 +124,10 @@ type AppIdentityWithSecret {
 	secret: String!
 }
 
-type AppTenant {
+type AppTenant implements Deletable{
 	createdAt: DateTime!
+	deletedAt: DateTime
+	destroysAt: DateTime
 """
 The environment this app-tenant lives in.
 """
@@ -135,7 +137,7 @@ The environment this app-tenant lives in.
 """
 When this app-tenant was retired, or null while it is live.
 """
-	retiredAt: DateTime
+	retiredAt: DateTime @deprecated(reason: "Use deletedAt.")
 	updatedAt: DateTime!
 }
 
@@ -512,6 +514,10 @@ Something whose deletion destroys its data on a stated date. Both fields are nul
 Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
 """
 	destroysAt: DateTime
+}
+
+input DeleteAppTenantInput {
+	id: ID!
 }
 
 input DeleteEnvironmentInput {
@@ -905,7 +911,7 @@ type Mutation {
 	): User!
 	deactivateAppTenant(
 		input: DeactivateAppTenantInput!
-	): AppTenant!
+	): AppTenant! @deprecated(reason: "Use deleteAppTenant.")
 	deactivateApplication(
 		input: DeactivateApplicationInput!
 	): Application!
@@ -921,6 +927,9 @@ Marks an import deleted. It must not be checking or importing. Nothing it holds 
 	deleteDataImport(
 		importId: ID!
 	): DataImport!
+	deleteAppTenant(
+		input: DeleteAppTenantInput!
+	): AppTenant!
 	deleteEnvironment(
 		input: DeleteEnvironmentInput!
 	): Environment!
@@ -1269,7 +1278,8 @@ type Query {
 		id: ID!
 	): AppTenant
 	appTenants(
-		includeRetired: Boolean
+		includeDeleted: Boolean
+		includeRetired: Boolean @deprecated(reason: "Use includeDeleted.")
 		page: PageInput!
 	): AppTenantPage!
 	application(

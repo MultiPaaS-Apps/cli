@@ -78,8 +78,8 @@ type fakeMultiPaaS struct {
 	secretSeq                    int                         // app identity secrets created so far; ids are never reused
 	noManageOAuth                bool                        // the signed-in user lacks application.manage_oauth
 	scopedEnvNull                bool                        // an app-tenant-level read returns the app-tenant's environment as null
-	removeNoData                 bool                        // removeEnvironment answers HTTP 200 with {"data":null} and no errors
-	deleteNoDate                 bool                        // deleteEnvironment answers without destroysAt
+	removeNoData                 bool                        // removeEnvironment and deleteAppTenant answer HTTP 200 with {"data":null} and no errors
+	deleteNoDate                 bool                        // deleteEnvironment and deleteAppTenant answer without destroysAt
 	deployerID, deployerSecret   string                      // the deployer the fake knows; empty for none
 	envClientID, envClientSecret string                      // MULTIPAAS_CLIENT_ID and _SECRET the CLI runs with
 	deployerTokens               map[string]bool             // access tokens minted by the client-credentials grant
@@ -421,12 +421,13 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		} else if len(parts) >= 2 {
 			apps = f.tenantsInEnvironment(parts[1], f.defaultEnvironment(parts[1]))
 		}
-		if includeRetired, _ := variables["includeRetired"].(bool); !includeRetired {
+		includeDeleted, _ := variables["includeDeleted"].(bool)
+		if includeRetired, _ := variables["includeRetired"].(bool); !includeRetired && !includeDeleted {
 			apps = slices.DeleteFunc(apps, func(row fakeRow) bool { return row.retiredAt != "" })
 		}
 		writeData(w, map[string]any{"appTenants": page(apps, variables)})
-	case "DeactivateAppTenant":
-		f.deactivateAppTenant(w, parts, variables)
+	case "DeactivateAppTenant", "DeleteAppTenant":
+		f.deactivateAppTenant(w, operation, parts, variables)
 	case "Environments", "EnvironmentRedirectUriSets", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "SetEnvironmentRedirectUris", "RemoveEnvironment", "DeleteEnvironment":
 		f.manageEnvironments(w, operation, appOf(parts), variables)
 	case "ScopedAppTenant":
@@ -673,6 +674,10 @@ func page(rows []fakeRow, variables map[string]any) map[string]any {
 		}
 		if row.retiredAt != "" {
 			item["retiredAt"] = row.retiredAt
+			item["deletedAt"] = row.retiredAt
+			if deleted, err := time.Parse(time.RFC3339, row.retiredAt); err == nil {
+				item["destroysAt"] = deleted.AddDate(0, 0, 30).UTC().Format("2006-01-02T15:04:05.000Z")
+			}
 		}
 		items = append(items, item)
 	}
@@ -950,8 +955,12 @@ func (f *fakeMultiPaaS) createAppTenant(w http.ResponseWriter, parts []string, v
 
 // deactivateAppTenant shares these steps with the server, in order: an application in scope, then
 // access.manage.application, then a live app-tenant of the scope's own environment, then the retirement.
-func (f *fakeMultiPaaS) deactivateAppTenant(w http.ResponseWriter, parts []string, variables map[string]any) {
+func (f *fakeMultiPaaS) deactivateAppTenant(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
 	f.mutations = append(f.mutations, variables)
+	if operation == "DeleteAppTenant" && f.removeNoData {
+		writeData(w, nil)
+		return
+	}
 	app := appOf(parts)
 	env, inEnv := strings.CutPrefix(parts[0], "env:")
 	if inEnv {
@@ -982,6 +991,15 @@ func (f *fakeMultiPaaS) deactivateAppTenant(w http.ResponseWriter, parts []strin
 	}
 	if found == nil || found.retiredAt != "" {
 		graphQLRefusal(w, "NOT_FOUND", "appTenant not found")
+		return
+	}
+	if operation == "DeleteAppTenant" {
+		found.retiredAt = "2026-11-15T12:00:00.000Z"
+		answer := map[string]any{"id": id}
+		if !f.deleteNoDate {
+			answer["destroysAt"] = "2026-12-15T12:00:00.000Z"
+		}
+		writeData(w, map[string]any{"deleteAppTenant": answer})
 		return
 	}
 	found.retiredAt = "2026-11-13T00:00:00Z"

@@ -328,7 +328,9 @@ type AppTenantsAppTenantsAppTenantPageItemsAppTenant struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 	// When this app-tenant was retired, or null while it is live.
-	RetiredAt string `json:"retiredAt"`
+	RetiredAt  string  `json:"retiredAt"`
+	DeletedAt  *string `json:"deletedAt"`
+	DestroysAt *string `json:"destroysAt"`
 	// The environment this app-tenant lives in.
 	Environment *AppTenantsAppTenantsAppTenantPageItemsAppTenantEnvironment `json:"environment"`
 }
@@ -341,6 +343,14 @@ func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetName() string { ret
 
 // GetRetiredAt returns AppTenantsAppTenantsAppTenantPageItemsAppTenant.RetiredAt, and is useful for accessing the field via an interface.
 func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetRetiredAt() string { return v.RetiredAt }
+
+// GetDeletedAt returns AppTenantsAppTenantsAppTenantPageItemsAppTenant.DeletedAt, and is useful for accessing the field via an interface.
+func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetDeletedAt() *string { return v.DeletedAt }
+
+// GetDestroysAt returns AppTenantsAppTenantsAppTenantPageItemsAppTenant.DestroysAt, and is useful for accessing the field via an interface.
+func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetDestroysAt() *string {
+	return v.DestroysAt
+}
 
 // GetEnvironment returns AppTenantsAppTenantsAppTenantPageItemsAppTenant.Environment, and is useful for accessing the field via an interface.
 func (v *AppTenantsAppTenantsAppTenantPageItemsAppTenant) GetEnvironment() *AppTenantsAppTenantsAppTenantPageItemsAppTenantEnvironment {
@@ -2575,6 +2585,35 @@ type DeactivateAppTenantResponse struct {
 // GetDeactivateAppTenant returns DeactivateAppTenantResponse.DeactivateAppTenant, and is useful for accessing the field via an interface.
 func (v *DeactivateAppTenantResponse) GetDeactivateAppTenant() DeactivateAppTenantDeactivateAppTenant {
 	return v.DeactivateAppTenant
+}
+
+// DeleteAppTenantDeleteAppTenant includes the requested fields of the GraphQL type AppTenant.
+type DeleteAppTenantDeleteAppTenant struct {
+	Id         string  `json:"id"`
+	DestroysAt *string `json:"destroysAt"`
+}
+
+// GetId returns DeleteAppTenantDeleteAppTenant.Id, and is useful for accessing the field via an interface.
+func (v *DeleteAppTenantDeleteAppTenant) GetId() string { return v.Id }
+
+// GetDestroysAt returns DeleteAppTenantDeleteAppTenant.DestroysAt, and is useful for accessing the field via an interface.
+func (v *DeleteAppTenantDeleteAppTenant) GetDestroysAt() *string { return v.DestroysAt }
+
+type DeleteAppTenantInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns DeleteAppTenantInput.Id, and is useful for accessing the field via an interface.
+func (v *DeleteAppTenantInput) GetId() string { return v.Id }
+
+// DeleteAppTenantResponse is returned by DeleteAppTenant on success.
+type DeleteAppTenantResponse struct {
+	DeleteAppTenant DeleteAppTenantDeleteAppTenant `json:"deleteAppTenant"`
+}
+
+// GetDeleteAppTenant returns DeleteAppTenantResponse.DeleteAppTenant, and is useful for accessing the field via an interface.
+func (v *DeleteAppTenantResponse) GetDeleteAppTenant() DeleteAppTenantDeleteAppTenant {
+	return v.DeleteAppTenant
 }
 
 // DeleteDataImportDeleteDataImport includes the requested fields of the GraphQL type DataImport.
@@ -7713,11 +7752,15 @@ func (v *__ApiSchemaInput) GetRevisionId() string { return v.RevisionId }
 // __AppTenantsInput is used internally by genqlient
 type __AppTenantsInput struct {
 	Page           PageInput `json:"page"`
+	IncludeDeleted bool      `json:"includeDeleted"`
 	IncludeRetired bool      `json:"includeRetired"`
 }
 
 // GetPage returns __AppTenantsInput.Page, and is useful for accessing the field via an interface.
 func (v *__AppTenantsInput) GetPage() PageInput { return v.Page }
+
+// GetIncludeDeleted returns __AppTenantsInput.IncludeDeleted, and is useful for accessing the field via an interface.
+func (v *__AppTenantsInput) GetIncludeDeleted() bool { return v.IncludeDeleted }
 
 // GetIncludeRetired returns __AppTenantsInput.IncludeRetired, and is useful for accessing the field via an interface.
 func (v *__AppTenantsInput) GetIncludeRetired() bool { return v.IncludeRetired }
@@ -7893,6 +7936,14 @@ type __DeactivateAppTenantInput struct {
 
 // GetInput returns __DeactivateAppTenantInput.Input, and is useful for accessing the field via an interface.
 func (v *__DeactivateAppTenantInput) GetInput() DeactivateAppTenantInput { return v.Input }
+
+// __DeleteAppTenantInput is used internally by genqlient
+type __DeleteAppTenantInput struct {
+	Input DeleteAppTenantInput `json:"input"`
+}
+
+// GetInput returns __DeleteAppTenantInput.Input, and is useful for accessing the field via an interface.
+func (v *__DeleteAppTenantInput) GetInput() DeleteAppTenantInput { return v.Input }
 
 // __DeleteDataImportInput is used internally by genqlient
 type __DeleteDataImportInput struct {
@@ -8561,12 +8612,14 @@ func AppIdentities(
 
 // The query executed by AppTenants.
 const AppTenants_Operation = `
-query AppTenants ($page: PageInput!, $includeRetired: Boolean!) {
-	appTenants(page: $page, includeRetired: $includeRetired) {
+query AppTenants ($page: PageInput!, $includeDeleted: Boolean!, $includeRetired: Boolean!) {
+	appTenants(page: $page, includeDeleted: $includeDeleted, includeRetired: $includeRetired) {
 		items {
 			id
 			name
 			retiredAt
+			deletedAt
+			destroysAt
 			environment {
 				id
 			}
@@ -8582,6 +8635,7 @@ func AppTenants(
 	ctx_ context.Context,
 	client_ graphql.Client,
 	page PageInput,
+	includeDeleted bool,
 	includeRetired bool,
 ) (data_ *AppTenantsResponse, err_ error) {
 	req_ := &graphql.Request{
@@ -8589,6 +8643,7 @@ func AppTenants(
 		Query:  AppTenants_Operation,
 		Variables: &__AppTenantsInput{
 			Page:           page,
+			IncludeDeleted: includeDeleted,
 			IncludeRetired: includeRetired,
 		},
 	}
@@ -9602,6 +9657,41 @@ func DeactivateAppTenant(
 	}
 
 	data_ = &DeactivateAppTenantResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteAppTenant.
+const DeleteAppTenant_Operation = `
+mutation DeleteAppTenant ($input: DeleteAppTenantInput!) {
+	deleteAppTenant(input: $input) {
+		id
+		destroysAt
+	}
+}
+`
+
+func DeleteAppTenant(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input DeleteAppTenantInput,
+) (data_ *DeleteAppTenantResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteAppTenant",
+		Query:  DeleteAppTenant_Operation,
+		Variables: &__DeleteAppTenantInput{
+			Input: input,
+		},
+	}
+
+	data_ = &DeleteAppTenantResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

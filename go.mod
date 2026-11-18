@@ -4,7 +4,7 @@ go 1.27.2
 
 tool (
 	github.com/Khan/genqlient
-	github.com/suessflorian/gqlfetch/gqlfetch
+	github.com/suessflorian/gqlfetch/gqlconvert
 )
 
 require (

@@ -10,6 +10,9 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 func TestFetchSchemaKeepsDeprecatedArgumentsAndInputFields(t *testing.T) {
@@ -25,6 +28,35 @@ func TestFetchSchemaKeepsDeprecatedArgumentsAndInputFields(t *testing.T) {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("schema is missing %q:\n%s", want, stdout)
 		}
+	}
+}
+
+func TestFetchSchemaKeepsDeprecatedDefaultedInputsOptional(t *testing.T) {
+	requireTools(t)
+	server := introspectionServer(t)
+
+	stdout, stderr, err := runFetchSchema(server.URL)
+
+	if err != nil {
+		t.Fatalf("fetch-schema failed: %v\n%s", err, stderr)
+	}
+	for _, want := range []string{"legacyLimit: Int\n", "legacyTag: String\n", "includeRetired: Boolean\n", "oldName: String\n"} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("schema is missing %q:\n%s", want, stdout)
+		}
+	}
+	for _, unwanted := range []string{"legacyLimit: Int!", "legacyTag: String!"} {
+		if strings.Contains(stdout, unwanted) {
+			t.Errorf("schema still has %q:\n%s", unwanted, stdout)
+		}
+	}
+	schema, gqlErr := gqlparser.LoadSchema(&ast.Source{Name: "schema.graphql", Input: stdout})
+	if gqlErr != nil {
+		t.Fatalf("the printed schema does not load: %v", gqlErr)
+	}
+	_, queryErrs := gqlparser.LoadQuery(schema, `query { items(filter: {name: "a"}) }`)
+	if len(queryErrs) != 0 {
+		t.Errorf("a query that leaves out the deprecated inputs is invalid: %v", queryErrs)
 	}
 }
 

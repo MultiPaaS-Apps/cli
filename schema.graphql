@@ -146,9 +146,11 @@ type AppTenantPage {
 	pageInfo: PageInfo!
 }
 
-type Application {
+type Application implements Deletable{
 	createdAt: DateTime!
+	deletedAt: DateTime
 	deployers: [Deployer!]!
+	destroysAt: DateTime
 	environments: [Environment!]!
 	id: ID!
 	name: String!
@@ -517,6 +519,10 @@ Something whose deletion destroys its data on a stated date. Both fields are nul
 }
 
 input DeleteAppTenantInput {
+	id: ID!
+}
+
+input DeleteApplicationInput {
 	id: ID!
 }
 
@@ -914,7 +920,7 @@ type Mutation {
 	): AppTenant! @deprecated(reason: "Use deleteAppTenant.")
 	deactivateApplication(
 		input: DeactivateApplicationInput!
-	): Application!
+	): Application! @deprecated(reason: "Use deleteApplication.")
 	deactivateClient(
 		input: DeactivateClientInput!
 	): Client!
@@ -924,6 +930,9 @@ type Mutation {
 	deleteAppTenant(
 		input: DeleteAppTenantInput!
 	): AppTenant!
+	deleteApplication(
+		input: DeleteApplicationInput!
+	): Application!
 """
 Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
 """

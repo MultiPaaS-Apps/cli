@@ -921,15 +921,15 @@ type Mutation {
 	deactivateUser(
 		input: DeactivateUserInput!
 	): User!
+	deleteAppTenant(
+		input: DeleteAppTenantInput!
+	): AppTenant!
 """
 Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
 """
 	deleteDataImport(
 		importId: ID!
 	): DataImport!
-	deleteAppTenant(
-		input: DeleteAppTenantInput!
-	): AppTenant!
 	deleteEnvironment(
 		input: DeleteEnvironmentInput!
 	): Environment!
@@ -1279,7 +1279,7 @@ type Query {
 	): AppTenant
 	appTenants(
 		includeDeleted: Boolean
-		includeRetired: Boolean @deprecated(reason: "Use includeDeleted.")
+		includeRetired: Boolean
 		page: PageInput!
 	): AppTenantPage!
 	application(

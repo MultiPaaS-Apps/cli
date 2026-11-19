@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.8.0...v1.8.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* [MP-315] keep deprecated arguments and input fields in the fetched schema ([#95](https://github.com/MultiPaaS-Apps/cli/issues/95)) ([41334e7](https://github.com/MultiPaaS-Apps/cli/commit/41334e7ace1b842f0db619b6d27d9ae97153b8d5))
+* update the webapp-api schema ([#94](https://github.com/MultiPaaS-Apps/cli/issues/94)) ([d71eaee](https://github.com/MultiPaaS-Apps/cli/commit/d71eaee30dfb7e379504b6d05fa0e5710fa366a5))
+* update the webapp-api schema ([#97](https://github.com/MultiPaaS-Apps/cli/issues/97)) ([383d05a](https://github.com/MultiPaaS-Apps/cli/commit/383d05adb10b06ed1323fdcddae13905113d6b83))
+
 ## [1.8.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.7.0...v1.8.0) (2026-11-18)
 
 

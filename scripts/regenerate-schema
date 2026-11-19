@@ -16,7 +16,7 @@ main() {
   trap 'rm -rf "$work"' EXIT
 
   cp schema.graphql "$work/before.graphql"
-  go tool gqlfetch --endpoint "$endpoint" --without-builtins > "$work/live.graphql"
+  "$(dirname "$0")/fetch-schema" "$endpoint" > "$work/live.graphql"
   mv "$work/live.graphql" schema.graphql
 
   genqlient=ok

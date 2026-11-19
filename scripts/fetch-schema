@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Prints the SDL of the GraphQL schema at <endpoint>, deprecated arguments and input fields included.
+set -euo pipefail
+
+main() {
+  local endpoint="${1:?usage: fetch-schema <endpoint>}"
+  work="$(mktemp -d)"
+  trap 'rm -rf "$work"' EXIT
+
+  jq -n --rawfile query "$(dirname "$0")/introspect.graphql" '{query: $query}' > "$work/request.json"
+  curl --fail-with-body --silent --show-error --connect-timeout 10 --max-time 120 \
+    -H 'Content-Type: application/json' --data @"$work/request.json" "$endpoint" > "$work/response.json"
+  if ! jq -e . "$work/response.json" > /dev/null 2>&1; then
+    echo "fetch-schema: the response is not JSON" >&2
+    exit 1
+  fi
+  if jq -e '.errors | length > 0' "$work/response.json" > /dev/null 2>&1; then
+    echo "fetch-schema: the introspection query failed:" >&2
+    jq '.errors' "$work/response.json" >&2
+    exit 1
+  fi
+  if ! jq -e '.data.__schema | type == "object"' "$work/response.json" > /dev/null 2>&1; then
+    echo "fetch-schema: the response has no data.__schema object" >&2
+    exit 1
+  fi
+  # gqlconvert prints no default values, so a deprecated non-null input with a default would print as required;
+  # the spec makes every deprecated input optional, so drop its NON_NULL.
+  jq '
+    def optional: if .isDeprecated and .type.kind == "NON_NULL" and .defaultValue != null then .type |= .ofType else . end;
+    def each_optional: if . == null then . else map(optional) end;
+    .data.__schema |= (
+      .types |= map(
+        (if .fields == null then . else .fields |= map(.args |= each_optional) end)
+        | .inputFields |= each_optional
+      )
+      | .directives |= (if . == null then . else map(.args |= each_optional) end)
+    )' "$work/response.json" > "$work/optional.json"
+  go tool gqlconvert --file "$work/optional.json" --without-builtins
+}
+
+main "$@"

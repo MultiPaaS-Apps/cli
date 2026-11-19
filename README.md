@@ -216,7 +216,7 @@ on this repository: Contents, Pull requests and Workflows, each read and write, 
 and the App installed, as this one does. To regenerate by hand:
 
 ```bash
-go tool gqlfetch --endpoint <your MultiPaaS's webapp-api /graphql> --without-builtins > schema.graphql
+scripts/fetch-schema <your MultiPaaS's webapp-api /graphql> > schema.graphql
 go tool genqlient
 ```
 

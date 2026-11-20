@@ -213,8 +213,10 @@ type AuthOkResult implements Receipt{
 	ok: Boolean!
 }
 
-type Client {
+type Client implements Deletable{
 	createdAt: DateTime!
+	deletedAt: DateTime
+	destroysAt: DateTime
 	id: ID!
 	name: String!
 	updatedAt: DateTime!
@@ -523,6 +525,10 @@ input DeleteAppTenantInput {
 }
 
 input DeleteApplicationInput {
+	id: ID!
+}
+
+input DeleteClientInput {
 	id: ID!
 }
 
@@ -923,7 +929,7 @@ type Mutation {
 	): Application! @deprecated(reason: "Use deleteApplication.")
 	deactivateClient(
 		input: DeactivateClientInput!
-	): Client!
+	): Client! @deprecated(reason: "Use deleteClient.")
 	deactivateUser(
 		input: DeactivateUserInput!
 	): User!
@@ -933,6 +939,9 @@ type Mutation {
 	deleteApplication(
 		input: DeleteApplicationInput!
 	): Application!
+	deleteClient(
+		input: DeleteClientInput!
+	): Client!
 """
 Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
 """

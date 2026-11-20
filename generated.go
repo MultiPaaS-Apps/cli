@@ -2587,6 +2587,109 @@ func (v *DeactivateAppTenantResponse) GetDeactivateAppTenant() DeactivateAppTena
 	return v.DeactivateAppTenant
 }
 
+// DeleteAppIdentityDeleteAppIdentity includes the requested fields of the GraphQL type AppIdentity.
+// The GraphQL type's documentation follows.
+//
+// An application's own identity for background jobs: its id is the OAuth client_id.
+type DeleteAppIdentityDeleteAppIdentity struct {
+	AppIdentityParts `json:"-"`
+}
+
+// GetId returns DeleteAppIdentityDeleteAppIdentity.Id, and is useful for accessing the field via an interface.
+func (v *DeleteAppIdentityDeleteAppIdentity) GetId() string { return v.AppIdentityParts.Id }
+
+// GetName returns DeleteAppIdentityDeleteAppIdentity.Name, and is useful for accessing the field via an interface.
+func (v *DeleteAppIdentityDeleteAppIdentity) GetName() string { return v.AppIdentityParts.Name }
+
+// GetEnvironment returns DeleteAppIdentityDeleteAppIdentity.Environment, and is useful for accessing the field via an interface.
+func (v *DeleteAppIdentityDeleteAppIdentity) GetEnvironment() *AppIdentityPartsEnvironment {
+	return v.AppIdentityParts.Environment
+}
+
+// GetUser returns DeleteAppIdentityDeleteAppIdentity.User, and is useful for accessing the field via an interface.
+func (v *DeleteAppIdentityDeleteAppIdentity) GetUser() *AppIdentityPartsUser {
+	return v.AppIdentityParts.User
+}
+
+// GetCreatedAt returns DeleteAppIdentityDeleteAppIdentity.CreatedAt, and is useful for accessing the field via an interface.
+func (v *DeleteAppIdentityDeleteAppIdentity) GetCreatedAt() string {
+	return v.AppIdentityParts.CreatedAt
+}
+
+// GetSecrets returns DeleteAppIdentityDeleteAppIdentity.Secrets, and is useful for accessing the field via an interface.
+func (v *DeleteAppIdentityDeleteAppIdentity) GetSecrets() []AppIdentityPartsSecretsAppIdentitySecret {
+	return v.AppIdentityParts.Secrets
+}
+
+func (v *DeleteAppIdentityDeleteAppIdentity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteAppIdentityDeleteAppIdentity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteAppIdentityDeleteAppIdentity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.AppIdentityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteAppIdentityDeleteAppIdentity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	Environment *AppIdentityPartsEnvironment `json:"environment"`
+
+	User *AppIdentityPartsUser `json:"user"`
+
+	CreatedAt string `json:"createdAt"`
+
+	Secrets []AppIdentityPartsSecretsAppIdentitySecret `json:"secrets"`
+}
+
+func (v *DeleteAppIdentityDeleteAppIdentity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteAppIdentityDeleteAppIdentity) __premarshalJSON() (*__premarshalDeleteAppIdentityDeleteAppIdentity, error) {
+	var retval __premarshalDeleteAppIdentityDeleteAppIdentity
+
+	retval.Id = v.AppIdentityParts.Id
+	retval.Name = v.AppIdentityParts.Name
+	retval.Environment = v.AppIdentityParts.Environment
+	retval.User = v.AppIdentityParts.User
+	retval.CreatedAt = v.AppIdentityParts.CreatedAt
+	retval.Secrets = v.AppIdentityParts.Secrets
+	return &retval, nil
+}
+
+// DeleteAppIdentityResponse is returned by DeleteAppIdentity on success.
+type DeleteAppIdentityResponse struct {
+	DeleteAppIdentity DeleteAppIdentityDeleteAppIdentity `json:"deleteAppIdentity"`
+}
+
+// GetDeleteAppIdentity returns DeleteAppIdentityResponse.DeleteAppIdentity, and is useful for accessing the field via an interface.
+func (v *DeleteAppIdentityResponse) GetDeleteAppIdentity() DeleteAppIdentityDeleteAppIdentity {
+	return v.DeleteAppIdentity
+}
+
 // DeleteAppTenantDeleteAppTenant includes the requested fields of the GraphQL type AppTenant.
 type DeleteAppTenantDeleteAppTenant struct {
 	Id         string  `json:"id"`
@@ -2614,6 +2717,90 @@ type DeleteAppTenantResponse struct {
 // GetDeleteAppTenant returns DeleteAppTenantResponse.DeleteAppTenant, and is useful for accessing the field via an interface.
 func (v *DeleteAppTenantResponse) GetDeleteAppTenant() DeleteAppTenantDeleteAppTenant {
 	return v.DeleteAppTenant
+}
+
+// DeleteConstraintDeleteConstraint includes the requested fields of the GraphQL type Constraint.
+type DeleteConstraintDeleteConstraint struct {
+	ConstraintParts `json:"-"`
+}
+
+// GetId returns DeleteConstraintDeleteConstraint.Id, and is useful for accessing the field via an interface.
+func (v *DeleteConstraintDeleteConstraint) GetId() string { return v.ConstraintParts.Id }
+
+// GetEntity returns DeleteConstraintDeleteConstraint.Entity, and is useful for accessing the field via an interface.
+func (v *DeleteConstraintDeleteConstraint) GetEntity() ConstraintPartsEntity {
+	return v.ConstraintParts.Entity
+}
+
+// GetKind returns DeleteConstraintDeleteConstraint.Kind, and is useful for accessing the field via an interface.
+func (v *DeleteConstraintDeleteConstraint) GetKind() string { return v.ConstraintParts.Kind }
+
+// GetFields returns DeleteConstraintDeleteConstraint.Fields, and is useful for accessing the field via an interface.
+func (v *DeleteConstraintDeleteConstraint) GetFields() ConstraintPartsFieldsFieldPage {
+	return v.ConstraintParts.Fields
+}
+
+func (v *DeleteConstraintDeleteConstraint) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteConstraintDeleteConstraint
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteConstraintDeleteConstraint = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.ConstraintParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteConstraintDeleteConstraint struct {
+	Id string `json:"id"`
+
+	Entity ConstraintPartsEntity `json:"entity"`
+
+	Kind string `json:"kind"`
+
+	Fields ConstraintPartsFieldsFieldPage `json:"fields"`
+}
+
+func (v *DeleteConstraintDeleteConstraint) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteConstraintDeleteConstraint) __premarshalJSON() (*__premarshalDeleteConstraintDeleteConstraint, error) {
+	var retval __premarshalDeleteConstraintDeleteConstraint
+
+	retval.Id = v.ConstraintParts.Id
+	retval.Entity = v.ConstraintParts.Entity
+	retval.Kind = v.ConstraintParts.Kind
+	retval.Fields = v.ConstraintParts.Fields
+	return &retval, nil
+}
+
+// DeleteConstraintResponse is returned by DeleteConstraint on success.
+type DeleteConstraintResponse struct {
+	DeleteConstraint DeleteConstraintDeleteConstraint `json:"deleteConstraint"`
+}
+
+// GetDeleteConstraint returns DeleteConstraintResponse.DeleteConstraint, and is useful for accessing the field via an interface.
+func (v *DeleteConstraintResponse) GetDeleteConstraint() DeleteConstraintDeleteConstraint {
+	return v.DeleteConstraint
 }
 
 // DeleteDataImportDeleteDataImport includes the requested fields of the GraphQL type DataImport.
@@ -2753,6 +2940,205 @@ func (v *DeleteDataImportResponse) GetDeleteDataImport() DeleteDataImportDeleteD
 	return v.DeleteDataImport
 }
 
+// DeleteDeployerDeleteDeployer includes the requested fields of the GraphQL type Deployer.
+// The GraphQL type's documentation follows.
+//
+// A credential CI uses to create and remove test environments: its id is the OAuth client_id.
+type DeleteDeployerDeleteDeployer struct {
+	Id string `json:"id"`
+}
+
+// GetId returns DeleteDeployerDeleteDeployer.Id, and is useful for accessing the field via an interface.
+func (v *DeleteDeployerDeleteDeployer) GetId() string { return v.Id }
+
+// DeleteDeployerResponse is returned by DeleteDeployer on success.
+type DeleteDeployerResponse struct {
+	DeleteDeployer DeleteDeployerDeleteDeployer `json:"deleteDeployer"`
+}
+
+// GetDeleteDeployer returns DeleteDeployerResponse.DeleteDeployer, and is useful for accessing the field via an interface.
+func (v *DeleteDeployerResponse) GetDeleteDeployer() DeleteDeployerDeleteDeployer {
+	return v.DeleteDeployer
+}
+
+// DeleteEntityDeleteEntity includes the requested fields of the GraphQL type Entity.
+type DeleteEntityDeleteEntity struct {
+	EntityParts `json:"-"`
+}
+
+// GetId returns DeleteEntityDeleteEntity.Id, and is useful for accessing the field via an interface.
+func (v *DeleteEntityDeleteEntity) GetId() string { return v.EntityParts.Id }
+
+// GetName returns DeleteEntityDeleteEntity.Name, and is useful for accessing the field via an interface.
+func (v *DeleteEntityDeleteEntity) GetName() string { return v.EntityParts.Name }
+
+// GetGraphqlTypeName returns DeleteEntityDeleteEntity.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *DeleteEntityDeleteEntity) GetGraphqlTypeName() string { return v.EntityParts.GraphqlTypeName }
+
+// GetGraphqlPluralName returns DeleteEntityDeleteEntity.GraphqlPluralName, and is useful for accessing the field via an interface.
+func (v *DeleteEntityDeleteEntity) GetGraphqlPluralName() string {
+	return v.EntityParts.GraphqlPluralName
+}
+
+// GetManaged returns DeleteEntityDeleteEntity.Managed, and is useful for accessing the field via an interface.
+func (v *DeleteEntityDeleteEntity) GetManaged() bool { return v.EntityParts.Managed }
+
+// GetShareNewRecordsWithTenant returns DeleteEntityDeleteEntity.ShareNewRecordsWithTenant, and is useful for accessing the field via an interface.
+func (v *DeleteEntityDeleteEntity) GetShareNewRecordsWithTenant() *RecordAccessLevel {
+	return v.EntityParts.ShareNewRecordsWithTenant
+}
+
+func (v *DeleteEntityDeleteEntity) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteEntityDeleteEntity
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteEntityDeleteEntity = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EntityParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteEntityDeleteEntity struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	GraphqlPluralName string `json:"graphqlPluralName"`
+
+	Managed bool `json:"managed"`
+
+	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
+}
+
+func (v *DeleteEntityDeleteEntity) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteEntityDeleteEntity) __premarshalJSON() (*__premarshalDeleteEntityDeleteEntity, error) {
+	var retval __premarshalDeleteEntityDeleteEntity
+
+	retval.Id = v.EntityParts.Id
+	retval.Name = v.EntityParts.Name
+	retval.GraphqlTypeName = v.EntityParts.GraphqlTypeName
+	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
+	retval.Managed = v.EntityParts.Managed
+	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
+	return &retval, nil
+}
+
+// DeleteEntityResponse is returned by DeleteEntity on success.
+type DeleteEntityResponse struct {
+	DeleteEntity DeleteEntityDeleteEntity `json:"deleteEntity"`
+}
+
+// GetDeleteEntity returns DeleteEntityResponse.DeleteEntity, and is useful for accessing the field via an interface.
+func (v *DeleteEntityResponse) GetDeleteEntity() DeleteEntityDeleteEntity { return v.DeleteEntity }
+
+// DeleteEnumTypeDeleteEnumType includes the requested fields of the GraphQL type EnumType.
+type DeleteEnumTypeDeleteEnumType struct {
+	EnumTypeParts `json:"-"`
+}
+
+// GetId returns DeleteEnumTypeDeleteEnumType.Id, and is useful for accessing the field via an interface.
+func (v *DeleteEnumTypeDeleteEnumType) GetId() string { return v.EnumTypeParts.Id }
+
+// GetName returns DeleteEnumTypeDeleteEnumType.Name, and is useful for accessing the field via an interface.
+func (v *DeleteEnumTypeDeleteEnumType) GetName() string { return v.EnumTypeParts.Name }
+
+// GetGraphqlTypeName returns DeleteEnumTypeDeleteEnumType.GraphqlTypeName, and is useful for accessing the field via an interface.
+func (v *DeleteEnumTypeDeleteEnumType) GetGraphqlTypeName() string {
+	return v.EnumTypeParts.GraphqlTypeName
+}
+
+// GetValues returns DeleteEnumTypeDeleteEnumType.Values, and is useful for accessing the field via an interface.
+func (v *DeleteEnumTypeDeleteEnumType) GetValues() []EnumTypePartsValuesEnumValue {
+	return v.EnumTypeParts.Values
+}
+
+func (v *DeleteEnumTypeDeleteEnumType) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteEnumTypeDeleteEnumType
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteEnumTypeDeleteEnumType = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EnumTypeParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteEnumTypeDeleteEnumType struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	GraphqlTypeName string `json:"graphqlTypeName"`
+
+	Values []EnumTypePartsValuesEnumValue `json:"values"`
+}
+
+func (v *DeleteEnumTypeDeleteEnumType) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteEnumTypeDeleteEnumType) __premarshalJSON() (*__premarshalDeleteEnumTypeDeleteEnumType, error) {
+	var retval __premarshalDeleteEnumTypeDeleteEnumType
+
+	retval.Id = v.EnumTypeParts.Id
+	retval.Name = v.EnumTypeParts.Name
+	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Values = v.EnumTypeParts.Values
+	return &retval, nil
+}
+
+// DeleteEnumTypeResponse is returned by DeleteEnumType on success.
+type DeleteEnumTypeResponse struct {
+	DeleteEnumType DeleteEnumTypeDeleteEnumType `json:"deleteEnumType"`
+}
+
+// GetDeleteEnumType returns DeleteEnumTypeResponse.DeleteEnumType, and is useful for accessing the field via an interface.
+func (v *DeleteEnumTypeResponse) GetDeleteEnumType() DeleteEnumTypeDeleteEnumType {
+	return v.DeleteEnumType
+}
+
 // DeleteEnvironmentDeleteEnvironment includes the requested fields of the GraphQL type Environment.
 type DeleteEnvironmentDeleteEnvironment struct {
 	Id         string  `json:"id"`
@@ -2781,6 +3167,267 @@ type DeleteEnvironmentResponse struct {
 func (v *DeleteEnvironmentResponse) GetDeleteEnvironment() DeleteEnvironmentDeleteEnvironment {
 	return v.DeleteEnvironment
 }
+
+// DeleteFieldDeleteField includes the requested fields of the GraphQL type Field.
+type DeleteFieldDeleteField struct {
+	FieldParts `json:"-"`
+}
+
+// GetId returns DeleteFieldDeleteField.Id, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetId() string { return v.FieldParts.Id }
+
+// GetEntity returns DeleteFieldDeleteField.Entity, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetEntity() FieldPartsEntity { return v.FieldParts.Entity }
+
+// GetName returns DeleteFieldDeleteField.Name, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetName() *string { return v.FieldParts.Name }
+
+// GetGraphqlFieldName returns DeleteFieldDeleteField.GraphqlFieldName, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetType returns DeleteFieldDeleteField.Type, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetType() string { return v.FieldParts.Type }
+
+// GetMaxFileBytes returns DeleteFieldDeleteField.MaxFileBytes, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetMaxFileBytes() *float64 { return v.FieldParts.MaxFileBytes }
+
+// GetRequired returns DeleteFieldDeleteField.Required, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetRequired() bool { return v.FieldParts.Required }
+
+// GetNotNull returns DeleteFieldDeleteField.NotNull, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetNotNull() bool { return v.FieldParts.NotNull }
+
+// GetList returns DeleteFieldDeleteField.List, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetList() bool { return v.FieldParts.List }
+
+// GetDefaultValue returns DeleteFieldDeleteField.DefaultValue, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetDefaultValue() *json.RawMessage { return v.FieldParts.DefaultValue }
+
+// GetEnumValues returns DeleteFieldDeleteField.EnumValues, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetEnumValues() []string { return v.FieldParts.EnumValues }
+
+// GetEnumType returns DeleteFieldDeleteField.EnumType, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetEnumType() *FieldPartsEnumType { return v.FieldParts.EnumType }
+
+// GetIsLifecycle returns DeleteFieldDeleteField.IsLifecycle, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetIsLifecycle() bool { return v.FieldParts.IsLifecycle }
+
+// GetIsParent returns DeleteFieldDeleteField.IsParent, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetIsParent() bool { return v.FieldParts.IsParent }
+
+// GetReferencesEntity returns DeleteFieldDeleteField.ReferencesEntity, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetReferencesEntity() *FieldPartsReferencesEntity {
+	return v.FieldParts.ReferencesEntity
+}
+
+// GetRelatedField returns DeleteFieldDeleteField.RelatedField, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetRelatedField() *FieldPartsRelatedField {
+	return v.FieldParts.RelatedField
+}
+
+func (v *DeleteFieldDeleteField) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteFieldDeleteField
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteFieldDeleteField = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.FieldParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteFieldDeleteField struct {
+	Id string `json:"id"`
+
+	Entity FieldPartsEntity `json:"entity"`
+
+	Name *string `json:"name"`
+
+	GraphqlFieldName string `json:"graphqlFieldName"`
+
+	Type string `json:"type"`
+
+	MaxFileBytes *float64 `json:"maxFileBytes"`
+
+	Required bool `json:"required"`
+
+	NotNull bool `json:"notNull"`
+
+	List bool `json:"list"`
+
+	DefaultValue *json.RawMessage `json:"defaultValue"`
+
+	EnumValues []string `json:"enumValues"`
+
+	EnumType *FieldPartsEnumType `json:"enumType"`
+
+	IsLifecycle bool `json:"isLifecycle"`
+
+	IsParent bool `json:"isParent"`
+
+	ReferencesEntity *FieldPartsReferencesEntity `json:"referencesEntity"`
+
+	RelatedField *FieldPartsRelatedField `json:"relatedField"`
+}
+
+func (v *DeleteFieldDeleteField) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteFieldDeleteField) __premarshalJSON() (*__premarshalDeleteFieldDeleteField, error) {
+	var retval __premarshalDeleteFieldDeleteField
+
+	retval.Id = v.FieldParts.Id
+	retval.Entity = v.FieldParts.Entity
+	retval.Name = v.FieldParts.Name
+	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Type = v.FieldParts.Type
+	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
+	retval.Required = v.FieldParts.Required
+	retval.NotNull = v.FieldParts.NotNull
+	retval.List = v.FieldParts.List
+	retval.DefaultValue = v.FieldParts.DefaultValue
+	retval.EnumValues = v.FieldParts.EnumValues
+	retval.EnumType = v.FieldParts.EnumType
+	retval.IsLifecycle = v.FieldParts.IsLifecycle
+	retval.IsParent = v.FieldParts.IsParent
+	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
+	retval.RelatedField = v.FieldParts.RelatedField
+	return &retval, nil
+}
+
+// DeleteFieldResponse is returned by DeleteField on success.
+type DeleteFieldResponse struct {
+	DeleteField DeleteFieldDeleteField `json:"deleteField"`
+}
+
+// GetDeleteField returns DeleteFieldResponse.DeleteField, and is useful for accessing the field via an interface.
+func (v *DeleteFieldResponse) GetDeleteField() DeleteFieldDeleteField { return v.DeleteField }
+
+// DeleteRecordDeleteRecord includes the requested fields of the GraphQL type Record.
+type DeleteRecordDeleteRecord struct {
+	RecordParts `json:"-"`
+}
+
+// GetId returns DeleteRecordDeleteRecord.Id, and is useful for accessing the field via an interface.
+func (v *DeleteRecordDeleteRecord) GetId() string { return v.RecordParts.Id }
+
+// GetAppWide returns DeleteRecordDeleteRecord.AppWide, and is useful for accessing the field via an interface.
+func (v *DeleteRecordDeleteRecord) GetAppWide() bool { return v.RecordParts.AppWide }
+
+// GetData returns DeleteRecordDeleteRecord.Data, and is useful for accessing the field via an interface.
+func (v *DeleteRecordDeleteRecord) GetData() json.RawMessage { return v.RecordParts.Data }
+
+// GetCreatedAt returns DeleteRecordDeleteRecord.CreatedAt, and is useful for accessing the field via an interface.
+func (v *DeleteRecordDeleteRecord) GetCreatedAt() string { return v.RecordParts.CreatedAt }
+
+// GetUpdatedAt returns DeleteRecordDeleteRecord.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *DeleteRecordDeleteRecord) GetUpdatedAt() string { return v.RecordParts.UpdatedAt }
+
+// GetVersion returns DeleteRecordDeleteRecord.Version, and is useful for accessing the field via an interface.
+func (v *DeleteRecordDeleteRecord) GetVersion() string { return v.RecordParts.Version }
+
+// GetFiles returns DeleteRecordDeleteRecord.Files, and is useful for accessing the field via an interface.
+func (v *DeleteRecordDeleteRecord) GetFiles() []recordFile { return v.RecordParts.Files }
+
+func (v *DeleteRecordDeleteRecord) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteRecordDeleteRecord
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteRecordDeleteRecord = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.RecordParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteRecordDeleteRecord struct {
+	Id string `json:"id"`
+
+	AppWide bool `json:"appWide"`
+
+	Data json.RawMessage `json:"data"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+
+	Version string `json:"version"`
+
+	Files []recordFile `json:"files"`
+}
+
+func (v *DeleteRecordDeleteRecord) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteRecordDeleteRecord) __premarshalJSON() (*__premarshalDeleteRecordDeleteRecord, error) {
+	var retval __premarshalDeleteRecordDeleteRecord
+
+	retval.Id = v.RecordParts.Id
+	retval.AppWide = v.RecordParts.AppWide
+	retval.Data = v.RecordParts.Data
+	retval.CreatedAt = v.RecordParts.CreatedAt
+	retval.UpdatedAt = v.RecordParts.UpdatedAt
+	retval.Version = v.RecordParts.Version
+	retval.Files = v.RecordParts.Files
+	return &retval, nil
+}
+
+type DeleteRecordInput struct {
+	EntityId string `json:"entityId"`
+	RecordId string `json:"recordId"`
+}
+
+// GetEntityId returns DeleteRecordInput.EntityId, and is useful for accessing the field via an interface.
+func (v *DeleteRecordInput) GetEntityId() string { return v.EntityId }
+
+// GetRecordId returns DeleteRecordInput.RecordId, and is useful for accessing the field via an interface.
+func (v *DeleteRecordInput) GetRecordId() string { return v.RecordId }
+
+// DeleteRecordResponse is returned by DeleteRecord on success.
+type DeleteRecordResponse struct {
+	DeleteRecord DeleteRecordDeleteRecord `json:"deleteRecord"`
+}
+
+// GetDeleteRecord returns DeleteRecordResponse.DeleteRecord, and is useful for accessing the field via an interface.
+func (v *DeleteRecordResponse) GetDeleteRecord() DeleteRecordDeleteRecord { return v.DeleteRecord }
 
 // DeployerParts includes the GraphQL fields of Deployer requested by the fragment DeployerParts.
 // The GraphQL type's documentation follows.
@@ -7937,6 +8584,14 @@ type __DeactivateAppTenantInput struct {
 // GetInput returns __DeactivateAppTenantInput.Input, and is useful for accessing the field via an interface.
 func (v *__DeactivateAppTenantInput) GetInput() DeactivateAppTenantInput { return v.Input }
 
+// __DeleteAppIdentityInput is used internally by genqlient
+type __DeleteAppIdentityInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __DeleteAppIdentityInput.Id, and is useful for accessing the field via an interface.
+func (v *__DeleteAppIdentityInput) GetId() string { return v.Id }
+
 // __DeleteAppTenantInput is used internally by genqlient
 type __DeleteAppTenantInput struct {
 	Input DeleteAppTenantInput `json:"input"`
@@ -7944,6 +8599,14 @@ type __DeleteAppTenantInput struct {
 
 // GetInput returns __DeleteAppTenantInput.Input, and is useful for accessing the field via an interface.
 func (v *__DeleteAppTenantInput) GetInput() DeleteAppTenantInput { return v.Input }
+
+// __DeleteConstraintInput is used internally by genqlient
+type __DeleteConstraintInput struct {
+	ConstraintId string `json:"constraintId"`
+}
+
+// GetConstraintId returns __DeleteConstraintInput.ConstraintId, and is useful for accessing the field via an interface.
+func (v *__DeleteConstraintInput) GetConstraintId() string { return v.ConstraintId }
 
 // __DeleteDataImportInput is used internally by genqlient
 type __DeleteDataImportInput struct {
@@ -7953,6 +8616,30 @@ type __DeleteDataImportInput struct {
 // GetImportId returns __DeleteDataImportInput.ImportId, and is useful for accessing the field via an interface.
 func (v *__DeleteDataImportInput) GetImportId() string { return v.ImportId }
 
+// __DeleteDeployerInput is used internally by genqlient
+type __DeleteDeployerInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __DeleteDeployerInput.Id, and is useful for accessing the field via an interface.
+func (v *__DeleteDeployerInput) GetId() string { return v.Id }
+
+// __DeleteEntityInput is used internally by genqlient
+type __DeleteEntityInput struct {
+	EntityId string `json:"entityId"`
+}
+
+// GetEntityId returns __DeleteEntityInput.EntityId, and is useful for accessing the field via an interface.
+func (v *__DeleteEntityInput) GetEntityId() string { return v.EntityId }
+
+// __DeleteEnumTypeInput is used internally by genqlient
+type __DeleteEnumTypeInput struct {
+	EnumTypeId string `json:"enumTypeId"`
+}
+
+// GetEnumTypeId returns __DeleteEnumTypeInput.EnumTypeId, and is useful for accessing the field via an interface.
+func (v *__DeleteEnumTypeInput) GetEnumTypeId() string { return v.EnumTypeId }
+
 // __DeleteEnvironmentInput is used internally by genqlient
 type __DeleteEnvironmentInput struct {
 	Input DeleteEnvironmentInput `json:"input"`
@@ -7960,6 +8647,22 @@ type __DeleteEnvironmentInput struct {
 
 // GetInput returns __DeleteEnvironmentInput.Input, and is useful for accessing the field via an interface.
 func (v *__DeleteEnvironmentInput) GetInput() DeleteEnvironmentInput { return v.Input }
+
+// __DeleteFieldInput is used internally by genqlient
+type __DeleteFieldInput struct {
+	FieldId string `json:"fieldId"`
+}
+
+// GetFieldId returns __DeleteFieldInput.FieldId, and is useful for accessing the field via an interface.
+func (v *__DeleteFieldInput) GetFieldId() string { return v.FieldId }
+
+// __DeleteRecordInput is used internally by genqlient
+type __DeleteRecordInput struct {
+	Input DeleteRecordInput `json:"input"`
+}
+
+// GetInput returns __DeleteRecordInput.Input, and is useful for accessing the field via an interface.
+func (v *__DeleteRecordInput) GetInput() DeleteRecordInput { return v.Input }
 
 // __DeployersInput is used internally by genqlient
 type __DeployersInput struct {
@@ -9668,6 +10371,57 @@ func DeactivateAppTenant(
 	return data_, err_
 }
 
+// The mutation executed by DeleteAppIdentity.
+const DeleteAppIdentity_Operation = `
+mutation DeleteAppIdentity ($id: ID!) {
+	deleteAppIdentity(id: $id) {
+		... AppIdentityParts
+	}
+}
+fragment AppIdentityParts on AppIdentity {
+	id
+	name
+	environment {
+		id
+	}
+	user {
+		id
+	}
+	createdAt
+	secrets {
+		id
+		lastFour
+		createdAt
+		lastUsedAt
+	}
+}
+`
+
+func DeleteAppIdentity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *DeleteAppIdentityResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteAppIdentity",
+		Query:  DeleteAppIdentity_Operation,
+		Variables: &__DeleteAppIdentityInput{
+			Id: id,
+		},
+	}
+
+	data_ = &DeleteAppIdentityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by DeleteAppTenant.
 const DeleteAppTenant_Operation = `
 mutation DeleteAppTenant ($input: DeleteAppTenantInput!) {
@@ -9692,6 +10446,52 @@ func DeleteAppTenant(
 	}
 
 	data_ = &DeleteAppTenantResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteConstraint.
+const DeleteConstraint_Operation = `
+mutation DeleteConstraint ($constraintId: ID!) {
+	deleteConstraint(constraintId: $constraintId) {
+		... ConstraintParts
+	}
+}
+fragment ConstraintParts on Constraint {
+	id
+	entity {
+		id
+	}
+	kind
+	fields(page: {page:0,pageSize:100}) {
+		items {
+			id
+		}
+	}
+}
+`
+
+func DeleteConstraint(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	constraintId string,
+) (data_ *DeleteConstraintResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteConstraint",
+		Query:  DeleteConstraint_Operation,
+		Variables: &__DeleteConstraintInput{
+			ConstraintId: constraintId,
+		},
+	}
+
+	data_ = &DeleteConstraintResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -9780,6 +10580,125 @@ func DeleteDataImport(
 	return data_, err_
 }
 
+// The mutation executed by DeleteDeployer.
+const DeleteDeployer_Operation = `
+mutation DeleteDeployer ($id: ID!) {
+	deleteDeployer(id: $id) {
+		id
+	}
+}
+`
+
+func DeleteDeployer(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *DeleteDeployerResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteDeployer",
+		Query:  DeleteDeployer_Operation,
+		Variables: &__DeleteDeployerInput{
+			Id: id,
+		},
+	}
+
+	data_ = &DeleteDeployerResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteEntity.
+const DeleteEntity_Operation = `
+mutation DeleteEntity ($entityId: ID!) {
+	deleteEntity(entityId: $entityId) {
+		... EntityParts
+	}
+}
+fragment EntityParts on Entity {
+	id
+	name
+	graphqlTypeName
+	graphqlPluralName
+	managed
+	shareNewRecordsWithTenant
+}
+`
+
+func DeleteEntity(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	entityId string,
+) (data_ *DeleteEntityResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteEntity",
+		Query:  DeleteEntity_Operation,
+		Variables: &__DeleteEntityInput{
+			EntityId: entityId,
+		},
+	}
+
+	data_ = &DeleteEntityResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteEnumType.
+const DeleteEnumType_Operation = `
+mutation DeleteEnumType ($enumTypeId: ID!) {
+	deleteEnumType(enumTypeId: $enumTypeId) {
+		... EnumTypeParts
+	}
+}
+fragment EnumTypeParts on EnumType {
+	id
+	name
+	graphqlTypeName
+	values {
+		value
+		graphqlName
+	}
+}
+`
+
+func DeleteEnumType(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	enumTypeId string,
+) (data_ *DeleteEnumTypeResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteEnumType",
+		Query:  DeleteEnumType_Operation,
+		Variables: &__DeleteEnumTypeInput{
+			EnumTypeId: enumTypeId,
+		},
+	}
+
+	data_ = &DeleteEnumTypeResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by DeleteEnvironment.
 const DeleteEnvironment_Operation = `
 mutation DeleteEnvironment ($input: DeleteEnvironmentInput!) {
@@ -9804,6 +10723,118 @@ func DeleteEnvironment(
 	}
 
 	data_ = &DeleteEnvironmentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteField.
+const DeleteField_Operation = `
+mutation DeleteField ($fieldId: ID!) {
+	deleteField(fieldId: $fieldId) {
+		... FieldParts
+	}
+}
+fragment FieldParts on Field {
+	id
+	entity {
+		id
+	}
+	name
+	graphqlFieldName
+	type
+	maxFileBytes
+	required
+	notNull
+	list
+	defaultValue
+	enumValues
+	enumType {
+		id
+		name
+	}
+	isLifecycle
+	isParent
+	referencesEntity {
+		id
+	}
+	relatedField {
+		id
+	}
+}
+`
+
+func DeleteField(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	fieldId string,
+) (data_ *DeleteFieldResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteField",
+		Query:  DeleteField_Operation,
+		Variables: &__DeleteFieldInput{
+			FieldId: fieldId,
+		},
+	}
+
+	data_ = &DeleteFieldResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteRecord.
+const DeleteRecord_Operation = `
+mutation DeleteRecord ($input: DeleteRecordInput!) {
+	deleteRecord(input: $input) {
+		... RecordParts
+	}
+}
+fragment RecordParts on Record {
+	id
+	appWide
+	data
+	createdAt
+	updatedAt
+	version
+	files {
+		fieldId
+		fileId
+		filename
+		contentType
+		sizeBytes
+		url
+		urlExpiresAt
+	}
+}
+`
+
+func DeleteRecord(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input DeleteRecordInput,
+) (data_ *DeleteRecordResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteRecord",
+		Query:  DeleteRecord_Operation,
+		Variables: &__DeleteRecordInput{
+			Input: input,
+		},
+	}
+
+	data_ = &DeleteRecordResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

@@ -283,11 +283,16 @@ func tenantsRetire(command commandFunc) *cobra.Command {
 	cmd.Args = oneID(&tenantID)
 	appFlag(cmd, &appID)
 	envFlagFromProject(cmd, &appID, &envID, nil)
+	return deprecatedAs(cmd, "tenants retire", "tenants delete")
+}
+
+// deprecatedAs hides cmd and prints its deprecation to stderr before it runs. Cobra's own Deprecated notice prints
+// to the command's output, which run() sets to stdout, and would break --json.
+func deprecatedAs(cmd *cobra.Command, oldName, newName string) *cobra.Command {
 	cmd.Hidden = true
-	// Cobra's own Deprecated notice prints to the command's output, which run() sets to stdout, and would break --json.
 	previous := cmd.PreRunE
 	cmd.PreRunE = func(c *cobra.Command, args []string) error {
-		fmt.Fprintln(c.ErrOrStderr(), `"tenants retire" is deprecated: use "tenants delete" instead`)
+		fmt.Fprintf(c.ErrOrStderr(), "%q is deprecated: use %q instead\n", oldName, newName)
 		if previous != nil {
 			return previous(c, args)
 		}

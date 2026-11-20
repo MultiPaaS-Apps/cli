@@ -270,19 +270,9 @@ func envsRemove(command commandFunc) *cobra.Command {
 		}, err
 	})
 	appFlag(cmd, &appID)
-	cmd.Hidden = true
-	// Cobra's own Deprecated notice prints to the command's output, which run() sets to stdout, and would break --json.
-	previous := cmd.PreRunE
-	cmd.PreRunE = func(c *cobra.Command, args []string) error {
-		fmt.Fprintln(c.ErrOrStderr(), `"envs remove" is deprecated: use "envs delete" instead`)
-		if previous != nil {
-			return previous(c, args)
-		}
-		return nil
-	}
 	cmd.Flags().StringVar(&envID, "env", "", "the environment's id (from envs list)")
 	_ = cmd.MarkFlagRequired("env")
-	return cmd
+	return deprecatedAs(cmd, "envs remove", "envs delete")
 }
 
 func envsRename(command commandFunc) *cobra.Command {

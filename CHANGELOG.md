@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.9.1...v1.10.0) (2026-11-21)
+
+
+### Features
+
+* [MP-332] add versions create and upgrade hints ([#101](https://github.com/MultiPaaS-Apps/cli/issues/101)) ([d73638a](https://github.com/MultiPaaS-Apps/cli/commit/d73638a6328cd4b42dc1f4e707b0b3e7fb6ffdb6))
+
 ## [1.9.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.9.0...v1.9.1) (2026-11-21)
 
 

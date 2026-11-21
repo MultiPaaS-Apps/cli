@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"slices"
+	"strconv"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/spf13/cobra"
@@ -40,19 +41,20 @@ type endpoints struct {
 
 // revision is one of an application's API versions.
 type revision struct {
-	ID        string `json:"id"`
-	CreatedAt string `json:"createdAt"`
-	Pinned    bool   `json:"pinned"`
+	ID               string `json:"id"`
+	CreatedAt        string `json:"createdAt"`
+	Pinned           bool   `json:"pinned"`
+	GeneratorVersion int    `json:"generatorVersion"`
 }
 
 var errNotInitialized = &cliError{exit: exitRefused, Code: "NOT_INITIALIZED", Message: "no multipaas.json with an applicationId here: run multipaas init first"}
 
-// projectCommands are init, pin, versions list|diff and schema pull: what pins an app to an API version.
+// projectCommands are init, pin, versions list|diff|create and schema pull: what pins an app to an API version.
 func projectCommands(command commandFunc) []*cobra.Command {
 	return []*cobra.Command{
 		initProject(command),
 		pin(command),
-		group("versions", "An application's API versions", versionsList(command), versionsDiff(command)),
+		group("versions", "An application's API versions", versionsList(command), versionsDiff(command), versionsCreate(command)),
 		group("schema", "An API version's GraphQL schema", schemaPull(command)),
 	}
 }
@@ -137,14 +139,21 @@ func versionsList(command commandFunc) *cobra.Command {
 		if err != nil {
 			return nil, nil, err
 		}
+		latest, err := s.latestGenerator(ctx, appID)
+		if err != nil {
+			return nil, nil, err
+		}
 		config, err := readProject()
 		for i := range list {
 			list[i].Pinned = config.ApplicationID == appID && list[i].ID == config.APIVersion
 		}
 		return list, func(out io.Writer) {
-			table(out, "ID\tCREATED\tPINNED", list, func(r revision) string {
-				return r.ID + "\t" + r.CreatedAt + "\t" + map[bool]string{true: "pinned"}[r.Pinned]
+			table(out, "ID\tCREATED\tGENERATOR\tPINNED", list, func(r revision) string {
+				return r.ID + "\t" + r.CreatedAt + "\t" + strconv.Itoa(r.GeneratorVersion) + "\t" + map[bool]string{true: "pinned"}[r.Pinned]
 			})
+			if len(list) > 0 && latest > list[0].GeneratorVersion {
+				fmt.Fprintln(out, upgradeHint)
+			}
 		}, err
 	})
 	appFlag(cmd, &appID)
@@ -156,6 +165,7 @@ type versionsDiffResult struct {
 	From string `json:"from"`
 	To   string `json:"to"`
 	versionDiff
+	UpgradeAvailable bool `json:"upgradeAvailable"`
 }
 
 func versionsDiff(command commandFunc) *cobra.Command {
@@ -171,25 +181,32 @@ func versionsDiff(command commandFunc) *cobra.Command {
 			}
 			from = config.APIVersion
 		}
+		list, err := s.revisions(ctx, appID)
+		if err != nil {
+			return nil, nil, err
+		}
 		if to == "" {
-			newest, err := s.pinnable(ctx, appID, "")
-			if err != nil {
-				return nil, nil, err
-			}
-			if newest == "" {
+			if len(list) == 0 {
 				return nil, nil, &cliError{exit: exitRefused, Code: "NO_API_VERSION", Message: "application " + appID + " has no API version yet: change its model first"}
 			}
-			to = newest
+			to = list[0].ID
+		}
+		if !slices.ContainsFunc(list, func(r revision) bool { return r.ID == to }) {
+			return nil, nil, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no API version " + to + " of application " + appID}
 		}
 		var diffed *ApiSchemaDiffResponse
-		err := s.inApp(ctx, appID, func(client graphql.Client) (err error) {
+		err = s.inApp(ctx, appID, func(client graphql.Client) (err error) {
 			diffed, err = ApiSchemaDiff(ctx, client, from, to)
 			return err
 		})
 		if err != nil {
 			return nil, nil, err
 		}
-		result := versionsDiffResult{From: from, To: to, versionDiff: diffed.ApiSchemaDiff}
+		latest, err := s.latestGenerator(ctx, appID)
+		if err != nil {
+			return nil, nil, err
+		}
+		result := versionsDiffResult{From: from, To: to, versionDiff: diffed.ApiSchemaDiff, UpgradeAvailable: latest > list[0].GeneratorVersion}
 		return result, func(out io.Writer) { printVersionsDiff(out, result) }, nil
 	})
 	appFlag(cmd, &appID)
@@ -219,6 +236,51 @@ func printVersionsDiff(out io.Writer, diff versionsDiffResult) {
 	if none {
 		fmt.Fprintln(out, "No changes.")
 	}
+	if diff.UpgradeAvailable {
+		fmt.Fprintln(out, "\n"+upgradeHint)
+	}
+}
+
+// versionsCreateResult is what versions create prints: the API version it minted.
+type versionsCreateResult struct {
+	ID               string `json:"id"`
+	CreatedAt        string `json:"createdAt"`
+	GeneratorVersion int    `json:"generatorVersion"`
+}
+
+func versionsCreate(command commandFunc) *cobra.Command {
+	var appID string
+	cmd := command("create", "Make an API version of the current model with the newest API features; it does not pin it", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var created *CreateModelRevisionResponse
+		err := s.inApp(ctx, appID, func(client graphql.Client) (err error) {
+			created, err = CreateModelRevision(ctx, client)
+			return err
+		})
+		if err != nil {
+			return nil, nil, versionsCreateRefusal(err, appID)
+		}
+		result := versionsCreateResult{ID: created.CreateModelRevision.Id, CreatedAt: created.CreateModelRevision.CreatedAt, GeneratorVersion: created.CreateModelRevision.GeneratorVersion}
+		return result, func(out io.Writer) {
+			fmt.Fprintf(out, "Created API version %s. Compare it with multipaas versions diff, then pin it with multipaas pin --api-version %s\n", result.ID, result.ID)
+		}, nil
+	})
+	appFlag(cmd, &appID)
+	return cmd
+}
+
+// versionsCreateRefusal names the server's two CONFLICT refusals as the CLI's own codes.
+func versionsCreateRefusal(err error, appID string) error {
+	var refused *cliError
+	if !errors.As(err, &refused) || refused.Code != "CONFLICT" {
+		return err
+	}
+	switch refused.Reason {
+	case "no_api_version":
+		return &cliError{exit: exitRefused, Code: "NO_API_VERSION", Message: "application " + appID + " has no API version yet: change its model first"}
+	case "already_latest":
+		return &cliError{exit: exitRefused, Code: "ALREADY_LATEST", Message: "application " + appID + "'s newest API version already has the newest API features"}
+	}
+	return err
 }
 
 func schemaPull(command commandFunc) *cobra.Command {
@@ -252,6 +314,22 @@ func schemaPull(command commandFunc) *cobra.Command {
 	cmd.Flags().StringVar(&wanted, "api-version", "", "the API version (default: multipaas.json's apiVersion)")
 	cmd.Flags().StringVar(&path, "out", "multipaas.graphql", "the file to write")
 	return cmd
+}
+
+// upgradeHint is printed when the platform can mint a version with newer features than the newest one.
+const upgradeHint = "Newer API features are available: run multipaas versions create"
+
+// latestGenerator is the generator a version of appID minted now would use.
+func (s *session) latestGenerator(ctx context.Context, appID string) (int, error) {
+	var latest *LatestGeneratorVersionResponse
+	err := s.inApp(ctx, appID, func(client graphql.Client) (err error) {
+		latest, err = LatestGeneratorVersion(ctx, client)
+		return err
+	})
+	if err != nil {
+		return 0, err
+	}
+	return latest.LatestGeneratorVersion, nil
 }
 
 // pinnable is wanted when it is one of appID's API versions, or the newest when wanted is "" ("" when
@@ -290,7 +368,7 @@ func (s *session) revisions(ctx context.Context, appID string) ([]revision, erro
 		}
 		found := []revision{}
 		for _, item := range listed.ModelRevisions.Items {
-			found = append(found, revision{ID: item.Id, CreatedAt: item.CreatedAt})
+			found = append(found, revision{ID: item.Id, CreatedAt: item.CreatedAt, GeneratorVersion: item.GeneratorVersion})
 		}
 		return found, listed.ModelRevisions.PageInfo.HasMore, nil
 	})

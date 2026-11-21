@@ -317,10 +317,23 @@ query ModelRevisions($page: PageInput!) {
     items {
       id
       createdAt
+      generatorVersion
     }
     pageInfo {
       hasMore
     }
+  }
+}
+
+query LatestGeneratorVersion {
+  latestGeneratorVersion
+}
+
+mutation CreateModelRevision {
+  createModelRevision {
+    id
+    createdAt
+    generatorVersion
   }
 }
 

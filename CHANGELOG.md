@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.10.0...v1.10.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#105](https://github.com/MultiPaaS-Apps/cli/issues/105)) ([f2f3d57](https://github.com/MultiPaaS-Apps/cli/commit/f2f3d57ae8f1ca08861d2a36f33b7b907477882d))
+
 ## [1.10.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.9.1...v1.10.0) (2026-11-21)
 
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.10.0...v1.10.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* [MP-336] key the duplicate-unique-key remedy to each clash case ([#107](https://github.com/MultiPaaS-Apps/cli/issues/107)) ([0c997de](https://github.com/MultiPaaS-Apps/cli/commit/0c997de2f7a8d639046600e8e0bf9c2e5b71cdcf))
+* update the webapp-api schema ([#105](https://github.com/MultiPaaS-Apps/cli/issues/105)) ([f2f3d57](https://github.com/MultiPaaS-Apps/cli/commit/f2f3d57ae8f1ca08861d2a36f33b7b907477882d))
+
 ## [1.10.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.9.1...v1.10.0) (2026-11-21)
 
 

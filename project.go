@@ -261,7 +261,7 @@ func versionsCreate(command commandFunc) *cobra.Command {
 		}
 		result := versionsCreateResult{ID: created.CreateModelRevision.Id, CreatedAt: created.CreateModelRevision.CreatedAt, GeneratorVersion: created.CreateModelRevision.GeneratorVersion}
 		return result, func(out io.Writer) {
-			fmt.Fprintf(out, "Created API version %s. Compare it with multipaas versions diff --app %s, then pin it with multipaas pin --api-version %s\n", result.ID, appID, result.ID)
+			fmt.Fprintf(out, "Created API version %s. Compare it with multipaas versions diff --app %s --to %s, then pin it with multipaas pin --api-version %s\n", result.ID, appID, result.ID, result.ID)
 		}, nil
 	})
 	appFlag(cmd, &appID)

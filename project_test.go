@@ -368,7 +368,7 @@ func TestVersionsCreatePrintsTheNewVersionAndDoesNotPin(t *testing.T) {
 	}
 	fake.latestGenerator = 11
 	human := fake.run(t, "versions", "create")
-	wantHuman := "Created API version rev-4. Compare it with multipaas versions diff --app app-a-000, then pin it with multipaas pin --api-version rev-4\n"
+	wantHuman := "Created API version rev-4. Compare it with multipaas versions diff --app app-a-000 --to rev-4, then pin it with multipaas pin --api-version rev-4\n"
 	if human.exit != exitOK || human.stdout != wantHuman {
 		t.Fatalf("exit %d: %q", human.exit, human.stdout)
 	}

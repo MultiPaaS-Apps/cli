@@ -1235,6 +1235,7 @@ type OAuthAuthorizationRequest {
 	appTenants: [OAuthAppTenantOption!]!
 	applicationName: String
 	clientName: String!
+	environmentName: String
 }
 
 type OAuthClient {

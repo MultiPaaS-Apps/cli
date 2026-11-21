@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.9.0...v1.9.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* [MP-309] name environment.manage in the envs create comment ([#92](https://github.com/MultiPaaS-Apps/cli/issues/92)) ([f7df586](https://github.com/MultiPaaS-Apps/cli/commit/f7df586628850cfc0102e244bd2b37da62d785d6))
+* [MP-336] the README covers importing into an app-tenant you already have ([#102](https://github.com/MultiPaaS-Apps/cli/issues/102)) ([469928c](https://github.com/MultiPaaS-Apps/cli/commit/469928c934dd9d0f500a42bf5ebc899911d49d53))
+* update the webapp-api schema ([#103](https://github.com/MultiPaaS-Apps/cli/issues/103)) ([d714b46](https://github.com/MultiPaaS-Apps/cli/commit/d714b468063ef220c67f14ffc9b174723e42a081))
+
 ## [1.9.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.8.1...v1.9.0) (2026-11-21)
 
 

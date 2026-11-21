@@ -105,14 +105,16 @@ Each shell, and any agent started from it, uses its own profile, so two shells c
 
 | File | Each line |
 |---|---|
-| `tenants.jsonl` | `{"id": "acct-17", "name": "Acme"}` — one app-tenant |
+| `tenants.jsonl` | `{"id": "acct-17", "name": "Acme"}` — one new app-tenant, or `{"id": "acct-17", "appTenant": "APP_TENANT_ID"}` to import into an app-tenant that already exists |
 | `users.jsonl` | `{"id": "u-9", "email": "pat@example.com", "name": "Pat Lee"}` — `name` is optional |
 | `memberships.jsonl` | `{"user": "u-9", "tenant": "acct-17", "role": "Editor"}` — a role your application declares |
 | `<entity>.jsonl` | `{"id": "s-301", "tenant": "acct-17", "createdBy": "u-9", "createdAt": "2025-03-02T10:00:00Z", "updatedAt": "2025-04-01T08:00:00Z", "deletedAt": null, "fields": {"title": "Q1 review", "parent": "s-300"}}` |
 
 - `id`, `user`, `tenant` and `createdBy` are ids from your old database, and a reference field's value is
-  the id of the row it points at. MultiPaaS gives every tenant and record a new id and remaps the
+  the id of the row it points at. MultiPaaS gives every tenant and record a new id (or, for an `appTenant` row, uses that app-tenant) and remaps the
   references. A user whose email already has an account is linked to that account, which keeps its id and name.
+- A `tenants.jsonl` row with `appTenant` in place of `name` maps the old tenant id onto that app-tenant: an `id` from `multipaas tenants list` or `tenants create`, live and in the import's environment (problem `unknown-app-tenant` otherwise). No app-tenant is created, and the import's records and memberships for that id go into it, as do later imports'. An old tenant id that an earlier import created or mapped is still `already-imported`. An app-tenant takes one old tenant id: a row naming an app-tenant that another row of the import, or an earlier import, already holds under a different old id is refused (problem `duplicate-app-tenant`). If another row of this import holds it, keep that first row, delete the refused row, and change every records and memberships row that names the refused row's old id to name the first row's. If an earlier import holds it (created or mapped), delete the refused row and change every row that names its old id to name the earlier import's old id, which needs no tenants row in this import. Either way the rewrite puts both old tenants' data in one app-tenant. Delete any memberships row it makes a repeat of another (a user with the same role in both would otherwise get problem `duplicate-membership`; a row with a different role stays), then check again. Records that share a unique constraint's values, with each other or with records already in the app-tenant, are reported as `duplicate-unique-key`: merge them, or drop one of each pair and decide which to keep.
+- To import into an app-tenant that already exists, go in this order. First find it, or create it, in the import's environment: `multipaas tenants list --app APP_ID --env ENV_ID --json` or `multipaas tenants create --app APP_ID --env ENV_ID --name NAME --json` (it prints `{"appTenant": {"id", "name"}}`). Then point your app's config at it, before the import: its deploy settings and app identities, and `testAppTenantId` in `multipaas.json` when it is the app-tenant you test in. Then write the `appTenant` row and run the import.
 - An `id` is at most 1,024 bytes in UTF-8 and has no control characters or unpaired surrogates (problems
   `id-too-long` and `id-invalid-character`).
 - A tenant's `name`, a user's `name` and `email`, and every text field value have no NUL character and no unpaired

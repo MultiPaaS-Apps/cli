@@ -366,6 +366,12 @@ func TestVersionsCreatePrintsTheNewVersionAndDoesNotPin(t *testing.T) {
 	if saved := readProjectForTest(t); saved.APIVersion != "rev-2" {
 		t.Fatalf("apiVersion %q, want rev-2 unchanged", saved.APIVersion)
 	}
+	fake.latestGenerator = 11
+	human := fake.run(t, "versions", "create")
+	wantHuman := "Created API version rev-4. Compare it with multipaas versions diff --app app-a-000, then pin it with multipaas pin --api-version rev-4\n"
+	if human.exit != exitOK || human.stdout != wantHuman {
+		t.Fatalf("exit %d: %q", human.exit, human.stdout)
+	}
 }
 
 func TestVersionsCreateWithNoVersionIsRefusedNoAPIVersion(t *testing.T) {
@@ -380,7 +386,7 @@ func TestVersionsCreateOnTheLatestGeneratorIsRefusedAlreadyLatest(t *testing.T) 
 }
 
 func TestVersionsListShowsTheGeneratorAndTheUpgradeHint(t *testing.T) {
-	const hint = "Newer API features are available: run multipaas versions create"
+	const hint = "Newer API features are available: run multipaas versions create --app app-a-000"
 	fake := projectFake(t)
 	fake.revisions["app-a-000"] = 2
 	fake.generators["app-a-000"] = []int{8, 9}
@@ -405,7 +411,7 @@ func TestVersionsListShowsTheGeneratorAndTheUpgradeHint(t *testing.T) {
 }
 
 func TestVersionsDiffSaysWhetherAnUpgradeIsAvailable(t *testing.T) {
-	const hint = "Newer API features are available: run multipaas versions create"
+	const hint = "Newer API features are available: run multipaas versions create --app app-a-000"
 	fake := projectFake(t)
 	fake.revisions["app-a-000"] = 2
 	fake.generators["app-a-000"] = []int{9, 9}

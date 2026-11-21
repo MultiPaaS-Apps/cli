@@ -152,7 +152,7 @@ func versionsList(command commandFunc) *cobra.Command {
 				return r.ID + "\t" + r.CreatedAt + "\t" + strconv.Itoa(r.GeneratorVersion) + "\t" + map[bool]string{true: "pinned"}[r.Pinned]
 			})
 			if len(list) > 0 && latest > list[0].GeneratorVersion {
-				fmt.Fprintln(out, upgradeHint)
+				fmt.Fprintln(out, upgradeHint(appID))
 			}
 		}, err
 	})
@@ -207,7 +207,7 @@ func versionsDiff(command commandFunc) *cobra.Command {
 			return nil, nil, err
 		}
 		result := versionsDiffResult{From: from, To: to, versionDiff: diffed.ApiSchemaDiff, UpgradeAvailable: latest > list[0].GeneratorVersion}
-		return result, func(out io.Writer) { printVersionsDiff(out, result) }, nil
+		return result, func(out io.Writer) { printVersionsDiff(out, result, appID) }, nil
 	})
 	appFlag(cmd, &appID)
 	cmd.Flags().StringVar(&from, "from", "", "the API version to compare from (default: multipaas.json's apiVersion)")
@@ -216,7 +216,7 @@ func versionsDiff(command commandFunc) *cobra.Command {
 }
 
 // printVersionsDiff prints each kind of change under its own heading, or that there are none.
-func printVersionsDiff(out io.Writer, diff versionsDiffResult) {
+func printVersionsDiff(out io.Writer, diff versionsDiffResult, appID string) {
 	fmt.Fprintf(out, "API version %s to %s\n", diff.From, diff.To)
 	sections := []struct {
 		heading string
@@ -237,7 +237,7 @@ func printVersionsDiff(out io.Writer, diff versionsDiffResult) {
 		fmt.Fprintln(out, "No changes.")
 	}
 	if diff.UpgradeAvailable {
-		fmt.Fprintln(out, "\n"+upgradeHint)
+		fmt.Fprintln(out, "\n"+upgradeHint(appID))
 	}
 }
 
@@ -261,7 +261,7 @@ func versionsCreate(command commandFunc) *cobra.Command {
 		}
 		result := versionsCreateResult{ID: created.CreateModelRevision.Id, CreatedAt: created.CreateModelRevision.CreatedAt, GeneratorVersion: created.CreateModelRevision.GeneratorVersion}
 		return result, func(out io.Writer) {
-			fmt.Fprintf(out, "Created API version %s. Compare it with multipaas versions diff, then pin it with multipaas pin --api-version %s\n", result.ID, result.ID)
+			fmt.Fprintf(out, "Created API version %s. Compare it with multipaas versions diff --app %s, then pin it with multipaas pin --api-version %s\n", result.ID, appID, result.ID)
 		}, nil
 	})
 	appFlag(cmd, &appID)
@@ -316,8 +316,10 @@ func schemaPull(command commandFunc) *cobra.Command {
 	return cmd
 }
 
-// upgradeHint is printed when the platform can mint a version with newer features than the newest one.
-const upgradeHint = "Newer API features are available: run multipaas versions create"
+// upgradeHint is printed when the platform can mint a version of appID with newer features than its newest one.
+func upgradeHint(appID string) string {
+	return "Newer API features are available: run multipaas versions create --app " + appID
+}
 
 // latestGenerator is the generator a version of appID minted now would use.
 func (s *session) latestGenerator(ctx context.Context, appID string) (int, error) {

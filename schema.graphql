@@ -540,6 +540,15 @@ input DeleteInvitationInput {
 	invitationId: ID!
 }
 
+input DeleteRecordInput {
+	entityId: ID!
+	recordId: ID!
+}
+
+input DeleteUserInput {
+	id: ID!
+}
+
 input DenyOAuthAuthorizationInput {
 	clientId: ID!
 	environment: ID
@@ -932,7 +941,13 @@ type Mutation {
 	): Client! @deprecated(reason: "Use deleteClient.")
 	deactivateUser(
 		input: DeactivateUserInput!
-	): User!
+	): User! @deprecated(reason: "Use deleteUser.")
+	deleteAccessGroup(
+		id: ID!
+	): AccessGroup!
+	deleteAppIdentity(
+		id: ID!
+	): AppIdentity!
 	deleteAppTenant(
 		input: DeleteAppTenantInput!
 	): AppTenant!
@@ -942,21 +957,60 @@ type Mutation {
 	deleteClient(
 		input: DeleteClientInput!
 	): Client!
+	deleteClientGroup(
+		id: ID!
+	): ClientGroup!
+	deleteClientRole(
+		id: ID!
+	): ClientRole!
+	deleteConstraint(
+		constraintId: ID!
+	): Constraint!
 """
 Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
 """
 	deleteDataImport(
 		importId: ID!
 	): DataImport!
+	deleteDeployer(
+		id: ID!
+	): Deployer!
+	deleteEntity(
+		entityId: ID!
+	): Entity!
+	deleteEnumType(
+		enumTypeId: ID!
+	): EnumType!
 	deleteEnvironment(
 		input: DeleteEnvironmentInput!
 	): Environment!
+	deleteField(
+		fieldId: ID!
+	): Field!
 """
 Marks an open invitation deleted: its link stops working and sign-in no longer accepts it. Nothing is removed.
 """
 	deleteInvitation(
 		input: DeleteInvitationInput!
 	): ApplicationInvitation!
+	deleteOAuthClient(
+		id: ID!
+	): OAuthClient!
+	deletePlatformGroup(
+		id: ID!
+	): PlatformGroup!
+	deletePlatformRole(
+		id: ID!
+	): PlatformRole!
+	deleteRecord(
+		input: DeleteRecordInput!
+	): Record!
+	deleteRole(
+		id: ID!
+	): Role!
+	deleteUser(
+		input: DeleteUserInput!
+	): User!
 	denyOAuthAuthorization(
 		input: DenyOAuthAuthorizationInput!
 	): OAuthRedirect!
@@ -1022,46 +1076,46 @@ Registers a file for a record's file field and signs its upload. Write the retur
 	): ApplicationInvitation!
 	retireAccessGroup(
 		id: ID!
-	): AccessGroup!
+	): AccessGroup! @deprecated(reason: "Use deleteAccessGroup.")
 	retireAppIdentity(
 		id: ID!
-	): AppIdentity!
+	): AppIdentity! @deprecated(reason: "Use deleteAppIdentity.")
 	retireClientGroup(
 		id: ID!
-	): ClientGroup!
+	): ClientGroup! @deprecated(reason: "Use deleteClientGroup.")
 	retireClientRole(
 		id: ID!
-	): ClientRole!
+	): ClientRole! @deprecated(reason: "Use deleteClientRole.")
 	retireConstraint(
 		constraintId: ID!
-	): Constraint!
+	): Constraint! @deprecated(reason: "Use deleteConstraint.")
 	retireDeployer(
 		id: ID!
-	): Deployer!
+	): Deployer! @deprecated(reason: "Use deleteDeployer.")
 	retireEntity(
 		entityId: ID!
-	): Entity!
+	): Entity! @deprecated(reason: "Use deleteEntity.")
 	retireEnumType(
 		enumTypeId: ID!
-	): EnumType!
+	): EnumType! @deprecated(reason: "Use deleteEnumType.")
 	retireField(
 		fieldId: ID!
-	): Field!
+	): Field! @deprecated(reason: "Use deleteField.")
 	retireOAuthClient(
 		id: ID!
-	): OAuthClient!
+	): OAuthClient! @deprecated(reason: "Use deleteOAuthClient.")
 	retirePlatformGroup(
 		id: ID!
-	): PlatformGroup!
+	): PlatformGroup! @deprecated(reason: "Use deletePlatformGroup.")
 	retirePlatformRole(
 		id: ID!
-	): PlatformRole!
+	): PlatformRole! @deprecated(reason: "Use deletePlatformRole.")
 	retireRecord(
 		input: RetireRecordInput!
-	): Record!
+	): Record! @deprecated(reason: "Use deleteRecord.")
 	retireRole(
 		id: ID!
-	): Role!
+	): Role! @deprecated(reason: "Use deleteRole.")
 	revokeAppIdentitySecret(
 		id: ID!
 	): AppIdentity!
@@ -1623,9 +1677,10 @@ type RecordShare implements AccessGrant{
 type RecordVersion {
 	current: Boolean!
 	data: JSON!
+	deletedAt: DateTime
 	files: [RecordFile!]!
 	id: ID!
-	retiredAt: DateTime
+	retiredAt: DateTime @deprecated(reason: "Use deletedAt.")
 	versionedAt: DateTime!
 }
 

@@ -320,7 +320,7 @@ func TestVersionsDiffComparesThePinWithTheNewest(t *testing.T) {
 	fake.revisions["app-a-000"] = 3
 	fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--api-version", "rev-1", "--json")
 	got := fake.run(t, "versions", "diff", "--json")
-	want := `{"from":"rev-1","to":"rev-3","breaking":[{"type":"FIELD_REMOVED","description":"rev-1 to rev-3"}],"dangerous":[],"added":[{"type":"FIELD_ADDED","description":"rev-1 to rev-3"}]}`
+	want := `{"from":"rev-1","to":"rev-3","breaking":[{"type":"FIELD_REMOVED","description":"rev-1 to rev-3"}],"dangerous":[],"added":[{"type":"FIELD_ADDED","description":"rev-1 to rev-3"}],"upgradeAvailable":false}`
 	if compact(got.stdout) != want {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
@@ -351,4 +351,88 @@ func TestVersionsDiffWithoutAPinIsRefusedNotPinned(t *testing.T) {
 	fake := projectFake(t)
 	fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--json")
 	assertFailure(t, fake.run(t, "versions", "diff", "--json"), exitRefused, "NOT_PINNED")
+}
+
+func TestVersionsCreatePrintsTheNewVersionAndDoesNotPin(t *testing.T) {
+	fake := projectFake(t)
+	fake.revisions["app-a-000"] = 2
+	fake.generators["app-a-000"] = []int{9, 9}
+	fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--json")
+	got := fake.run(t, "versions", "create", "--json")
+	want := `{"id":"rev-3","createdAt":"2026-10-11T00:00:00.000Z","generatorVersion":10}`
+	if got.exit != exitOK || compact(got.stdout) != want {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if saved := readProjectForTest(t); saved.APIVersion != "rev-2" {
+		t.Fatalf("apiVersion %q, want rev-2 unchanged", saved.APIVersion)
+	}
+	fake.latestGenerator = 11
+	human := fake.run(t, "versions", "create")
+	wantHuman := "Created API version rev-4. Compare it with multipaas versions diff --app app-a-000 --to rev-4, then pin it with multipaas pin --api-version rev-4\n"
+	if human.exit != exitOK || human.stdout != wantHuman {
+		t.Fatalf("exit %d: %q", human.exit, human.stdout)
+	}
+}
+
+func TestVersionsCreateWithNoVersionIsRefusedNoAPIVersion(t *testing.T) {
+	fake := projectFake(t)
+	assertFailure(t, fake.run(t, "versions", "create", "--app", "app-a-000", "--json"), exitRefused, "NO_API_VERSION")
+}
+
+func TestVersionsCreateOnTheLatestGeneratorIsRefusedAlreadyLatest(t *testing.T) {
+	fake := projectFake(t)
+	fake.revisions["app-a-000"] = 2
+	assertFailure(t, fake.run(t, "versions", "create", "--app", "app-a-000", "--json"), exitRefused, "ALREADY_LATEST")
+}
+
+func TestVersionsListShowsTheGeneratorAndTheUpgradeHint(t *testing.T) {
+	const hint = "Newer API features are available: run multipaas versions create --app app-a-000"
+	fake := projectFake(t)
+	fake.revisions["app-a-000"] = 2
+	fake.generators["app-a-000"] = []int{8, 9}
+	got := fake.run(t, "versions", "list", "--app", "app-a-000")
+	lines := strings.Split(strings.TrimSuffix(got.stdout, "\n"), "\n")
+	if got.exit != exitOK || len(lines) != 4 ||
+		!reflect.DeepEqual(strings.Fields(lines[0]), []string{"ID", "CREATED", "GENERATOR", "PINNED"}) ||
+		!reflect.DeepEqual(strings.Fields(lines[1]), []string{"rev-2", "2026-10-11T00:00:00.000Z", "9"}) ||
+		!reflect.DeepEqual(strings.Fields(lines[2]), []string{"rev-1", "2026-10-11T00:00:00.000Z", "8"}) ||
+		lines[3] != hint {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	var listed []map[string]any
+	decode(t, fake.run(t, "versions", "list", "--app", "app-a-000", "--json").stdout, &listed)
+	if len(listed) != 2 || listed[0]["generatorVersion"] != float64(9) || listed[1]["generatorVersion"] != float64(8) {
+		t.Fatalf("listed %+v", listed)
+	}
+	fake.generators["app-a-000"] = []int{8, 10}
+	if got = fake.run(t, "versions", "list", "--app", "app-a-000"); got.exit != exitOK || strings.Contains(got.stdout, hint) {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+}
+
+func TestVersionsDiffSaysWhetherAnUpgradeIsAvailable(t *testing.T) {
+	const hint = "Newer API features are available: run multipaas versions create --app app-a-000"
+	fake := projectFake(t)
+	fake.revisions["app-a-000"] = 2
+	fake.generators["app-a-000"] = []int{9, 9}
+	args := []string{"versions", "diff", "--app", "app-a-000", "--from", "rev-1"}
+	behind := fake.run(t, append(args, "--json")...)
+	if behind.exit != exitOK || !strings.HasSuffix(compact(behind.stdout), `"upgradeAvailable":true}`) {
+		t.Fatalf("exit %d: %s", behind.exit, behind.stdout)
+	}
+	if human := fake.run(t, args...); !strings.HasSuffix(human.stdout, "\n\n"+hint+"\n") {
+		t.Fatalf("human output %q", human.stdout)
+	}
+	fake.generators["app-a-000"] = []int{9, 10}
+	current := fake.run(t, append(args, "--json")...)
+	if current.exit != exitOK || !strings.HasSuffix(compact(current.stdout), `"upgradeAvailable":false}`) {
+		t.Fatalf("exit %d: %s", current.exit, current.stdout)
+	}
+	if human := fake.run(t, args...); strings.Contains(human.stdout, hint) {
+		t.Fatalf("human output %q", human.stdout)
+	}
+	older := fake.run(t, "versions", "diff", "--app", "app-a-000", "--from", "rev-2", "--to", "rev-1", "--json")
+	if older.exit != exitOK || !strings.HasSuffix(compact(older.stdout), `"upgradeAvailable":false}`) {
+		t.Fatalf("exit %d: %s", older.exit, older.stdout)
+	}
 }

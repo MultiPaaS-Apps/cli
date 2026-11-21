@@ -912,6 +912,7 @@ type Mutation {
 	createField(
 		input: CreateFieldInput!
 	): Field!
+	createModelRevision: ModelRevision!
 	createOAuthClient(
 		input: CreateOAuthClientInput!
 	): OAuthClient!
@@ -1437,6 +1438,7 @@ type Query {
 		page: PageInput!
 		where: InvitationFilter
 	): ApplicationInvitationPage!
+	latestGeneratorVersion: Int!
 	me: User
 	members(
 		appTenantId: ID

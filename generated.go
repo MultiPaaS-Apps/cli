@@ -1869,6 +1869,32 @@ type CreateFieldResponse struct {
 // GetCreateField returns CreateFieldResponse.CreateField, and is useful for accessing the field via an interface.
 func (v *CreateFieldResponse) GetCreateField() CreateFieldCreateField { return v.CreateField }
 
+// CreateModelRevisionCreateModelRevision includes the requested fields of the GraphQL type ModelRevision.
+type CreateModelRevisionCreateModelRevision struct {
+	Id               string `json:"id"`
+	CreatedAt        string `json:"createdAt"`
+	GeneratorVersion int    `json:"generatorVersion"`
+}
+
+// GetId returns CreateModelRevisionCreateModelRevision.Id, and is useful for accessing the field via an interface.
+func (v *CreateModelRevisionCreateModelRevision) GetId() string { return v.Id }
+
+// GetCreatedAt returns CreateModelRevisionCreateModelRevision.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateModelRevisionCreateModelRevision) GetCreatedAt() string { return v.CreatedAt }
+
+// GetGeneratorVersion returns CreateModelRevisionCreateModelRevision.GeneratorVersion, and is useful for accessing the field via an interface.
+func (v *CreateModelRevisionCreateModelRevision) GetGeneratorVersion() int { return v.GeneratorVersion }
+
+// CreateModelRevisionResponse is returned by CreateModelRevision on success.
+type CreateModelRevisionResponse struct {
+	CreateModelRevision CreateModelRevisionCreateModelRevision `json:"createModelRevision"`
+}
+
+// GetCreateModelRevision returns CreateModelRevisionResponse.CreateModelRevision, and is useful for accessing the field via an interface.
+func (v *CreateModelRevisionResponse) GetCreateModelRevision() CreateModelRevisionCreateModelRevision {
+	return v.CreateModelRevision
+}
+
 // CreateOAuthClientCreateOAuthClient includes the requested fields of the GraphQL type OAuthClient.
 type CreateOAuthClientCreateOAuthClient struct {
 	OAuthClientParts `json:"-"`
@@ -4732,6 +4758,16 @@ func (v *ImportInvitationsResponse) GetInvitations() ImportInvitationsInvitation
 	return v.Invitations
 }
 
+// LatestGeneratorVersionResponse is returned by LatestGeneratorVersion on success.
+type LatestGeneratorVersionResponse struct {
+	LatestGeneratorVersion int `json:"latestGeneratorVersion"`
+}
+
+// GetLatestGeneratorVersion returns LatestGeneratorVersionResponse.LatestGeneratorVersion, and is useful for accessing the field via an interface.
+func (v *LatestGeneratorVersionResponse) GetLatestGeneratorVersion() int {
+	return v.LatestGeneratorVersion
+}
+
 // LatestModelRevisionModelRevisionsModelRevisionPage includes the requested fields of the GraphQL type ModelRevisionPage.
 type LatestModelRevisionModelRevisionsModelRevisionPage struct {
 	Items []LatestModelRevisionModelRevisionsModelRevisionPageItemsModelRevision `json:"items"`
@@ -4804,8 +4840,9 @@ func (v *ModelRevisionsModelRevisionsModelRevisionPage) GetPageInfo() ModelRevis
 
 // ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision includes the requested fields of the GraphQL type ModelRevision.
 type ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision struct {
-	Id        string `json:"id"`
-	CreatedAt string `json:"createdAt"`
+	Id               string `json:"id"`
+	CreatedAt        string `json:"createdAt"`
+	GeneratorVersion int    `json:"generatorVersion"`
 }
 
 // GetId returns ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision.Id, and is useful for accessing the field via an interface.
@@ -4814,6 +4851,11 @@ func (v *ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision) GetId(
 // GetCreatedAt returns ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision.CreatedAt, and is useful for accessing the field via an interface.
 func (v *ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision) GetCreatedAt() string {
 	return v.CreatedAt
+}
+
+// GetGeneratorVersion returns ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision.GeneratorVersion, and is useful for accessing the field via an interface.
+func (v *ModelRevisionsModelRevisionsModelRevisionPageItemsModelRevision) GetGeneratorVersion() int {
+	return v.GeneratorVersion
 }
 
 // ModelRevisionsModelRevisionsModelRevisionPagePageInfo includes the requested fields of the GraphQL type PageInfo.
@@ -10121,6 +10163,38 @@ func CreateField(
 	return data_, err_
 }
 
+// The mutation executed by CreateModelRevision.
+const CreateModelRevision_Operation = `
+mutation CreateModelRevision {
+	createModelRevision {
+		id
+		createdAt
+		generatorVersion
+	}
+}
+`
+
+func CreateModelRevision(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *CreateModelRevisionResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateModelRevision",
+		Query:  CreateModelRevision_Operation,
+	}
+
+	data_ = &CreateModelRevisionResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by CreateOAuthClient.
 const CreateOAuthClient_Operation = `
 mutation CreateOAuthClient ($input: CreateOAuthClientInput!) {
@@ -11275,6 +11349,34 @@ func ImportInvitations(
 	return data_, err_
 }
 
+// The query executed by LatestGeneratorVersion.
+const LatestGeneratorVersion_Operation = `
+query LatestGeneratorVersion {
+	latestGeneratorVersion
+}
+`
+
+func LatestGeneratorVersion(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *LatestGeneratorVersionResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "LatestGeneratorVersion",
+		Query:  LatestGeneratorVersion_Operation,
+	}
+
+	data_ = &LatestGeneratorVersionResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by LatestModelRevision.
 const LatestModelRevision_Operation = `
 query LatestModelRevision {
@@ -11346,6 +11448,7 @@ query ModelRevisions ($page: PageInput!) {
 		items {
 			id
 			createdAt
+			generatorVersion
 		}
 		pageInfo {
 			hasMore

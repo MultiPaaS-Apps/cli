@@ -58,6 +58,8 @@ type fakeMultiPaaS struct {
 	constraints                  map[string][]map[string]any // entity id -> its constraints
 	revisions                    map[string]int              // app id -> how many revisions its model has
 	operations                   []string                    // the name of every operation received, in order
+	generators                   map[string][]int            // app id -> the generator of rev-1..rev-N; a missing entry means 10 for every revision
+	latestGenerator              int                         // the newest generator the platform has; 0 means 10
 	mutations                    []map[string]any            // the variables of every model mutation received
 	noModelEdit                  bool                        // the signed-in user lacks model.edit
 	refuseChange                 [2]string                   // a model mutation is refused with this code and message
@@ -165,7 +167,7 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
 		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envsMinted: map[string]int{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{}, deployerTokens: map[string]bool{},
-		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{},
+		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{}, generators: map[string][]int{},
 		records: map[string][]map[string]any{},
 		imports: map[string]*fakeImport{}, uploads: map[string]fakeUpload{}, statusQueue: map[string][]string{},
 	}
@@ -470,6 +472,14 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			return
 		}
 		writeData(w, map[string]any{"modelRevisions": pageOf(f.revisionRows(appOf(parts)), variables)})
+	case "LatestGeneratorVersion":
+		if appOf(parts) == "" {
+			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+			return
+		}
+		writeData(w, map[string]any{"latestGeneratorVersion": cmp.Or(f.latestGenerator, 10)})
+	case "CreateModelRevision":
+		f.createRevision(w, appOf(parts))
 	case "ApiSchema":
 		var n int
 		revisionID, _ := variables["revisionId"].(string)
@@ -737,6 +747,16 @@ func graphQLRefusal(w http.ResponseWriter, code, message string) {
 	})
 }
 
+// graphQLRefusalWith is a refusal whose extensions carry more than the code.
+func graphQLRefusalWith(w http.ResponseWriter, code, message string, extensions map[string]any) {
+	merged := map[string]any{"code": code}
+	maps.Copy(merged, extensions)
+	writeJSONResponse(w, http.StatusOK, map[string]any{
+		"data":   nil,
+		"errors": []map[string]any{{"message": message, "extensions": merged}},
+	})
+}
+
 // graphQLValidation is a VALIDATION refusal naming the fields that failed, as the server's extensions carry them.
 func graphQLValidation(w http.ResponseWriter, message string, fieldErrors []map[string]any) {
 	writeJSONResponse(w, http.StatusOK, map[string]any{
@@ -853,11 +873,39 @@ func (f *fakeMultiPaaS) hasRevision(app, id string) bool {
 	return err == nil && n >= 1 && n <= f.revisions[app]
 }
 
+// generatorOf is the generator rev-n of app was made with.
+func (f *fakeMultiPaaS) generatorOf(app string, n int) int {
+	if list := f.generators[app]; n >= 1 && n <= len(list) {
+		return list[n-1]
+	}
+	return 10
+}
+
+// createRevision answers createModelRevision as the server does: refused with no version yet or when the newest is on the latest generator, else a new version on the latest.
+func (f *fakeMultiPaaS) createRevision(w http.ResponseWriter, app string) {
+	latest := cmp.Or(f.latestGenerator, 10)
+	switch {
+	case app == "":
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+	case f.revisions[app] == 0:
+		graphQLRefusalWith(w, "CONFLICT", "This application has no API version yet: change its model first.", map[string]any{"reason": "no_api_version"})
+	case f.generatorOf(app, f.revisions[app]) >= latest:
+		graphQLRefusalWith(w, "CONFLICT", "The newest API version already has the latest features.", map[string]any{"reason": "already_latest"})
+	default:
+		for n := len(f.generators[app]); n < f.revisions[app]; n++ {
+			f.generators[app] = append(f.generators[app], f.generatorOf(app, n+1))
+		}
+		f.revisions[app]++
+		f.generators[app] = append(f.generators[app], latest)
+		writeData(w, map[string]any{"createModelRevision": map[string]any{"id": fmt.Sprintf("rev-%d", f.revisions[app]), "createdAt": "2026-10-11T00:00:00.000Z", "generatorVersion": latest}})
+	}
+}
+
 // revisionRows are an app's revisions as modelRevisions lists them, newest first: rev-n down to rev-1.
 func (f *fakeMultiPaaS) revisionRows(app string) []map[string]any {
 	rows := []map[string]any{}
 	for n := f.revisions[app]; n > 0; n-- {
-		rows = append(rows, map[string]any{"id": fmt.Sprintf("rev-%d", n), "createdAt": "2026-10-11T00:00:00.000Z"})
+		rows = append(rows, map[string]any{"id": fmt.Sprintf("rev-%d", n), "createdAt": "2026-10-11T00:00:00.000Z", "generatorVersion": f.generatorOf(app, n)})
 	}
 	return rows
 }

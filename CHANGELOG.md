@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.8.1...v1.9.0) (2026-11-21)
+
+
+### Features
+
+* [MP-304] say "delete" in every CLI command that deletes ([#100](https://github.com/MultiPaaS-Apps/cli/issues/100)) ([76c3705](https://github.com/MultiPaaS-Apps/cli/commit/76c37058a7d5fbef47f3b49713e04f0a317d8a47))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#98](https://github.com/MultiPaaS-Apps/cli/issues/98)) ([b0b7f1a](https://github.com/MultiPaaS-Apps/cli/commit/b0b7f1a9ea19f98cc4359effb59ce6fb5ccfc0cf))
+
 ## [1.8.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.8.0...v1.8.1) (2026-11-19)
 
 

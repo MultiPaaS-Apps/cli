@@ -14,7 +14,8 @@ import (
 // application.manage_oauth on the application; role add and remove also need access.manage where they act, or access.manage.application with --app-wide.
 func appIdentityCommands(command commandFunc) *cobra.Command {
 	return group("app-identity", "Manage the app's own identities for background jobs",
-		appIdentityList(command), appIdentityCreate(command), appIdentitySecretGroup(command), appIdentityRoleGroup(command), appIdentityRetire(command))
+		appIdentityList(command), appIdentityCreate(command), appIdentitySecretGroup(command), appIdentityRoleGroup(command),
+		appIdentityDelete(command), deprecatedAs(appIdentityRetire(command), "app-identity retire", "app-identity delete"))
 }
 
 func appIdentityList(command commandFunc) *cobra.Command {
@@ -145,6 +146,27 @@ func appIdentitySecretList(command commandFunc) *cobra.Command {
 				}
 				return s.Id + "\t" + s.LastFour + "\t" + s.CreatedAt + "\t" + lastUsed
 			})
+		}, err
+	})
+	cmd.Args = oneID(&clientID)
+	appFlag(cmd, &appID)
+	envFlagFromProject(cmd, &appID, &envID, nil)
+	return cmd
+}
+
+func appIdentityDelete(command commandFunc) *cobra.Command {
+	var appID, envID, clientID string
+	cmd := command("delete <client-id>", "Delete an app identity; its tokens stop working", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var deleted AppIdentityParts
+		err := s.inEnv(ctx, appID, envID, func(client graphql.Client) error {
+			response, err := DeleteAppIdentity(ctx, client, clientID)
+			if err == nil {
+				deleted = response.DeleteAppIdentity.AppIdentityParts
+			}
+			return err
+		})
+		return map[string]any{"appIdentity": deleted}, func(out io.Writer) {
+			fmt.Fprintf(out, "Deleted %s; its tokens stop working now.\n", deleted.Name)
 		}, err
 	})
 	cmd.Args = oneID(&clientID)

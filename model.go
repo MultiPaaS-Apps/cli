@@ -54,7 +54,7 @@ func modelCommands(command commandFunc) []*cobra.Command {
 	fieldType := option{flag: "type", field: "type", usage: "text, number, boolean, timestamp, enum (needs --enum-type), reference, related or file; --list makes a text or enum field hold a list"}
 	return []*cobra.Command{
 		group("model", "An application's model", modelShow(command)),
-		group("entity", "Declare, change and retire entities",
+		group("entity", "Declare, change and delete entities",
 			change(command, "create", "Declare an entity", "entity", createEntity,
 				option{flag: "name", field: "name", usage: "the entity's name", required: true},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its GraphQL type name (default: from the name), not one the generated API has for itself, such as Query, User or File"},
@@ -66,9 +66,10 @@ func modelCommands(command commandFunc) []*cobra.Command {
 				option{flag: "plural-name", field: "graphqlPluralName", usage: "its new GraphQL plural name"},
 				option{flag: "managed", field: "managed", usage: "whether the entity is managed", kind: "bool"},
 				option{flag: "share-with-tenant", field: "shareNewRecordsWithTenant", usage: "share each new record with everyone in its app-tenant: view, edit, or off to stop", kind: "level"}),
-			change(command, "retire", "Retire an entity", "entity", retireEntity, entityID),
+			change(command, "delete", "Delete an entity", "entity", deleteEntity, entityID),
+			deprecatedAs(change(command, "retire", "Retire an entity", "entity", retireEntity, entityID), "entity retire", "entity delete"),
 		),
-		group("enum", "Declare, change and retire enum types",
+		group("enum", "Declare, change and delete enum types",
 			change(command, "create", "Declare an enum type", "enumType", createEnumType,
 				option{flag: "name", field: "name", usage: "the enum's name", required: true},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its GraphQL type name (default: from the name), not one the generated API has for itself, such as Query, User or File"},
@@ -78,9 +79,10 @@ func modelCommands(command commandFunc) []*cobra.Command {
 				option{flag: "name", field: "name", usage: "the enum's new name"},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its new GraphQL type name, not one the generated API has for itself, such as Query, User or File"},
 				withUsage(enumValues, enumValues.usage+". Replaces the whole list: a value left out is removed (refused while a record or a field default holds it), and a name not given goes back to its default")),
-			change(command, "retire", "Retire an enum type", "enumType", retireEnumType, enumID),
+			change(command, "delete", "Delete an enum type", "enumType", deleteEnumType, enumID),
+			deprecatedAs(change(command, "retire", "Retire an enum type", "enumType", retireEnumType, enumID), "enum retire", "enum delete"),
 		),
-		group("field", "Declare, change and retire fields",
+		group("field", "Declare, change and delete fields",
 			change(command, "add", "Add a field to an entity", "field", createField, append([]option{
 				{flag: "entity", field: "entityId", usage: "the entity's id (from model show)", required: true},
 				{flag: fieldType.flag, field: fieldType.field, usage: fieldType.usage, required: true},
@@ -91,14 +93,17 @@ func modelCommands(command commandFunc) []*cobra.Command {
 				{flag: "clear-default", field: "defaultValue", usage: "remove the field's default (refused while the field is not null)", kind: "null", excludes: "default"},
 				{flag: "nullable", field: "notNull", usage: "the field may be empty again", kind: "false", excludes: "not-null"},
 			}, fieldOptions...)...),
-			change(command, "retire", "Retire a field", "field", retireField, fieldID),
+			change(command, "delete", "Delete a field", "field", deleteField, fieldID),
+			deprecatedAs(change(command, "retire", "Retire a field", "field", retireField, fieldID), "field retire", "field delete"),
 		),
-		group("constraint", "Declare and retire unique constraints",
+		group("constraint", "Declare and delete unique constraints",
 			change(command, "add", "Make a set of an entity's fields unique together", "constraint", createConstraint,
 				option{flag: "entity", field: "entityId", usage: "the entity's id (from model show)", required: true},
 				option{flag: "fields", field: "fieldIds", usage: "the field ids, comma-separated", kind: "list", required: true}),
-			change(command, "retire", "Retire a constraint", "constraint", retireConstraint,
+			change(command, "delete", "Delete a constraint", "constraint", deleteConstraint,
 				option{flag: "id", field: "constraintId", usage: "the constraint's id (from model show)", required: true}),
+			deprecatedAs(change(command, "retire", "Retire a constraint", "constraint", retireConstraint,
+				option{flag: "id", field: "constraintId", usage: "the constraint's id (from model show)", required: true}), "constraint retire", "constraint delete"),
 		),
 	}
 }
@@ -243,6 +248,14 @@ func updateEntity(ctx context.Context, client graphql.Client, input map[string]a
 	return &updated.UpdateEntity.EntityParts, nil
 }
 
+func deleteEntity(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
+	deleted, err := DeleteEntity(ctx, client, input["entityId"].(string))
+	if err != nil {
+		return nil, err
+	}
+	return &deleted.DeleteEntity.EntityParts, nil
+}
+
 func retireEntity(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
 	retired, err := RetireEntity(ctx, client, input["entityId"].(string))
 	if err != nil {
@@ -265,6 +278,14 @@ func updateEnumType(ctx context.Context, client graphql.Client, input map[string
 		return nil, err
 	}
 	return &updated.UpdateEnumType.EnumTypeParts, nil
+}
+
+func deleteEnumType(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
+	deleted, err := DeleteEnumType(ctx, client, input["enumTypeId"].(string))
+	if err != nil {
+		return nil, err
+	}
+	return &deleted.DeleteEnumType.EnumTypeParts, nil
 }
 
 func retireEnumType(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
@@ -326,6 +347,14 @@ func updatedFieldShape(ctx context.Context, client graphql.Client, input map[str
 	return current.Field.Type, current.Field.List, nil
 }
 
+func deleteField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
+	deleted, err := DeleteField(ctx, client, input["fieldId"].(string))
+	if err != nil {
+		return nil, err
+	}
+	return &deleted.DeleteField.FieldParts, nil
+}
+
 func retireField(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
 	retired, err := RetireField(ctx, client, input["fieldId"].(string))
 	if err != nil {
@@ -380,6 +409,14 @@ func createConstraint(ctx context.Context, client graphql.Client, input map[stri
 		return nil, err
 	}
 	return &created.CreateConstraint.ConstraintParts, nil
+}
+
+func deleteConstraint(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {
+	deleted, err := DeleteConstraint(ctx, client, input["constraintId"].(string))
+	if err != nil {
+		return nil, err
+	}
+	return &deleted.DeleteConstraint.ConstraintParts, nil
 }
 
 func retireConstraint(ctx context.Context, client graphql.Client, input map[string]any) (row, error) {

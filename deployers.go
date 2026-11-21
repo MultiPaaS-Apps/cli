@@ -13,7 +13,8 @@ import (
 // access.manage.application on the application.
 func deployerCommands(command commandFunc) *cobra.Command {
 	return group("deployers", "Manage the credentials CI uses to create and remove test environments",
-		deployersList(command), deployersCreate(command), deployersRetire(command))
+		deployersList(command), deployersCreate(command), deployersDelete(command),
+		deprecatedAs(deployersRetire(command), "deployers retire", "deployers delete"))
 }
 
 func deployersList(command commandFunc) *cobra.Command {
@@ -57,6 +58,25 @@ func deployersCreate(command commandFunc) *cobra.Command {
 	appFlag(cmd, &appID)
 	cmd.Flags().StringVar(&name, "name", "", "the deployer's name")
 	_ = cmd.MarkFlagRequired("name")
+	return cmd
+}
+
+func deployersDelete(command commandFunc) *cobra.Command {
+	var appID, id string
+	cmd := command("delete", "Delete a deployer; its tokens stop working at once", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		deletedID := id
+		err := s.inApp(ctx, appID, func(client graphql.Client) error {
+			response, err := DeleteDeployer(ctx, client, id)
+			if err == nil {
+				deletedID = response.DeleteDeployer.Id
+			}
+			return err
+		})
+		return map[string]any{"deleted": true, "id": deletedID}, func(out io.Writer) { fmt.Fprintf(out, "Deleted deployer %s\n", deletedID) }, err
+	})
+	appFlag(cmd, &appID)
+	cmd.Flags().StringVar(&id, "id", "", "the deployer's client ID, from deployers list")
+	_ = cmd.MarkFlagRequired("id")
 	return cmd
 }
 

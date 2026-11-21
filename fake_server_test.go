@@ -57,6 +57,7 @@ type fakeMultiPaaS struct {
 	enumTypes                    map[string][]map[string]any // app id -> its enum types
 	constraints                  map[string][]map[string]any // entity id -> its constraints
 	revisions                    map[string]int              // app id -> how many revisions its model has
+	operations                   []string                    // the name of every operation received, in order
 	mutations                    []map[string]any            // the variables of every model mutation received
 	noModelEdit                  bool                        // the signed-in user lacks model.edit
 	refuseChange                 [2]string                   // a model mutation is refused with this code and message
@@ -383,6 +384,7 @@ func (f *fakeMultiPaaS) answerRaw(w http.ResponseWriter, query string, variables
 // answer serves the operations the CLI sends, shaped as the schema shapes them.
 func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, variables map[string]any) {
 	parts := strings.Split(scope, "/")
+	f.operations = append(f.operations, operation)
 	switch operation {
 	case "Me":
 		var name any = "Dev"
@@ -460,7 +462,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			items = append(items, map[string]any{"id": fmt.Sprintf("rev-%d", n)})
 		}
 		writeData(w, map[string]any{"modelRevisions": map[string]any{"items": items}})
-	case "CreateEntity", "UpdateEntity", "RetireEntity", "CreateEnumType", "UpdateEnumType", "RetireEnumType", "CreateField", "UpdateField", "RetireField", "CreateConstraint", "RetireConstraint":
+	case "CreateEntity", "UpdateEntity", "RetireEntity", "DeleteEntity", "CreateEnumType", "UpdateEnumType", "RetireEnumType", "DeleteEnumType", "CreateField", "UpdateField", "RetireField", "DeleteField", "CreateConstraint", "RetireConstraint", "DeleteConstraint":
 		f.mutateModel(w, operation, parts, variables)
 	case "ModelRevisions":
 		if appOf(parts) == "" {
@@ -548,15 +550,15 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			return
 		}
 		writeData(w, map[string]any{"record": withFiles(f.records[variables["entityId"].(string)][i])})
-	case "CreateRecord", "UpdateRecord", "RetireRecord":
+	case "CreateRecord", "UpdateRecord", "RetireRecord", "DeleteRecord":
 		f.writeRecord(w, operation, parts, variables)
 	case "RequestRecordFileUpload":
 		f.requestRecordFileUpload(w, variables)
 	case "OAuthClients", "CreateOAuthClient", "UpdateOAuthClient":
 		f.manageOAuth(w, operation, parts, variables)
-	case "AppIdentities", "CreateAppIdentity", "CreateAppIdentitySecret", "RevokeAppIdentitySecret", "RetireAppIdentity":
+	case "AppIdentities", "CreateAppIdentity", "CreateAppIdentitySecret", "RevokeAppIdentitySecret", "RetireAppIdentity", "DeleteAppIdentity":
 		f.manageAppIdentity(w, operation, parts, variables)
-	case "Deployers", "CreateDeployer", "RetireDeployer":
+	case "Deployers", "CreateDeployer", "RetireDeployer", "DeleteDeployer":
 		f.manageDeployers(w, operation, variables)
 	case "Roles", "PermissionCatalog", "CreateRole", "UpdateRole", "RoleAssignments", "AssignRole", "UnassignRole":
 		f.manageRoles(w, operation, parts, variables)
@@ -703,7 +705,7 @@ func (f *fakeMultiPaaS) manageDeployers(w http.ResponseWriter, operation string,
 		created := map[string]any{"id": fmt.Sprintf("deployer-%d", f.deployerSeq), "name": variables["input"].(map[string]any)["name"], "lastFour": "abcd", "createdAt": "2026-11-08T00:00:00Z", "lastUsedAt": nil}
 		f.deployers = append(f.deployers, created)
 		writeData(w, map[string]any{"createDeployer": map[string]any{"deployer": created, "secret": "secret-abcd"}})
-	case "RetireDeployer":
+	case "RetireDeployer", "DeleteDeployer":
 		i := slices.IndexFunc(f.deployers, func(d map[string]any) bool { return d["id"] == variables["id"] })
 		if i < 0 {
 			graphQLRefusal(w, "NOT_FOUND", "deployer not found")
@@ -711,7 +713,7 @@ func (f *fakeMultiPaaS) manageDeployers(w http.ResponseWriter, operation string,
 		}
 		retired := f.deployers[i]
 		f.deployers = slices.Delete(f.deployers, i, i+1)
-		writeData(w, map[string]any{"retireDeployer": map[string]any{"id": retired["id"]}})
+		writeData(w, map[string]any{strings.ToLower(operation[:1]) + operation[1:]: map[string]any{"id": retired["id"]}})
 	default:
 		writeData(w, map[string]any{"application": map[string]any{"deployers": f.deployers}})
 	}
@@ -886,7 +888,7 @@ func (f *fakeMultiPaaS) writeRecord(w http.ResponseWriter, operation string, par
 		return
 	}
 	record := maps.Clone(f.records[entity][i])
-	if operation == "RetireRecord" {
+	if operation == "RetireRecord" || operation == "DeleteRecord" {
 		f.records[entity] = slices.Delete(f.records[entity], i, i+1)
 		writeData(w, map[string]any{field: withFiles(record)})
 		return
@@ -1170,7 +1172,7 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 			}
 		}
 		graphQLRefusal(w, "NOT_FOUND", "secret not found")
-	case "RetireAppIdentity":
+	case "RetireAppIdentity", "DeleteAppIdentity":
 		i := byID(variables["id"])
 		if i < 0 {
 			graphQLRefusal(w, "NOT_FOUND", "appIdentity not found")
@@ -1178,7 +1180,7 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		}
 		retired := f.appIdentities[i]
 		f.appIdentities = slices.Delete(f.appIdentities, i, i+1)
-		writeData(w, map[string]any{"retireAppIdentity": retired})
+		writeData(w, map[string]any{strings.ToLower(operation[:1]) + operation[1:]: retired})
 	}
 }
 

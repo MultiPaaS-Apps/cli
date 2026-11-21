@@ -26,7 +26,8 @@ type recordTarget struct {
 // object keyed by field id.
 func recordCommands(command commandFunc) *cobra.Command {
 	return group("records", "Read and write an entity's records in an app-tenant, or the application's app-wide records",
-		recordsList(command), recordGet(command), recordCreate(command), recordUpdate(command), recordRetire(command), recordUpload(command))
+		recordsList(command), recordGet(command), recordCreate(command), recordUpdate(command), recordDelete(command),
+		deprecatedAs(recordRetire(command), "records retire", "records delete"), recordUpload(command))
 }
 
 func recordsList(command commandFunc) *cobra.Command {
@@ -250,6 +251,23 @@ func recordUpdate(command commandFunc) *cobra.Command {
 	cmd.Flags().StringVar(&data, "data", "{}", "the fields to set, as a JSON object keyed by field id (from model show)")
 	cmd.Flags().StringSliceVar(&clear, "clear", nil, "field ids to clear, comma-separated")
 	cmd.Flags().StringVar(&expectedVersion, "expected-version", "", "update only if the record is still at this version, its version from records get or list; otherwise it is refused with CONFLICT and nothing is written")
+	return cmd
+}
+
+func recordDelete(command commandFunc) *cobra.Command {
+	var target recordTarget
+	var id string
+	cmd := command("delete", "Delete a record", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		return s.writeRecord(ctx, target, "{}", func(client graphql.Client, _ json.RawMessage) (RecordParts, error) {
+			deleted, err := DeleteRecord(ctx, client, DeleteRecordInput{EntityId: target.entityID, RecordId: id})
+			if err != nil {
+				return RecordParts{}, err
+			}
+			return deleted.DeleteRecord.RecordParts, nil
+		})
+	})
+	recordFlags(cmd, &target)
+	recordID(cmd, &id)
 	return cmd
 }
 

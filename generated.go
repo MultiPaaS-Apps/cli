@@ -1887,6 +1887,7 @@ func (v *CreateModelRevisionCreateModelRevision) GetGeneratorVersion() int { ret
 
 // CreateModelRevisionResponse is returned by CreateModelRevision on success.
 type CreateModelRevisionResponse struct {
+	// Mint an API version of the current model with the latest generator. Needs model.edit.
 	CreateModelRevision CreateModelRevisionCreateModelRevision `json:"createModelRevision"`
 }
 
@@ -4760,6 +4761,7 @@ func (v *ImportInvitationsResponse) GetInvitations() ImportInvitationsInvitation
 
 // LatestGeneratorVersionResponse is returned by LatestGeneratorVersion on success.
 type LatestGeneratorVersionResponse struct {
+	// The generator a version minted now would use.
 	LatestGeneratorVersion int `json:"latestGeneratorVersion"`
 }
 

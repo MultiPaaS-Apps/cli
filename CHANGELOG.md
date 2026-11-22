@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.11.0...v1.11.1) (2026-11-22)
+
+
+### Bug Fixes
+
+* [MP-337] match the lines that name a record by their app-tenant in the import steps ([#113](https://github.com/MultiPaaS-Apps/cli/issues/113)) ([3677cf4](https://github.com/MultiPaaS-Apps/cli/commit/3677cf49a1342727523cbc73673e6560a2450298))
+
 ## [1.11.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.10.1...v1.11.0) (2026-11-22)
 
 

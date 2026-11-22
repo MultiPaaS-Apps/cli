@@ -159,7 +159,8 @@ func run(args []string, env environment) int {
 		}
 		return nil
 	}
-	tenants.AddCommand(tenantsList, tenantsCreate(command), tenantsDelete(command), tenantsRetire(command))
+	tenants.AddCommand(tenantsList, tenantsCreate(command), tenantsDelete(command), tenantsRetire(command), tenantsInvite(command), tenantsMembers(command),
+		group("invitation", "Change an app-tenant invitation that hasn't been accepted", tenantsInvitationUpdate(command)))
 	root.AddCommand(apps, tenants, envsCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)

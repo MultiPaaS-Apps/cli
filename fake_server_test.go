@@ -102,13 +102,19 @@ type fakeMultiPaaS struct {
 	refuseImport     [2]string              // an import mutation is refused with this code and message
 	refuseRead       [2]string              // a DataImport read is refused with this code and message
 	refuseReadFields []map[string]any       // when set, a refused DataImport read is a VALIDATION refusal naming these fields
-	invitationRows   []map[string]any       // the invitations ImportInvitations lists, filtered by the where it is sent
-	invitationWheres []map[string]any       // the where of every ImportInvitations read
+	invitationRows   []map[string]any       // the invitations ImportInvitations and TenantInvitations list, filtered by the where it is sent
+	invitationWheres []map[string]any       // the where of every ImportInvitations and TenantInvitations read
 	reissued         map[string]any         // what ReissueImportInvitations answers: reissued and skipped
 	failReport       bool                   // GET /report answers HTTP 500
 	reportLines      []map[string]any       // GET /report serves these, one JSON line each
 	statusQueue      map[string][]string    // import id -> the statuses its later DataImport reads answer
 	fileCount        int                    // files registered so far, for part-N and file-N
+
+	members          map[string][]map[string]any // app-tenant id -> its members, newest first
+	refuseInvitation [2]string                   // InviteMember and UpdateInvitation are refused with this code and message
+	refuseTenantRead [2]string                   // TenantInvitations is refused with this code and message
+	invitationSeq    int                         // invitations created so far; ids are never reused
+	emailed          []string                    // the address of every invitation the server would have emailed, in order
 
 	feedback   []map[string]any // the reports submitted, newest last
 	cliVersion string           // X-MultiPaaS-Cli-Version of the latest GraphQL request
@@ -574,8 +580,16 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageRoles(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
-	case "ImportInvitations", "ReissueImportInvitations":
+	case "ImportInvitations", "TenantInvitations", "ReissueImportInvitations":
 		f.importInvitations(w, operation, parts, variables)
+	case "InviteMember", "UpdateInvitation":
+		f.manageInvitations(w, operation, parts, variables)
+	case "TenantMembers":
+		if scope == "" {
+			graphQLRefusal(w, "UNAUTHORIZED", "unauthorized") // requireTenant: no client selected
+			return
+		}
+		writeData(w, map[string]any{"members": pageOf(f.members[fmt.Sprint(variables["appTenantId"])], variables)})
 	case "SubmitFeedback":
 		f.submitFeedback(w, parts, variables)
 	case "FeedbackSetting":

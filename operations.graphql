@@ -706,6 +706,65 @@ mutation ReissueImportInvitations($input: ReissueImportInvitationsInput!) {
   }
 }
 
+fragment InvitationParts on ApplicationInvitation {
+  id
+  email
+  kind
+  status
+  expiresAt
+  roles {
+    id
+    key
+    name
+  }
+  groups {
+    id
+    name
+  }
+}
+
+mutation InviteMember($input: InviteMemberInput!) {
+  inviteMember(input: $input) {
+    ...InvitationParts
+  }
+}
+
+mutation UpdateInvitation($input: UpdateInvitationInput!) {
+  updateInvitation(input: $input) {
+    ...InvitationParts
+  }
+}
+
+query TenantInvitations($page: PageInput!, $where: InvitationFilter!) {
+  invitations(page: $page, where: $where) {
+    items {
+      ...InvitationParts
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
+query TenantMembers($appTenantId: ID!, $page: PageInput!) {
+  members(appTenantId: $appTenantId, page: $page) {
+    items {
+      id
+      createdAt
+      user {
+        id
+        # @genqlient(pointer: true)
+        email
+        # @genqlient(pointer: true)
+        name
+      }
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
 fragment FeedbackParts on Feedback {
   id
   kind

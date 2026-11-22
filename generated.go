@@ -381,6 +381,18 @@ type AppTenantsResponse struct {
 // GetAppTenants returns AppTenantsResponse.AppTenants, and is useful for accessing the field via an interface.
 func (v *AppTenantsResponse) GetAppTenants() AppTenantsAppTenantsAppTenantPage { return v.AppTenants }
 
+type ApplicationInvitationStatus string
+
+const (
+	ApplicationInvitationStatusExpired ApplicationInvitationStatus = "expired"
+	ApplicationInvitationStatusPending ApplicationInvitationStatus = "pending"
+)
+
+var AllApplicationInvitationStatus = []ApplicationInvitationStatus{
+	ApplicationInvitationStatusExpired,
+	ApplicationInvitationStatusPending,
+}
+
 // ApplicationsApplicationsApplicationPage includes the requested fields of the GraphQL type ApplicationPage.
 type ApplicationsApplicationsApplicationPage struct {
 	Items    []ApplicationsApplicationsApplicationPageItemsApplication `json:"items"`
@@ -4759,6 +4771,219 @@ func (v *ImportInvitationsResponse) GetInvitations() ImportInvitationsInvitation
 	return v.Invitations
 }
 
+type InvitationKind string
+
+const (
+	InvitationKindEmail  InvitationKind = "email"
+	InvitationKindImport InvitationKind = "import"
+)
+
+var AllInvitationKind = []InvitationKind{
+	InvitationKindEmail,
+	InvitationKindImport,
+}
+
+// InvitationParts includes the GraphQL fields of ApplicationInvitation requested by the fragment InvitationParts.
+type InvitationParts struct {
+	Id        string                             `json:"id"`
+	Email     string                             `json:"email"`
+	Kind      InvitationKind                     `json:"kind"`
+	Status    ApplicationInvitationStatus        `json:"status"`
+	ExpiresAt string                             `json:"expiresAt"`
+	Roles     []InvitationPartsRolesRole         `json:"roles"`
+	Groups    []InvitationPartsGroupsAccessGroup `json:"groups"`
+}
+
+// GetId returns InvitationParts.Id, and is useful for accessing the field via an interface.
+func (v *InvitationParts) GetId() string { return v.Id }
+
+// GetEmail returns InvitationParts.Email, and is useful for accessing the field via an interface.
+func (v *InvitationParts) GetEmail() string { return v.Email }
+
+// GetKind returns InvitationParts.Kind, and is useful for accessing the field via an interface.
+func (v *InvitationParts) GetKind() InvitationKind { return v.Kind }
+
+// GetStatus returns InvitationParts.Status, and is useful for accessing the field via an interface.
+func (v *InvitationParts) GetStatus() ApplicationInvitationStatus { return v.Status }
+
+// GetExpiresAt returns InvitationParts.ExpiresAt, and is useful for accessing the field via an interface.
+func (v *InvitationParts) GetExpiresAt() string { return v.ExpiresAt }
+
+// GetRoles returns InvitationParts.Roles, and is useful for accessing the field via an interface.
+func (v *InvitationParts) GetRoles() []InvitationPartsRolesRole { return v.Roles }
+
+// GetGroups returns InvitationParts.Groups, and is useful for accessing the field via an interface.
+func (v *InvitationParts) GetGroups() []InvitationPartsGroupsAccessGroup { return v.Groups }
+
+// InvitationPartsGroupsAccessGroup includes the requested fields of the GraphQL type AccessGroup.
+type InvitationPartsGroupsAccessGroup struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetId returns InvitationPartsGroupsAccessGroup.Id, and is useful for accessing the field via an interface.
+func (v *InvitationPartsGroupsAccessGroup) GetId() string { return v.Id }
+
+// GetName returns InvitationPartsGroupsAccessGroup.Name, and is useful for accessing the field via an interface.
+func (v *InvitationPartsGroupsAccessGroup) GetName() string { return v.Name }
+
+// InvitationPartsRolesRole includes the requested fields of the GraphQL type Role.
+type InvitationPartsRolesRole struct {
+	Id   string `json:"id"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+// GetId returns InvitationPartsRolesRole.Id, and is useful for accessing the field via an interface.
+func (v *InvitationPartsRolesRole) GetId() string { return v.Id }
+
+// GetKey returns InvitationPartsRolesRole.Key, and is useful for accessing the field via an interface.
+func (v *InvitationPartsRolesRole) GetKey() string { return v.Key }
+
+// GetName returns InvitationPartsRolesRole.Name, and is useful for accessing the field via an interface.
+func (v *InvitationPartsRolesRole) GetName() string { return v.Name }
+
+type InvitationScope string
+
+const (
+	InvitationScopeAppTenant InvitationScope = "app_tenant"
+	InvitationScopeClient    InvitationScope = "client"
+)
+
+var AllInvitationScope = []InvitationScope{
+	InvitationScopeAppTenant,
+	InvitationScopeClient,
+}
+
+type InviteMemberInput struct {
+	Email    string          `json:"email"`
+	GroupIds []string        `json:"groupIds"`
+	RoleIds  []string        `json:"roleIds"`
+	Scope    InvitationScope `json:"scope"`
+}
+
+// GetEmail returns InviteMemberInput.Email, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetEmail() string { return v.Email }
+
+// GetGroupIds returns InviteMemberInput.GroupIds, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetGroupIds() []string { return v.GroupIds }
+
+// GetRoleIds returns InviteMemberInput.RoleIds, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetRoleIds() []string { return v.RoleIds }
+
+// GetScope returns InviteMemberInput.Scope, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetScope() InvitationScope { return v.Scope }
+
+// InviteMemberInviteMemberApplicationInvitation includes the requested fields of the GraphQL type ApplicationInvitation.
+type InviteMemberInviteMemberApplicationInvitation struct {
+	InvitationParts `json:"-"`
+}
+
+// GetId returns InviteMemberInviteMemberApplicationInvitation.Id, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetId() string { return v.InvitationParts.Id }
+
+// GetEmail returns InviteMemberInviteMemberApplicationInvitation.Email, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetEmail() string {
+	return v.InvitationParts.Email
+}
+
+// GetKind returns InviteMemberInviteMemberApplicationInvitation.Kind, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetKind() InvitationKind {
+	return v.InvitationParts.Kind
+}
+
+// GetStatus returns InviteMemberInviteMemberApplicationInvitation.Status, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetStatus() ApplicationInvitationStatus {
+	return v.InvitationParts.Status
+}
+
+// GetExpiresAt returns InviteMemberInviteMemberApplicationInvitation.ExpiresAt, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetExpiresAt() string {
+	return v.InvitationParts.ExpiresAt
+}
+
+// GetRoles returns InviteMemberInviteMemberApplicationInvitation.Roles, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetRoles() []InvitationPartsRolesRole {
+	return v.InvitationParts.Roles
+}
+
+// GetGroups returns InviteMemberInviteMemberApplicationInvitation.Groups, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetGroups() []InvitationPartsGroupsAccessGroup {
+	return v.InvitationParts.Groups
+}
+
+func (v *InviteMemberInviteMemberApplicationInvitation) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*InviteMemberInviteMemberApplicationInvitation
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.InviteMemberInviteMemberApplicationInvitation = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.InvitationParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalInviteMemberInviteMemberApplicationInvitation struct {
+	Id string `json:"id"`
+
+	Email string `json:"email"`
+
+	Kind InvitationKind `json:"kind"`
+
+	Status ApplicationInvitationStatus `json:"status"`
+
+	ExpiresAt string `json:"expiresAt"`
+
+	Roles []InvitationPartsRolesRole `json:"roles"`
+
+	Groups []InvitationPartsGroupsAccessGroup `json:"groups"`
+}
+
+func (v *InviteMemberInviteMemberApplicationInvitation) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *InviteMemberInviteMemberApplicationInvitation) __premarshalJSON() (*__premarshalInviteMemberInviteMemberApplicationInvitation, error) {
+	var retval __premarshalInviteMemberInviteMemberApplicationInvitation
+
+	retval.Id = v.InvitationParts.Id
+	retval.Email = v.InvitationParts.Email
+	retval.Kind = v.InvitationParts.Kind
+	retval.Status = v.InvitationParts.Status
+	retval.ExpiresAt = v.InvitationParts.ExpiresAt
+	retval.Roles = v.InvitationParts.Roles
+	retval.Groups = v.InvitationParts.Groups
+	return &retval, nil
+}
+
+// InviteMemberResponse is returned by InviteMember on success.
+type InviteMemberResponse struct {
+	InviteMember InviteMemberInviteMemberApplicationInvitation `json:"inviteMember"`
+}
+
+// GetInviteMember returns InviteMemberResponse.InviteMember, and is useful for accessing the field via an interface.
+func (v *InviteMemberResponse) GetInviteMember() InviteMemberInviteMemberApplicationInvitation {
+	return v.InviteMember
+}
+
 // LatestGeneratorVersionResponse is returned by LatestGeneratorVersion on success.
 type LatestGeneratorVersionResponse struct {
 	// The generator a version minted now would use.
@@ -7683,6 +7908,214 @@ func (v *SubmitFeedbackSubmitFeedback) __premarshalJSON() (*__premarshalSubmitFe
 	return &retval, nil
 }
 
+// TenantInvitationsInvitationsApplicationInvitationPage includes the requested fields of the GraphQL type ApplicationInvitationPage.
+type TenantInvitationsInvitationsApplicationInvitationPage struct {
+	Items    []TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation `json:"items"`
+	PageInfo TenantInvitationsInvitationsApplicationInvitationPagePageInfo                     `json:"pageInfo"`
+}
+
+// GetItems returns TenantInvitationsInvitationsApplicationInvitationPage.Items, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPage) GetItems() []TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation {
+	return v.Items
+}
+
+// GetPageInfo returns TenantInvitationsInvitationsApplicationInvitationPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPage) GetPageInfo() TenantInvitationsInvitationsApplicationInvitationPagePageInfo {
+	return v.PageInfo
+}
+
+// TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation includes the requested fields of the GraphQL type ApplicationInvitation.
+type TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation struct {
+	InvitationParts `json:"-"`
+}
+
+// GetId returns TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Id, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetId() string {
+	return v.InvitationParts.Id
+}
+
+// GetEmail returns TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Email, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetEmail() string {
+	return v.InvitationParts.Email
+}
+
+// GetKind returns TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Kind, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetKind() InvitationKind {
+	return v.InvitationParts.Kind
+}
+
+// GetStatus returns TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Status, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetStatus() ApplicationInvitationStatus {
+	return v.InvitationParts.Status
+}
+
+// GetExpiresAt returns TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.ExpiresAt, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetExpiresAt() string {
+	return v.InvitationParts.ExpiresAt
+}
+
+// GetRoles returns TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Roles, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetRoles() []InvitationPartsRolesRole {
+	return v.InvitationParts.Roles
+}
+
+// GetGroups returns TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation.Groups, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) GetGroups() []InvitationPartsGroupsAccessGroup {
+	return v.InvitationParts.Groups
+}
+
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.InvitationParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalTenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation struct {
+	Id string `json:"id"`
+
+	Email string `json:"email"`
+
+	Kind InvitationKind `json:"kind"`
+
+	Status ApplicationInvitationStatus `json:"status"`
+
+	ExpiresAt string `json:"expiresAt"`
+
+	Roles []InvitationPartsRolesRole `json:"roles"`
+
+	Groups []InvitationPartsGroupsAccessGroup `json:"groups"`
+}
+
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *TenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation) __premarshalJSON() (*__premarshalTenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation, error) {
+	var retval __premarshalTenantInvitationsInvitationsApplicationInvitationPageItemsApplicationInvitation
+
+	retval.Id = v.InvitationParts.Id
+	retval.Email = v.InvitationParts.Email
+	retval.Kind = v.InvitationParts.Kind
+	retval.Status = v.InvitationParts.Status
+	retval.ExpiresAt = v.InvitationParts.ExpiresAt
+	retval.Roles = v.InvitationParts.Roles
+	retval.Groups = v.InvitationParts.Groups
+	return &retval, nil
+}
+
+// TenantInvitationsInvitationsApplicationInvitationPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type TenantInvitationsInvitationsApplicationInvitationPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns TenantInvitationsInvitationsApplicationInvitationPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsInvitationsApplicationInvitationPagePageInfo) GetHasMore() bool {
+	return v.HasMore
+}
+
+// TenantInvitationsResponse is returned by TenantInvitations on success.
+type TenantInvitationsResponse struct {
+	Invitations TenantInvitationsInvitationsApplicationInvitationPage `json:"invitations"`
+}
+
+// GetInvitations returns TenantInvitationsResponse.Invitations, and is useful for accessing the field via an interface.
+func (v *TenantInvitationsResponse) GetInvitations() TenantInvitationsInvitationsApplicationInvitationPage {
+	return v.Invitations
+}
+
+// TenantMembersMembersTenantMemberPage includes the requested fields of the GraphQL type TenantMemberPage.
+type TenantMembersMembersTenantMemberPage struct {
+	Items    []TenantMembersMembersTenantMemberPageItemsTenantMember `json:"items"`
+	PageInfo TenantMembersMembersTenantMemberPagePageInfo            `json:"pageInfo"`
+}
+
+// GetItems returns TenantMembersMembersTenantMemberPage.Items, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPage) GetItems() []TenantMembersMembersTenantMemberPageItemsTenantMember {
+	return v.Items
+}
+
+// GetPageInfo returns TenantMembersMembersTenantMemberPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPage) GetPageInfo() TenantMembersMembersTenantMemberPagePageInfo {
+	return v.PageInfo
+}
+
+// TenantMembersMembersTenantMemberPageItemsTenantMember includes the requested fields of the GraphQL type TenantMember.
+type TenantMembersMembersTenantMemberPageItemsTenantMember struct {
+	Id        string                                                    `json:"id"`
+	CreatedAt string                                                    `json:"createdAt"`
+	User      TenantMembersMembersTenantMemberPageItemsTenantMemberUser `json:"user"`
+}
+
+// GetId returns TenantMembersMembersTenantMemberPageItemsTenantMember.Id, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPageItemsTenantMember) GetId() string { return v.Id }
+
+// GetCreatedAt returns TenantMembersMembersTenantMemberPageItemsTenantMember.CreatedAt, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPageItemsTenantMember) GetCreatedAt() string {
+	return v.CreatedAt
+}
+
+// GetUser returns TenantMembersMembersTenantMemberPageItemsTenantMember.User, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPageItemsTenantMember) GetUser() TenantMembersMembersTenantMemberPageItemsTenantMemberUser {
+	return v.User
+}
+
+// TenantMembersMembersTenantMemberPageItemsTenantMemberUser includes the requested fields of the GraphQL type User.
+type TenantMembersMembersTenantMemberPageItemsTenantMemberUser struct {
+	Id    string  `json:"id"`
+	Email *string `json:"email"`
+	Name  *string `json:"name"`
+}
+
+// GetId returns TenantMembersMembersTenantMemberPageItemsTenantMemberUser.Id, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPageItemsTenantMemberUser) GetId() string { return v.Id }
+
+// GetEmail returns TenantMembersMembersTenantMemberPageItemsTenantMemberUser.Email, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPageItemsTenantMemberUser) GetEmail() *string {
+	return v.Email
+}
+
+// GetName returns TenantMembersMembersTenantMemberPageItemsTenantMemberUser.Name, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPageItemsTenantMemberUser) GetName() *string { return v.Name }
+
+// TenantMembersMembersTenantMemberPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type TenantMembersMembersTenantMemberPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns TenantMembersMembersTenantMemberPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *TenantMembersMembersTenantMemberPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// TenantMembersResponse is returned by TenantMembers on success.
+type TenantMembersResponse struct {
+	Members TenantMembersMembersTenantMemberPage `json:"members"`
+}
+
+// GetMembers returns TenantMembersResponse.Members, and is useful for accessing the field via an interface.
+func (v *TenantMembersResponse) GetMembers() TenantMembersMembersTenantMemberPage { return v.Members }
+
 // UnassignRoleResponse is returned by UnassignRole on success.
 type UnassignRoleResponse struct {
 	UnassignRole UnassignRoleUnassignRoleRoleAssignment `json:"unassignRole"`
@@ -8090,6 +8523,133 @@ func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpd
 	retval.IsParent = v.FieldParts.IsParent
 	retval.ReferencesEntity = v.FieldParts.ReferencesEntity
 	retval.RelatedField = v.FieldParts.RelatedField
+	return &retval, nil
+}
+
+type UpdateInvitationInput struct {
+	GroupIds []string `json:"groupIds"`
+	Id       string   `json:"id"`
+	RoleIds  []string `json:"roleIds"`
+}
+
+// GetGroupIds returns UpdateInvitationInput.GroupIds, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationInput) GetGroupIds() []string { return v.GroupIds }
+
+// GetId returns UpdateInvitationInput.Id, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationInput) GetId() string { return v.Id }
+
+// GetRoleIds returns UpdateInvitationInput.RoleIds, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationInput) GetRoleIds() []string { return v.RoleIds }
+
+// UpdateInvitationResponse is returned by UpdateInvitation on success.
+type UpdateInvitationResponse struct {
+	UpdateInvitation UpdateInvitationUpdateInvitationApplicationInvitation `json:"updateInvitation"`
+}
+
+// GetUpdateInvitation returns UpdateInvitationResponse.UpdateInvitation, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationResponse) GetUpdateInvitation() UpdateInvitationUpdateInvitationApplicationInvitation {
+	return v.UpdateInvitation
+}
+
+// UpdateInvitationUpdateInvitationApplicationInvitation includes the requested fields of the GraphQL type ApplicationInvitation.
+type UpdateInvitationUpdateInvitationApplicationInvitation struct {
+	InvitationParts `json:"-"`
+}
+
+// GetId returns UpdateInvitationUpdateInvitationApplicationInvitation.Id, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) GetId() string {
+	return v.InvitationParts.Id
+}
+
+// GetEmail returns UpdateInvitationUpdateInvitationApplicationInvitation.Email, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) GetEmail() string {
+	return v.InvitationParts.Email
+}
+
+// GetKind returns UpdateInvitationUpdateInvitationApplicationInvitation.Kind, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) GetKind() InvitationKind {
+	return v.InvitationParts.Kind
+}
+
+// GetStatus returns UpdateInvitationUpdateInvitationApplicationInvitation.Status, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) GetStatus() ApplicationInvitationStatus {
+	return v.InvitationParts.Status
+}
+
+// GetExpiresAt returns UpdateInvitationUpdateInvitationApplicationInvitation.ExpiresAt, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) GetExpiresAt() string {
+	return v.InvitationParts.ExpiresAt
+}
+
+// GetRoles returns UpdateInvitationUpdateInvitationApplicationInvitation.Roles, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) GetRoles() []InvitationPartsRolesRole {
+	return v.InvitationParts.Roles
+}
+
+// GetGroups returns UpdateInvitationUpdateInvitationApplicationInvitation.Groups, and is useful for accessing the field via an interface.
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) GetGroups() []InvitationPartsGroupsAccessGroup {
+	return v.InvitationParts.Groups
+}
+
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateInvitationUpdateInvitationApplicationInvitation
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateInvitationUpdateInvitationApplicationInvitation = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.InvitationParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateInvitationUpdateInvitationApplicationInvitation struct {
+	Id string `json:"id"`
+
+	Email string `json:"email"`
+
+	Kind InvitationKind `json:"kind"`
+
+	Status ApplicationInvitationStatus `json:"status"`
+
+	ExpiresAt string `json:"expiresAt"`
+
+	Roles []InvitationPartsRolesRole `json:"roles"`
+
+	Groups []InvitationPartsGroupsAccessGroup `json:"groups"`
+}
+
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateInvitationUpdateInvitationApplicationInvitation) __premarshalJSON() (*__premarshalUpdateInvitationUpdateInvitationApplicationInvitation, error) {
+	var retval __premarshalUpdateInvitationUpdateInvitationApplicationInvitation
+
+	retval.Id = v.InvitationParts.Id
+	retval.Email = v.InvitationParts.Email
+	retval.Kind = v.InvitationParts.Kind
+	retval.Status = v.InvitationParts.Status
+	retval.ExpiresAt = v.InvitationParts.ExpiresAt
+	retval.Roles = v.InvitationParts.Roles
+	retval.Groups = v.InvitationParts.Groups
 	return &retval, nil
 }
 
@@ -8764,6 +9324,14 @@ func (v *__ImportInvitationsInput) GetPage() PageInput { return v.Page }
 // GetWhere returns __ImportInvitationsInput.Where, and is useful for accessing the field via an interface.
 func (v *__ImportInvitationsInput) GetWhere() map[string]any { return v.Where }
 
+// __InviteMemberInput is used internally by genqlient
+type __InviteMemberInput struct {
+	Input InviteMemberInput `json:"input"`
+}
+
+// GetInput returns __InviteMemberInput.Input, and is useful for accessing the field via an interface.
+func (v *__InviteMemberInput) GetInput() InviteMemberInput { return v.Input }
+
 // __ModelRevisionsInput is used internally by genqlient
 type __ModelRevisionsInput struct {
 	Page PageInput `json:"page"`
@@ -9048,6 +9616,30 @@ type __SubmitFeedbackInput struct {
 // GetInput returns __SubmitFeedbackInput.Input, and is useful for accessing the field via an interface.
 func (v *__SubmitFeedbackInput) GetInput() map[string]any { return v.Input }
 
+// __TenantInvitationsInput is used internally by genqlient
+type __TenantInvitationsInput struct {
+	Page  PageInput      `json:"page"`
+	Where map[string]any `json:"where"`
+}
+
+// GetPage returns __TenantInvitationsInput.Page, and is useful for accessing the field via an interface.
+func (v *__TenantInvitationsInput) GetPage() PageInput { return v.Page }
+
+// GetWhere returns __TenantInvitationsInput.Where, and is useful for accessing the field via an interface.
+func (v *__TenantInvitationsInput) GetWhere() map[string]any { return v.Where }
+
+// __TenantMembersInput is used internally by genqlient
+type __TenantMembersInput struct {
+	AppTenantId string    `json:"appTenantId"`
+	Page        PageInput `json:"page"`
+}
+
+// GetAppTenantId returns __TenantMembersInput.AppTenantId, and is useful for accessing the field via an interface.
+func (v *__TenantMembersInput) GetAppTenantId() string { return v.AppTenantId }
+
+// GetPage returns __TenantMembersInput.Page, and is useful for accessing the field via an interface.
+func (v *__TenantMembersInput) GetPage() PageInput { return v.Page }
+
 // __UnassignRoleInput is used internally by genqlient
 type __UnassignRoleInput struct {
 	Id string `json:"id"`
@@ -9079,6 +9671,14 @@ type __UpdateFieldInput struct {
 
 // GetInput returns __UpdateFieldInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateFieldInput) GetInput() map[string]any { return v.Input }
+
+// __UpdateInvitationInput is used internally by genqlient
+type __UpdateInvitationInput struct {
+	Input UpdateInvitationInput `json:"input"`
+}
+
+// GetInput returns __UpdateInvitationInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateInvitationInput) GetInput() UpdateInvitationInput { return v.Input }
 
 // __UpdateOAuthClientInput is used internally by genqlient
 type __UpdateOAuthClientInput struct {
@@ -11351,6 +11951,56 @@ func ImportInvitations(
 	return data_, err_
 }
 
+// The mutation executed by InviteMember.
+const InviteMember_Operation = `
+mutation InviteMember ($input: InviteMemberInput!) {
+	inviteMember(input: $input) {
+		... InvitationParts
+	}
+}
+fragment InvitationParts on ApplicationInvitation {
+	id
+	email
+	kind
+	status
+	expiresAt
+	roles {
+		id
+		key
+		name
+	}
+	groups {
+		id
+		name
+	}
+}
+`
+
+func InviteMember(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input InviteMemberInput,
+) (data_ *InviteMemberResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "InviteMember",
+		Query:  InviteMember_Operation,
+		Variables: &__InviteMemberInput{
+			Input: input,
+		},
+	}
+
+	data_ = &InviteMemberResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by LatestGeneratorVersion.
 const LatestGeneratorVersion_Operation = `
 query LatestGeneratorVersion {
@@ -12872,6 +13522,110 @@ func SubmitFeedback(
 	return data_, err_
 }
 
+// The query executed by TenantInvitations.
+const TenantInvitations_Operation = `
+query TenantInvitations ($page: PageInput!, $where: InvitationFilter!) {
+	invitations(page: $page, where: $where) {
+		items {
+			... InvitationParts
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+fragment InvitationParts on ApplicationInvitation {
+	id
+	email
+	kind
+	status
+	expiresAt
+	roles {
+		id
+		key
+		name
+	}
+	groups {
+		id
+		name
+	}
+}
+`
+
+func TenantInvitations(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	page PageInput,
+	where map[string]any,
+) (data_ *TenantInvitationsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "TenantInvitations",
+		Query:  TenantInvitations_Operation,
+		Variables: &__TenantInvitationsInput{
+			Page:  page,
+			Where: where,
+		},
+	}
+
+	data_ = &TenantInvitationsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by TenantMembers.
+const TenantMembers_Operation = `
+query TenantMembers ($appTenantId: ID!, $page: PageInput!) {
+	members(appTenantId: $appTenantId, page: $page) {
+		items {
+			id
+			createdAt
+			user {
+				id
+				email
+				name
+			}
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+`
+
+func TenantMembers(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	appTenantId string,
+	page PageInput,
+) (data_ *TenantMembersResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "TenantMembers",
+		Query:  TenantMembers_Operation,
+		Variables: &__TenantMembersInput{
+			AppTenantId: appTenantId,
+			Page:        page,
+		},
+	}
+
+	data_ = &TenantMembersResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by UnassignRole.
 const UnassignRole_Operation = `
 mutation UnassignRole ($id: ID!) {
@@ -13062,6 +13816,56 @@ func UpdateField(
 	}
 
 	data_ = &UpdateFieldResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateInvitation.
+const UpdateInvitation_Operation = `
+mutation UpdateInvitation ($input: UpdateInvitationInput!) {
+	updateInvitation(input: $input) {
+		... InvitationParts
+	}
+}
+fragment InvitationParts on ApplicationInvitation {
+	id
+	email
+	kind
+	status
+	expiresAt
+	roles {
+		id
+		key
+		name
+	}
+	groups {
+		id
+		name
+	}
+}
+`
+
+func UpdateInvitation(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input UpdateInvitationInput,
+) (data_ *UpdateInvitationResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateInvitation",
+		Query:  UpdateInvitation_Operation,
+		Variables: &__UpdateInvitationInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateInvitationResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

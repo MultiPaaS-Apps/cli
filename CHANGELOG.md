@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.11.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.10.1...v1.11.0) (2026-11-22)
+
+
+### Features
+
+* [MP-337] import one source into a second app-tenant ([#111](https://github.com/MultiPaaS-Apps/cli/issues/111)) ([a204695](https://github.com/MultiPaaS-Apps/cli/commit/a204695d253509be5cd6cf85401e3b0f0f26edc7))
+
+
+### Bug Fixes
+
+* [MP-337] let the second-app-tenant steps use an existing app-tenant and include app-wide records ([#112](https://github.com/MultiPaaS-Apps/cli/issues/112)) ([7677da3](https://github.com/MultiPaaS-Apps/cli/commit/7677da371b935c67486ee510233861da0e9dbc73))
+* update the webapp-api schema ([#109](https://github.com/MultiPaaS-Apps/cli/issues/109)) ([2ef678d](https://github.com/MultiPaaS-Apps/cli/commit/2ef678d58107589f11a88dd2802e0f21b741c63a))
+
 ## [1.10.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.10.0...v1.10.1) (2026-11-21)
 
 

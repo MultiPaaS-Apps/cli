@@ -116,7 +116,7 @@ func run(args []string, env environment) int {
 		return list, func(out io.Writer) {
 			table(out, "CLIENT\tNAME\tID", list, func(a app) string { return a.ClientName + "\t" + a.Name + "\t" + a.ID })
 		}, err
-	}), appsCreate(command))
+	}), appsCreate(command), appsMCPURL(command))
 
 	var appID, envID string
 	var includeDeleted, includeRetired bool

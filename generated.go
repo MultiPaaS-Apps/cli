@@ -4759,6 +4759,59 @@ func (v *ImportInvitationsResponse) GetInvitations() ImportInvitationsInvitation
 	return v.Invitations
 }
 
+type InvitationScope string
+
+const (
+	InvitationScopeAppTenant InvitationScope = "app_tenant"
+	InvitationScopeClient    InvitationScope = "client"
+)
+
+var AllInvitationScope = []InvitationScope{
+	InvitationScopeAppTenant,
+	InvitationScopeClient,
+}
+
+type InviteMemberInput struct {
+	Email    string          `json:"email"`
+	GroupIds []string        `json:"groupIds"`
+	RoleIds  []string        `json:"roleIds"`
+	Scope    InvitationScope `json:"scope"`
+}
+
+// GetEmail returns InviteMemberInput.Email, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetEmail() string { return v.Email }
+
+// GetGroupIds returns InviteMemberInput.GroupIds, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetGroupIds() []string { return v.GroupIds }
+
+// GetRoleIds returns InviteMemberInput.RoleIds, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetRoleIds() []string { return v.RoleIds }
+
+// GetScope returns InviteMemberInput.Scope, and is useful for accessing the field via an interface.
+func (v *InviteMemberInput) GetScope() InvitationScope { return v.Scope }
+
+// InviteMemberInviteMemberApplicationInvitation includes the requested fields of the GraphQL type ApplicationInvitation.
+type InviteMemberInviteMemberApplicationInvitation struct {
+	Id    string `json:"id"`
+	Email string `json:"email"`
+}
+
+// GetId returns InviteMemberInviteMemberApplicationInvitation.Id, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetId() string { return v.Id }
+
+// GetEmail returns InviteMemberInviteMemberApplicationInvitation.Email, and is useful for accessing the field via an interface.
+func (v *InviteMemberInviteMemberApplicationInvitation) GetEmail() string { return v.Email }
+
+// InviteMemberResponse is returned by InviteMember on success.
+type InviteMemberResponse struct {
+	InviteMember InviteMemberInviteMemberApplicationInvitation `json:"inviteMember"`
+}
+
+// GetInviteMember returns InviteMemberResponse.InviteMember, and is useful for accessing the field via an interface.
+func (v *InviteMemberResponse) GetInviteMember() InviteMemberInviteMemberApplicationInvitation {
+	return v.InviteMember
+}
+
 // LatestGeneratorVersionResponse is returned by LatestGeneratorVersion on success.
 type LatestGeneratorVersionResponse struct {
 	// The generator a version minted now would use.
@@ -8764,6 +8817,14 @@ func (v *__ImportInvitationsInput) GetPage() PageInput { return v.Page }
 // GetWhere returns __ImportInvitationsInput.Where, and is useful for accessing the field via an interface.
 func (v *__ImportInvitationsInput) GetWhere() map[string]any { return v.Where }
 
+// __InviteMemberInput is used internally by genqlient
+type __InviteMemberInput struct {
+	Input InviteMemberInput `json:"input"`
+}
+
+// GetInput returns __InviteMemberInput.Input, and is useful for accessing the field via an interface.
+func (v *__InviteMemberInput) GetInput() InviteMemberInput { return v.Input }
+
 // __ModelRevisionsInput is used internally by genqlient
 type __ModelRevisionsInput struct {
 	Page PageInput `json:"page"`
@@ -11340,6 +11401,41 @@ func ImportInvitations(
 	}
 
 	data_ = &ImportInvitationsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by InviteMember.
+const InviteMember_Operation = `
+mutation InviteMember ($input: InviteMemberInput!) {
+	inviteMember(input: $input) {
+		id
+		email
+	}
+}
+`
+
+func InviteMember(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input InviteMemberInput,
+) (data_ *InviteMemberResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "InviteMember",
+		Query:  InviteMember_Operation,
+		Variables: &__InviteMemberInput{
+			Input: input,
+		},
+	}
+
+	data_ = &InviteMemberResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

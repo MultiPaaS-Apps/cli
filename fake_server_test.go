@@ -570,7 +570,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageAppIdentity(w, operation, parts, variables)
 	case "Deployers", "CreateDeployer", "RetireDeployer", "DeleteDeployer":
 		f.manageDeployers(w, operation, variables)
-	case "Roles", "PermissionCatalog", "CreateRole", "UpdateRole", "RoleAssignments", "AssignRole", "UnassignRole":
+	case "Roles", "PermissionCatalog", "CreateRole", "UpdateRole", "RoleAssignments", "AssignRole", "UnassignRole", "InviteMember":
 		f.manageRoles(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
@@ -1236,7 +1236,7 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 // belongs to that app-tenant, and one made in the application's scope belongs to the application. A read in an
 // app-tenant's scope sees both, so the CLI must do its own filtering by scope.
 func (f *fakeMultiPaaS) manageRoles(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
-	write := operation == "CreateRole" || operation == "UpdateRole" || operation == "AssignRole" || operation == "UnassignRole"
+	write := operation == "CreateRole" || operation == "UpdateRole" || operation == "AssignRole" || operation == "UnassignRole" || operation == "InviteMember"
 	if write {
 		f.mutations = append(f.mutations, variables)
 	}
@@ -1335,6 +1335,9 @@ func (f *fakeMultiPaaS) manageRoles(w http.ResponseWriter, operation string, par
 		removed := shown(f.assignments[i])
 		f.assignments = slices.Delete(f.assignments, i, i+1)
 		writeData(w, map[string]any{"unassignRole": removed})
+	case "InviteMember":
+		input, _ := variables["input"].(map[string]any)
+		writeData(w, map[string]any{"inviteMember": map[string]any{"id": "invitation-1", "email": input["email"]}})
 	}
 }
 

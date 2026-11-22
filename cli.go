@@ -163,7 +163,7 @@ func run(args []string, env environment) int {
 	root.AddCommand(apps, tenants, envsCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
-	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), deployerCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
+	root.AddCommand(recordCommands(command), roleCommands(command), memberCommands(command), oauthClientCommands(command), appIdentityCommands(command), deployerCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
 
 	root.SetArgs(args)
 	root.SetOut(env.stdout)

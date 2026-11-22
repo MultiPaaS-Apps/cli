@@ -24,8 +24,9 @@ type fakeImport struct {
 	deletedAt    any            // nil while live, else the time it was deleted
 }
 
-// importInvitations answers the lapsed-invitation list and the re-issue. A list returns the seeded rows that match
-// every key of the where it was sent, and records that where; a re-issue records its input and answers reissued.
+// importInvitations answers the invitation lists and the re-issue. A list (ImportInvitations or TenantInvitations)
+// returns the seeded rows that match every key of the where it was sent, and records that where; a re-issue records its
+// input and answers reissued.
 func (f *fakeMultiPaaS) importInvitations(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
 	if appOf(parts) == "" && !strings.HasPrefix(parts[0], "env:") {
 		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
@@ -44,6 +45,10 @@ func (f *fakeMultiPaaS) importInvitations(w http.ResponseWriter, operation strin
 			return
 		}
 		writeData(w, map[string]any{"reissueImportInvitations": f.reissued})
+		return
+	}
+	if operation == "TenantInvitations" && f.refuseTenantRead[0] != "" {
+		graphQLRefusal(w, f.refuseTenantRead[0], f.refuseTenantRead[1])
 		return
 	}
 	where, _ := variables["where"].(map[string]any)

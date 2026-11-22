@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.11.1...v1.12.0) (2026-11-22)
+
+
+### Features
+
+* [MP-338] invite people to an app-tenant from the CLI ([#117](https://github.com/MultiPaaS-Apps/cli/issues/117)) ([aa38314](https://github.com/MultiPaaS-Apps/cli/commit/aa3831443ac873230597b2a1b48fced8ffaf9fe6))
+
 ## [1.11.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.11.0...v1.11.1) (2026-11-22)
 
 

@@ -9,13 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// appsMCPURL prints the URL an application's end users add to Claude or ChatGPT as a custom connector, to reach its
+// appsMCPURL prints the URL an application's end users add to Claude as a custom connector, to reach its
 // records over MCP. Without an environment it needs no request and says it is the default environment's; with one it
 // looks the environment up and names it. Stdout stays the bare URL, and the environment goes to stderr and, as
 // "environment", into --json.
 func appsMCPURL(command commandFunc) *cobra.Command {
 	var appID, envID string
-	cmd := command("mcp-url", "Print the MCP URL end users add to Claude or ChatGPT to reach an application's records", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	cmd := command("mcp-url", "Print the MCP URL end users add to Claude to reach an application's records", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		url, environment, err := s.mcpURL(ctx, appID, envID)
 		return map[string]any{"mcpUrl": url, "environment": environmentJSON(environment)}, func(out io.Writer) {
 			fmt.Fprintln(out, url)

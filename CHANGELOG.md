@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.13.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.12.0...v1.13.0) (2026-11-23)
+
+
+### Features
+
+* [MP-346] multipaas apps mcp-url prints an app's MCP URL ([#116](https://github.com/MultiPaaS-Apps/cli/issues/116)) ([b3056e9](https://github.com/MultiPaaS-Apps/cli/commit/b3056e94aee006e9cb25f85f8783cb96468940bf))
+
+
+### Bug Fixes
+
+* [MP-339] say a deployer can invite within its own environments ([#119](https://github.com/MultiPaaS-Apps/cli/issues/119)) ([bda15cb](https://github.com/MultiPaaS-Apps/cli/commit/bda15cb236b343ce7ba950f1ff5c6862fb6388fb))
+* update the webapp-api schema ([#121](https://github.com/MultiPaaS-Apps/cli/issues/121)) ([021f955](https://github.com/MultiPaaS-Apps/cli/commit/021f955767ad08a552cad5b24c18e7d47a5ca678))
+
 ## [1.12.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.11.1...v1.12.0) (2026-11-22)
 
 

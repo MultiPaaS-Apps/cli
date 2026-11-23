@@ -191,6 +191,7 @@ type ApplicationPage {
 
 input ApproveOAuthAuthorizationInput {
 	appTenantId: ID
+	application: ID
 	clientId: ID!
 	codeChallenge: String!
 	environment: ID
@@ -550,6 +551,7 @@ input DeleteUserInput {
 }
 
 input DenyOAuthAuthorizationInput {
+	application: ID
 	clientId: ID!
 	environment: ID
 	redirectUri: String!
@@ -1234,6 +1236,7 @@ type OAuthAppTenantOption {
 type OAuthAuthorizationRequest {
 	appTenants: [OAuthAppTenantOption!]!
 	applicationName: String
+	clientHost: String
 	clientName: String!
 	environmentName: String
 }
@@ -1474,6 +1477,7 @@ The generator a version minted now would use.
 	): [HeldPermission!]!
 	myTenants: [TenantOption!]!
 	oauthAuthorizationRequest(
+		application: ID
 		clientId: ID!
 		environment: ID
 		redirectUri: String!

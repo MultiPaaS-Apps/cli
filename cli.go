@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -161,7 +162,7 @@ func run(args []string, env environment) int {
 	}
 	tenants.AddCommand(tenantsList, tenantsCreate(command), tenantsDelete(command), tenantsRetire(command), tenantsInvite(command), tenantsMembers(command),
 		group("invitation", "Change an app-tenant invitation that hasn't been accepted", tenantsInvitationUpdate(command)))
-	root.AddCommand(apps, tenants, envsCommands(command))
+	root.AddCommand(apps, tenants, envsCommands(command), urlNameCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
 	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), deployerCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
@@ -341,11 +342,20 @@ type retirement struct {
 
 // cliError is a failure carrying its exit code and the code, message and field errors --json reports.
 type cliError struct {
-	exit        int
-	Code        string       `json:"code"`
-	Message     string       `json:"message"`
-	FieldErrors []fieldError `json:"fieldErrors,omitempty"`
-	Reason      string       `json:"reason,omitempty"`
+	exit          int
+	Code          string         `json:"code"`
+	Message       string         `json:"message"`
+	FieldErrors   []fieldError   `json:"fieldErrors,omitempty"`
+	Reason        string         `json:"reason,omitempty"`
+	Rules         []string       `json:"rules,omitempty"`
+	ChangeableAt  string         `json:"changeableAt,omitempty"`
+	PreviousOwner *previousOwner `json:"previousOwner,omitempty"`
+}
+
+// previousOwner is the app or environment a URL_NAME_TAKEOVER_UNCONFIRMED refusal names as the name's last holder.
+type previousOwner struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // fieldError is one field a VALIDATION refusal names, as the server sends it.
@@ -372,8 +382,28 @@ func report(env environment, asJSON bool, err error) int {
 		_ = writeJSON(env.stdout, map[string]*cliError{"error": failure})
 	} else {
 		fmt.Fprintf(env.stderr, "multipaas: %s (%s)\n", failure.Message, failure.Code)
+		for _, hint := range failure.hints() {
+			fmt.Fprintln(env.stderr, hint)
+		}
 	}
 	return failure.exit
+}
+
+// hints are the lines a human-mode refusal adds after its message: what the refusal's details say to do next.
+func (e *cliError) hints() []string {
+	switch e.Code {
+	case "URL_NAME_RENAME_TOO_SOON":
+		if e.ChangeableAt != "" {
+			return []string{"The name can change again at " + e.ChangeableAt + "."}
+		}
+	case "URL_NAME_INVALID":
+		if len(e.Rules) > 0 {
+			return []string{"Rules the name breaks: " + strings.Join(e.Rules, ", ") + "."}
+		}
+	case "URL_NAME_TAKEOVER_UNCONFIRMED":
+		return []string{"Run the command again with --confirm-takeover to take the name."}
+	}
+	return nil
 }
 
 // asCLIError gives every failure an exit code: a refusal keeps the server's code, anything else is CLI_ERROR.

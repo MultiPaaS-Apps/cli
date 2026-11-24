@@ -25,32 +25,35 @@ type fakeMultiPaaS struct {
 	t      *testing.T
 	server *httptest.Server
 
-	mu           sync.Mutex
-	deny         bool                   // authorize redirects with error=access_denied
-	accessTTL    int                    // expires_in for every minted pair
-	nextVersion  int                    // last version minted for a created record
-	nextRecordID int                    // last id minted for a created record
-	codes        map[string]pendingCode // code -> what it was issued for
-	chains       map[string]*chain      // any token ever minted -> its chain
-	refreshes    int                    // refresh grants answered
-	revokes      []url.Values           // revoke forms received
-	entitlements []entitlement          // what myTenants answers
-	apps         map[string][]fakeRow   // client id -> its apps
-	tenants      map[string][]fakeRow   // app id -> its app-tenants
-	scopedApps   map[string]fakeRow     // app-tenant id -> its app
-	environments map[string][]fakeEnv   // app id -> its environments, the default first
-	envTenants   map[string][]fakeRow   // environment id -> its app-tenants
-	envsMinted   map[string]int         // app id -> environment ids handed out, so a removal never frees one
-	scopes       []string               // X-MultiPaaS-Scope per GraphQL request ("" when absent)
-	refused      map[string]bool        // client ids myTenants lists but the scope check refuses
-	nameless     bool                   // the signed-in user has no name
-	hangToken    bool                   // the token endpoint never answers
-	redirectTo   string                 // the token endpoint answers 307 to this URL
-	failRevoke   bool                   // the revoke endpoint answers HTTP 500
-	profile      string                 // MULTIPAAS_PROFILE for every command run against the fake
-	onGraphQL    func(operation string) // runs on each GraphQL request, before it is answered
-	release      chan struct{}          // closed at cleanup, to free handlers that never answer
-	accessTokens map[string]bool        // every access token minted, so a refresh grant can refuse one
+	mu              sync.Mutex
+	deny            bool                        // authorize redirects with error=access_denied
+	accessTTL       int                         // expires_in for every minted pair
+	nextVersion     int                         // last version minted for a created record
+	nextRecordID    int                         // last id minted for a created record
+	codes           map[string]pendingCode      // code -> what it was issued for
+	chains          map[string]*chain           // any token ever minted -> its chain
+	refreshes       int                         // refresh grants answered
+	revokes         []url.Values                // revoke forms received
+	entitlements    []entitlement               // what myTenants answers
+	apps            map[string][]fakeRow        // client id -> its apps
+	tenants         map[string][]fakeRow        // app id -> its app-tenants
+	scopedApps      map[string]fakeRow          // app-tenant id -> its app
+	environments    map[string][]fakeEnv        // app id -> its environments, the default first
+	envTenants      map[string][]fakeRow        // environment id -> its app-tenants
+	envsMinted      map[string]int              // app id -> environment ids handed out, so a removal never frees one
+	urlNames        map[string][]map[string]any // "client:<id>", "app:<id>" or "env:<id>" -> its URL names, newest first
+	retiredAppNames map[string]map[string]any   // an app URL name another app held before -> that app's {id, name}
+	clientRenamed   bool                        // the client's URL name changed once; another rename is too soon
+	scopes          []string                    // X-MultiPaaS-Scope per GraphQL request ("" when absent)
+	refused         map[string]bool             // client ids myTenants lists but the scope check refuses
+	nameless        bool                        // the signed-in user has no name
+	hangToken       bool                        // the token endpoint never answers
+	redirectTo      string                      // the token endpoint answers 307 to this URL
+	failRevoke      bool                        // the revoke endpoint answers HTTP 500
+	profile         string                      // MULTIPAAS_PROFILE for every command run against the fake
+	onGraphQL       func(operation string)      // runs on each GraphQL request, before it is answered
+	release         chan struct{}               // closed at cleanup, to free handlers that never answer
+	accessTokens    map[string]bool             // every access token minted, so a refresh grant can refuse one
 
 	entities                     map[string][]map[string]any // app id -> its entities, as model show reads them
 	fields                       map[string][]map[string]any // entity id -> its fields
@@ -172,7 +175,7 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 	fake := &fakeMultiPaaS{
 		t: t, accessTTL: 3600,
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
-		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envsMinted: map[string]int{}, appsMinted: map[string]int{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
+		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envsMinted: map[string]int{}, urlNames: map[string][]map[string]any{}, retiredAppNames: map[string]map[string]any{}, appsMinted: map[string]int{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{}, deployerTokens: map[string]bool{},
 		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{}, generators: map[string][]int{},
 		records: map[string][]map[string]any{},
@@ -442,7 +445,9 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 	case "DeactivateAppTenant", "DeleteAppTenant":
 		f.deactivateAppTenant(w, operation, parts, variables)
 	case "Environments", "EnvironmentRedirectUriSets", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "SetEnvironmentRedirectUris", "RemoveEnvironment", "DeleteEnvironment":
-		f.manageEnvironments(w, operation, appOf(parts), variables)
+		f.manageEnvironments(w, operation, parts[0], appOf(parts), variables)
+	case "ClientUrlName", "RenameClientUrlName", "ApplicationUrlName", "RenameApplicationUrlName", "EnvironmentUrlNames", "RenameEnvironmentUrlName":
+		f.manageURLNames(w, operation, parts, variables)
 	case "ScopedAppTenant":
 		scopedApp := f.scopedApps[parts[len(parts)-1]]
 		tenant, _ := f.tenantRow(scopedApp.id, parts[len(parts)-1])
@@ -1492,7 +1497,7 @@ func removalRefusal(e fakeEnv) (reason, message string) {
 
 // manageEnvironments shares these steps with the server, in order: an application in scope, then
 // access.manage.application for a change, then the change. Names are unique within an application.
-func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app string, variables map[string]any) {
+func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, client, app string, variables map[string]any) {
 	changes := operation != "Environments" && operation != "EnvironmentRedirectUriSets"
 	if changes {
 		f.mutations = append(f.mutations, variables)
@@ -1502,7 +1507,7 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 		return
 	}
 	shown := func(e fakeEnv) map[string]any {
-		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.deletionProtected(), "redirectUriSets": e.redirectSets()}
+		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.deletionProtected(), "redirectUriSets": e.redirectSets(), "siteUrl": f.siteURL(client, app, e)}
 	}
 	input, _ := variables["input"].(map[string]any)
 	name, _ := input["name"].(string)
@@ -1593,4 +1598,119 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 		}
 		writeData(w, map[string]any{"me": map[string]any{"application": map[string]any{"environments": listed}}})
 	}
+}
+
+// validURLName is the shape the API accepts: lower-case letters, digits and single hyphens.
+var validURLName = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
+const (
+	fakeRenamedAt    = "2026-11-22T12:00:00.000Z"
+	fakeChangeableAt = "2026-12-22T12:00:00.000Z"
+)
+
+// manageURLNames serves the URL-name operations for the scope's client, app and environments. The client may rename
+// once; a second rename is too soon. An app name in retiredAppNames was another app's and needs confirmTakeover.
+func (f *fakeMultiPaaS) manageURLNames(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	app := appOf(parts)
+	if app == "" {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	if strings.HasPrefix(operation, "Rename") {
+		f.mutations = append(f.mutations, variables)
+	}
+	clientKey := "client:" + parts[0]
+	name, _ := variables["name"].(string)
+	if strings.HasPrefix(operation, "Rename") && !validURLName.MatchString(name) {
+		graphQLRefusalWith(w, "URL_NAME_INVALID", "That URL name isn't valid.", map[string]any{"rules": []string{"pattern"}})
+		return
+	}
+	confirmed, _ := variables["confirmTakeover"].(bool)
+	client := func() map[string]any {
+		var changeableAt any
+		if f.clientRenamed {
+			changeableAt = fakeChangeableAt
+		}
+		return map[string]any{"id": parts[0], "urlName": f.currentURLName(clientKey, initialClientURLName(parts[0])), "urlNameChangeableAt": changeableAt, "urlNameHistory": f.urlNameHistory(clientKey, initialClientURLName(parts[0]))}
+	}
+	application := func() map[string]any {
+		return map[string]any{"id": app, "urlName": f.currentURLName("app:"+app, app), "urlNameHistory": f.urlNameHistory("app:"+app, app)}
+	}
+	environment := func(e fakeEnv) map[string]any {
+		key, initial := "env:"+e.id, strings.ToLower(e.name)
+		return map[string]any{"id": e.id, "urlName": f.currentURLName(key, initial), "siteUrl": f.siteURL(parts[0], app, e), "urlNameHistory": f.urlNameHistory(key, initial)}
+	}
+	switch operation {
+	case "ClientUrlName":
+		writeData(w, map[string]any{"me": map[string]any{"client": client()}})
+	case "RenameClientUrlName":
+		if f.clientRenamed {
+			graphQLRefusalWith(w, "URL_NAME_RENAME_TOO_SOON", "A client's URL name can change once a month.", map[string]any{"changeableAt": fakeChangeableAt})
+			return
+		}
+		f.clientRenamed = true
+		f.renameURLName(clientKey, initialClientURLName(parts[0]), name)
+		writeData(w, map[string]any{"renameClientUrlName": client()})
+	case "ApplicationUrlName":
+		writeData(w, map[string]any{"me": map[string]any{"application": application()}})
+	case "RenameApplicationUrlName":
+		if owner, used := f.retiredAppNames[name]; used && !confirmed {
+			message := fmt.Sprintf("%q used that URL name before. Rename again with confirmTakeover to take it.", owner["name"])
+			graphQLRefusalWith(w, "URL_NAME_TAKEOVER_UNCONFIRMED", message, map[string]any{"previousOwner": owner})
+			return
+		}
+		f.renameURLName("app:"+app, app, name)
+		writeData(w, map[string]any{"renameApplicationUrlName": application()})
+	case "EnvironmentUrlNames":
+		listed := []map[string]any{}
+		for _, e := range f.environments[app] {
+			listed = append(listed, environment(e))
+		}
+		writeData(w, map[string]any{"me": map[string]any{"application": map[string]any{"environments": listed}}})
+	case "RenameEnvironmentUrlName":
+		i := slices.IndexFunc(f.environments[app], func(e fakeEnv) bool { return e.id == variables["environmentId"] })
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "environment not found")
+			return
+		}
+		e := f.environments[app][i]
+		f.renameURLName("env:"+e.id, strings.ToLower(e.name), name)
+		writeData(w, map[string]any{"renameEnvironmentUrlName": environment(e)})
+	}
+}
+
+// urlNameHistory is an owner's URL names in the fake, newest first, starting from initial the first time it is asked for.
+func (f *fakeMultiPaaS) urlNameHistory(key, initial string) []map[string]any {
+	if _, ok := f.urlNames[key]; !ok {
+		f.urlNames[key] = []map[string]any{{"name": initial, "claimedAt": "2026-11-01T00:00:00.000Z", "replacedAt": nil}}
+	}
+	return f.urlNames[key]
+}
+
+func (f *fakeMultiPaaS) currentURLName(key, initial string) string {
+	name, _ := f.urlNameHistory(key, initial)[0]["name"].(string)
+	return name
+}
+
+func (f *fakeMultiPaaS) renameURLName(key, initial, name string) {
+	history := f.urlNameHistory(key, initial)
+	history[0]["replacedAt"] = fakeRenamedAt
+	f.urlNames[key] = append([]map[string]any{{"name": name, "claimedAt": fakeRenamedAt, "replacedAt": nil}}, history...)
+}
+
+// initialClientURLName is the URL name the fake gives a client before any rename: acme-co for client-a, the client's id for any other.
+func initialClientURLName(client string) string {
+	if client == "client-a" {
+		return "acme-co"
+	}
+	return client
+}
+
+// siteURL is the address the fake gives an environment's site: <app>--<client> for the default, <env>--<app>--<client> for the rest.
+func (f *fakeMultiPaaS) siteURL(client, app string, e fakeEnv) string {
+	labels := []string{f.currentURLName("app:"+app, app), f.currentURLName("client:"+client, initialClientURLName(client))}
+	if !e.isDefault {
+		labels = append([]string{f.currentURLName("env:"+e.id, strings.ToLower(e.name))}, labels...)
+	}
+	return "https://" + strings.Join(labels, "--") + ".example.test"
 }

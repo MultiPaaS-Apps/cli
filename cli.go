@@ -116,7 +116,7 @@ func run(args []string, env environment) int {
 		return list, func(out io.Writer) {
 			table(out, "CLIENT\tNAME\tID", list, func(a app) string { return a.ClientName + "\t" + a.Name + "\t" + a.ID })
 		}, err
-	}), appsCreate(command), appsMCPURL(command))
+	}), appsCreate(command), appsDelete(command), appsMCPURL(command))
 
 	var appID, envID string
 	var includeDeleted, includeRetired bool
@@ -195,6 +195,37 @@ func appsCreate(command commandFunc) *cobra.Command {
 	cmd.Flags().StringVar(&clientID, "client", "", "the client to create it in (needed when you can reach more than one)")
 	cmd.Flags().StringVar(&name, "name", "", "the application's name")
 	_ = cmd.MarkFlagRequired("name")
+	return cmd
+}
+
+// appsDelete deletes an application in the client that owns it; its data is destroyed on the date the server answers.
+func appsDelete(command commandFunc) *cobra.Command {
+	var appID string
+	cmd := command("delete <app-id>", "Delete an application; its data is destroyed 30 days later", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+		var deleted deletion
+		owner, err := s.reachableApp(ctx, appID)
+		if err == nil {
+			err = s.call(ctx, owner.ClientID, func(client graphql.Client) error {
+				response, err := DeleteApplication(ctx, client, DeleteApplicationInput{Id: appID})
+				if err != nil {
+					return err
+				}
+				if response.DeleteApplication.Id == "" {
+					return &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "the server's answer did not say which application was deleted; run apps list to see whether it still exists"}
+				}
+				deleted = deletion{Deleted: true, ID: response.DeleteApplication.Id, DestroysAt: response.DeleteApplication.DestroysAt}
+				return nil
+			})
+		}
+		return deleted, func(out io.Writer) {
+			if deleted.DestroysAt == nil {
+				fmt.Fprintf(out, "application %s is deleted, with its app-tenants and their members. The server did not say when its data is destroyed\n", deleted.ID)
+				return
+			}
+			fmt.Fprintf(out, "application %s is deleted, with its app-tenants and their members. Its data is destroyed on %s\n", deleted.ID, eraseDate(*deleted.DestroysAt))
+		}, err
+	})
+	cmd.Args = oneID(&appID)
 	return cmd
 }
 

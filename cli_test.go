@@ -902,6 +902,95 @@ func TestAppsCreateWithoutCreatePermissionIsRefusedUnauthorized(t *testing.T) {
 	}
 }
 
+func TestAppsDeleteSendsItInItsClientsScopeAndListDropsIt(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "apps", "delete", "app-a-000", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"deleted":true,"id":"app-a-000","destroysAt":"2026-12-15T12:00:00.000Z"}` {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	want := map[string]any{"input": map[string]any{"id": "app-a-000"}}
+	if len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+		t.Fatalf("sent %v, want %v", fake.mutations, want)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a" {
+		t.Fatalf("scope %q, want client-a", last)
+	}
+	var apps []app
+	decode(t, fake.run(t, "apps", "list", "--json").stdout, &apps)
+	if slices.ContainsFunc(apps, func(a app) bool { return a.ID == "app-a-000" }) {
+		t.Fatalf("apps list still shows the deleted application")
+	}
+	assertFailure(t, fake.run(t, "apps", "delete", "app-a-000", "--json"), exitRefused, "NOT_FOUND")
+	if len(fake.mutations) != 1 {
+		t.Fatalf("a second delete sent %d more mutations, want none", len(fake.mutations)-1)
+	}
+}
+
+func TestAppsDeleteOfAnAppInAnotherClientUsesThatClientsScope(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entitlements = append(fake.entitlements, entitlement{clientID: "client-c", clientName: "Gamma"})
+	fake.apps["client-c"] = []fakeRow{{id: "app-c", name: "Ledger"}}
+	got := fake.run(t, "apps", "delete", "app-c", "--json")
+	if got.exit != exitOK || compact(got.stdout) != `{"deleted":true,"id":"app-c","destroysAt":"2026-12-15T12:00:00.000Z"}` {
+		t.Fatalf("exit %d: %q", got.exit, got.stdout)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-c" {
+		t.Fatalf("scope %q, want client-c", last)
+	}
+}
+
+func TestAppsDeletePrintsTheDestroyDateOrSaysItIsUnknown(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	dated := fake.run(t, "apps", "delete", "app-a-000")
+	if dated.exit != exitOK || dated.stdout != "application app-a-000 is deleted, with its app-tenants and their members. Its data is destroyed on 2026-12-15\n" {
+		t.Fatalf("exit %d: %q", dated.exit, dated.stdout)
+	}
+	fake.deleteNoDate = true
+	asJSON := fake.run(t, "apps", "delete", "app-a-001", "--json")
+	if asJSON.exit != exitOK || compact(asJSON.stdout) != `{"deleted":true,"id":"app-a-001","destroysAt":null}` {
+		t.Fatalf("exit %d: %q", asJSON.exit, asJSON.stdout)
+	}
+	human := fake.run(t, "apps", "delete", "app-a-002")
+	if human.exit != exitOK || human.stdout != "application app-a-002 is deleted, with its app-tenants and their members. The server did not say when its data is destroyed\n" {
+		t.Fatalf("exit %d: %q", human.exit, human.stdout)
+	}
+}
+
+func TestAppsDeleteOfAnAppYouCannotReachIsNotFoundAndSendsNothing(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	assertFailure(t, fake.run(t, "apps", "delete", "app-unknown", "--json"), exitRefused, "NOT_FOUND")
+	if len(fake.mutations) != 0 {
+		t.Fatalf("sent %v for an application no entitlement reaches", fake.mutations)
+	}
+}
+
+func TestAppsDeleteWithoutManageIsUnauthorizedAndKeepsTheApp(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.noManageApp = true
+	assertFailure(t, fake.run(t, "apps", "delete", "app-a-000", "--json"), exitRefused, "UNAUTHORIZED")
+	var apps []app
+	decode(t, fake.run(t, "apps", "list", "--json").stdout, &apps)
+	if !slices.ContainsFunc(apps, func(a app) bool { return a.ID == "app-a-000" }) {
+		t.Fatalf("a refused delete removed the application from the list")
+	}
+}
+
+func TestAppsDeleteFailsWhenTheAnswerNamesNoApplication(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.removeNoData = true
+	for _, args := range [][]string{{"--json"}, {}} {
+		got := fake.run(t, append([]string{"apps", "delete", "app-a-000"}, args...)...)
+		if got.exit != exitRefused || strings.Contains(got.stdout, `"deleted":true`) || strings.Contains(got.stdout, "is deleted") {
+			t.Fatalf("%v: exit %d, want %d with no success output: %q", args, got.exit, exitRefused, got.stdout)
+		}
+	}
+	var failure struct{ Error struct{ Code string } }
+	decode(t, fake.run(t, "apps", "delete", "app-a-000", "--json").stdout, &failure)
+	if failure.Error.Code != "CLI_ERROR" {
+		t.Fatalf("code %q, want CLI_ERROR", failure.Error.Code)
+	}
+}
+
 func TestAScopeTheServerRefusesIsExitOneWithItsCode(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	fake.entitlements = append(fake.entitlements, entitlement{clientID: "client-gone", clientName: "Gone"})

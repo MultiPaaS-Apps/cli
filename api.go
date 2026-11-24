@@ -130,6 +130,19 @@ func (s *session) creatableClient(ctx context.Context, clientID string) (MyTenan
 	return MyTenantsMyTenantsTenantOptionClient{}, &cliError{exit: exitRefused, Code: "CLIENT_REQUIRED", Message: "you can reach more than one client: pass --client with one of " + strings.Join(named, ", ")}
 }
 
+// reachableApp is appID among the applications the developer's entitlements reach, so a call can go in its client's scope.
+func (s *session) reachableApp(ctx context.Context, appID string) (app, error) {
+	apps, err := s.apps(ctx)
+	if err != nil {
+		return app{}, err
+	}
+	at := slices.IndexFunc(apps, func(candidate app) bool { return candidate.ID == appID })
+	if at < 0 {
+		return app{}, &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no application " + appID + " that you can reach"}
+	}
+	return apps[at], nil
+}
+
 // entitlements is myTenants: where the developer may act, with no scope sent.
 func (s *session) entitlements(ctx context.Context) ([]MyTenantsMyTenantsTenantOption, error) {
 	var mine *MyTenantsResponse

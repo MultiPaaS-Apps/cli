@@ -2,45 +2,36 @@
 Indicates exactly one field must be supplied and this field must not be `null`.
 """
 directive @oneOf on INPUT_OBJECT
-
 """
 Exposes a URL that specifies the behavior of this scalar.
 """
 directive @specifiedBy(
-"""
-The URL that specifies the behavior of this scalar.
-"""
+	"""
+	The URL that specifies the behavior of this scalar.
+	"""
 	url: String!
 ) on SCALAR
-
 input AcceptInvitationInput {
 	token: String!
 }
-
 """
 Marks a type that decides which rows the server shows the caller: writing one can change any list, so the client discards its whole cache after it.
 """
 interface AccessGrant {
-"""
-Marks a type that decides which rows the server shows the caller: writing one can change any list, so the client discards its whole cache after it.
-"""
 	_accessGrant: Boolean!
 }
-
-type AccessGroup implements AccessGrant{
+type AccessGroup implements AccessGrant {
 	_accessGrant: Boolean!
 	appTenant: AppTenant
 	id: ID!
 	name: String!
 }
-
-type AccessGroupMember implements AccessGrant{
+type AccessGroupMember implements AccessGrant {
 	_accessGrant: Boolean!
 	group: AccessGroup
 	id: ID!
 	user: User
 }
-
 input AddDataImportFileInput {
 	contentType: String!
 	entityId: ID
@@ -50,12 +41,10 @@ input AddDataImportFileInput {
 	sha256: String!
 	sizeBytes: Int!
 }
-
 input AddMemberInput {
 	appTenantId: ID
 	userId: ID!
 }
-
 type AiTurn {
 	conversation: Conversation!
 	createdAt: DateTime!
@@ -66,56 +55,49 @@ type AiTurn {
 	status: AiTurnStatus!
 	steps: [TurnStep!]!
 }
-
 type AiTurnPage {
 	items: [AiTurn!]!
 	pageInfo: PageInfo!
 }
-
 enum AiTurnStatus {
 	failed
 	queued
 	running
 	succeeded
 }
-
 type ApiSchemaDiff {
 	added: [SchemaChange!]!
 	breaking: [SchemaChange!]!
 	dangerous: [SchemaChange!]!
 }
-
-type ApiToken implements Receipt{
+type ApiToken implements Receipt {
 	_receipt: Boolean!
 	accessToken: String!
 	expiresAt: DateTime!
 }
-
 """
 An application's own identity for background jobs: its id is the OAuth client_id.
 """
 type AppIdentity {
 	createdAt: DateTime!
-"""
-The environment this identity lives in.
-"""
+	"""
+	The environment this identity lives in.
+	"""
 	environment: Environment
 	id: ID!
 	name: String!
 	secrets: [AppIdentitySecret!]!
-"""
-The service user this identity acts as.
-"""
+	"""
+	The service user this identity acts as.
+	"""
 	user: User
 }
-
 type AppIdentitySecret {
 	createdAt: DateTime!
 	id: ID!
 	lastFour: String!
 	lastUsedAt: DateTime
 }
-
 """
 The identity plus a new secret, returned only here and never again.
 """
@@ -123,30 +105,27 @@ type AppIdentityWithSecret {
 	appIdentity: AppIdentity!
 	secret: String!
 }
-
-type AppTenant implements Deletable{
+type AppTenant implements Deletable {
 	createdAt: DateTime!
 	deletedAt: DateTime
 	destroysAt: DateTime
-"""
-The environment this app-tenant lives in.
-"""
+	"""
+	The environment this app-tenant lives in.
+	"""
 	environment: Environment
 	id: ID!
 	name: String!
-"""
-When this app-tenant was retired, or null while it is live.
-"""
+	"""
+	When this app-tenant was retired, or null while it is live.
+	"""
 	retiredAt: DateTime @deprecated(reason: "Use deletedAt.")
 	updatedAt: DateTime!
 }
-
 type AppTenantPage {
 	items: [AppTenant!]!
 	pageInfo: PageInfo!
 }
-
-type Application implements Deletable{
+type Application implements Deletable {
 	createdAt: DateTime!
 	deletedAt: DateTime
 	deployers: [Deployer!]!
@@ -156,13 +135,12 @@ type Application implements Deletable{
 	name: String!
 	updatedAt: DateTime!
 }
-
 type ApplicationInvitation {
 	appTenant: AppTenant
 	createdAt: DateTime!
-"""
-The import that wrote this invitation; null when the invitation names none or you cannot read the import.
-"""
+	"""
+	The import that wrote this invitation; null when the invitation names none or you cannot read the import.
+	"""
 	dataImport: DataImport
 	email: String!
 	expiresAt: DateTime!
@@ -173,22 +151,18 @@ The import that wrote this invitation; null when the invitation names none or yo
 	scope: InvitationScope!
 	status: ApplicationInvitationStatus!
 }
-
 type ApplicationInvitationPage {
 	items: [ApplicationInvitation!]!
 	pageInfo: PageInfo!
 }
-
 enum ApplicationInvitationStatus {
 	expired
 	pending
 }
-
 type ApplicationPage {
 	items: [Application!]!
 	pageInfo: PageInfo!
 }
-
 input ApproveOAuthAuthorizationInput {
 	appTenantId: ID
 	application: ID
@@ -198,23 +172,19 @@ input ApproveOAuthAuthorizationInput {
 	redirectUri: String!
 	state: String
 }
-
 input AssignClientRoleInput {
 	roleId: ID!
 	userId: ID!
 }
-
 input AssignPlatformRoleInput {
 	roleId: ID!
 	userId: ID!
 }
-
-type AuthOkResult implements Receipt{
+type AuthOkResult implements Receipt {
 	_receipt: Boolean!
 	ok: Boolean!
 }
-
-type Client implements Deletable{
+type Client implements Deletable {
 	createdAt: DateTime!
 	deletedAt: DateTime
 	destroysAt: DateTime
@@ -222,155 +192,124 @@ type Client implements Deletable{
 	name: String!
 	updatedAt: DateTime!
 }
-
 type ClientApplication {
 	application: Application!
 	client: Client!
 }
-
 type ClientApplicationPage {
 	items: [ClientApplication!]!
 	pageInfo: PageInfo!
 }
-
 type ClientEffectiveRole {
 	direct: Boolean!
 	groups: [ClientGroup!]!
 	role: ClientRole!
 }
-
-type ClientGroup implements AccessGrant{
+type ClientGroup implements AccessGrant {
 	_accessGrant: Boolean!
 	id: ID!
 	name: String!
 }
-
-type ClientGroupMember implements AccessGrant{
+type ClientGroupMember implements AccessGrant {
 	_accessGrant: Boolean!
 	group: ClientGroup
 	id: ID!
 	user: User
 }
-
-type ClientGroupRoleAssignment implements AccessGrant{
+type ClientGroupRoleAssignment implements AccessGrant {
 	_accessGrant: Boolean!
 	group: ClientGroup
 	id: ID!
 	role: ClientRole!
 }
-
 type ClientPage {
 	items: [Client!]!
 	pageInfo: PageInfo!
 }
-
-type ClientRole implements AccessGrant{
+type ClientRole implements AccessGrant {
 	_accessGrant: Boolean!
 	id: ID!
 	name: String!
 	permissions: [String!]!
 }
-
-type ClientRoleAssignment implements AccessGrant{
+type ClientRoleAssignment implements AccessGrant {
 	_accessGrant: Boolean!
 	id: ID!
 	role: ClientRole!
 	user: User
 }
-
 type Constraint {
 	createdAt: DateTime!
 	entity: Entity!
-	fields(
-		page: PageInput!
-	): FieldPage!
+	fields(page: PageInput! = {page:0,pageSize:20}): FieldPage!
 	id: ID!
 	kind: String!
 	updatedAt: DateTime!
 }
-
 type ConstraintPage {
 	items: [Constraint!]!
 	pageInfo: PageInfo!
 }
-
 type Conversation {
 	canContinue: Boolean!
 	createdAt: DateTime!
 	id: ID!
 	model: String!
 	title: String
-	turns(
-		before: ID
-		page: PageInput!
-	): AiTurnPage!
+	turns(before: ID, page: PageInput! = {page:0,pageSize:20}): AiTurnPage!
 }
-
 type ConversationPage {
 	items: [Conversation!]!
 	pageInfo: PageInfo!
 }
-
 input CreateAppIdentityInput {
 	name: String!
 }
-
 input CreateAppTenantInput {
 	name: String!
 }
-
 input CreateApplicationInput {
 	name: String!
 }
-
 input CreateClientInitialUserInput {
 	email: String!
 	name: String
 }
-
 input CreateClientInput {
 	initialUser: CreateClientInitialUserInput!
 	name: String!
 }
-
 type CreateClientPayload {
 	client: Client!
 	user: User!
 	userWasExisting: Boolean!
 }
-
 input CreateClientRoleInput {
 	name: String!
 	permissions: [String!]!
 }
-
 input CreateConstraintInput {
 	entityId: ID!
 	fieldIds: [ID!]!
 }
-
 input CreateDeployerInput {
 	applicationId: ID!
 	name: String!
 }
-
 input CreateEntityInput {
 	graphqlPluralName: String
 	graphqlTypeName: String
 	name: String!
 }
-
 input CreateEnumTypeInput {
 	graphqlTypeName: String
 	name: String!
 	values: [EnumValueInput!]!
 }
-
 input CreateEnvironmentInput {
 	name: String!
 	redirectUris: [EnvironmentRedirectInput!]
 }
-
 input CreateFieldInput {
 	defaultValue: JSON
 	entityId: ID!
@@ -387,74 +326,65 @@ input CreateFieldInput {
 	required: Boolean
 	type: String!
 }
-
 input CreateOAuthClientInput {
 	name: String!
 	redirectUris: [String!]!
 }
-
 input CreatePlatformRoleInput {
 	name: String!
 	permissions: [String!]!
 }
-
 input CreateRecordInput {
 	data: JSON!
 	entityId: ID!
 }
-
 input CreateRoleInput {
 	key: String!
 	name: String!
 	permissions: [RolePermissionInput!]!
 }
-
 input CreateUserInput {
 	email: String!
 	name: String
 }
-
 type DataImport {
 	application: Application!
 	counts: [DataImportCount!]
 	createdAt: DateTime!
-"""
-When the import was deleted; null while it is live.
-"""
+	"""
+	When the import was deleted; null while it is live.
+	"""
 	deletedAt: DateTime
 	files: [DataImportFile!]!
 	finishedAt: DateTime
 	id: ID!
-"""
-Counts of the membership invitations this import wrote. Imports run before they were recorded show zeros.
-"""
+	"""
+	Counts of the membership invitations this import wrote. Imports run before they were recorded show zeros.
+	"""
 	invitations: DataImportInvitationCounts!
 	problemCount: Int
-"""
-A 15-minute download link for the full report, when it was too large to keep inline.
-"""
+	"""
+	A 15-minute download link for the full report, when it was too large to keep inline.
+	"""
 	problemReportUrl: String
 	problems: [ImportProblem!]
 	startedAt: DateTime
-"""
-One of draft, checking, check-failed, checked, importing, import-failed, imported.
-"""
+	"""
+	One of draft, checking, check-failed, checked, importing, import-failed, imported.
+	"""
 	status: String!
 	updatedAt: DateTime!
 }
-
 type DataImportCount {
 	count: Int!
 	key: String!
 }
-
 type DataImportFile {
 	entity: Entity
 	file: File!
 	id: ID!
 	kind: DataImportFileKind!
 }
-
 enum DataImportFileKind {
 	files
 	memberships
@@ -462,94 +392,71 @@ enum DataImportFileKind {
 	tenants
 	users
 }
-
 type DataImportFileUpload {
 	importFile: DataImportFile!
 	uploadHeaders: [Header!]!
 	uploadUrl: String!
 }
-
 """
 An import's invitations: pending until accepted or lapsed 7 days after the run or the last re-issue.
 """
 type DataImportInvitationCounts {
 	accepted: Int!
-"""
-Unaccepted 7 days after the run or the last re-issue; reissueImportInvitations re-issues them.
-"""
+	"""
+	Unaccepted 7 days after the run or the last re-issue; reissueImportInvitations re-issues them.
+	"""
 	lapsed: Int!
 	pending: Int!
 }
-
 type DataImportPage {
 	items: [DataImport!]!
 	pageInfo: PageInfo!
 }
-
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
 scalar DateTime
-
 input DeactivateAppTenantInput {
 	id: ID!
 }
-
 input DeactivateApplicationInput {
 	id: ID!
 }
-
 input DeactivateClientInput {
 	id: ID!
 }
-
 input DeactivateUserInput {
 	id: ID!
 }
-
 """
 Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
 """
 interface Deletable {
-"""
-Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
-"""
 	deletedAt: DateTime
-"""
-Something whose deletion destroys its data on a stated date. Both fields are null while it is live.
-"""
 	destroysAt: DateTime
 }
-
 input DeleteAppTenantInput {
 	id: ID!
 }
-
 input DeleteApplicationInput {
 	id: ID!
 }
-
 input DeleteClientInput {
 	id: ID!
 }
-
 input DeleteEnvironmentInput {
 	id: ID!
 }
-
 input DeleteInvitationInput {
 	invitationId: ID!
 }
-
 input DeleteRecordInput {
 	entityId: ID!
 	recordId: ID!
 }
-
 input DeleteUserInput {
 	id: ID!
 }
-
 input DenyOAuthAuthorizationInput {
 	application: ID
 	clientId: ID!
@@ -557,7 +464,6 @@ input DenyOAuthAuthorizationInput {
 	redirectUri: String!
 	state: String
 }
-
 """
 A credential CI uses to create and remove test environments: its id is the OAuth client_id.
 """
@@ -568,7 +474,6 @@ type Deployer {
 	lastUsedAt: DateTime
 	name: String!
 }
-
 """
 The deployer plus its secret, returned only here and never again.
 """
@@ -576,18 +481,16 @@ type DeployerWithSecret {
 	deployer: Deployer!
 	secret: String!
 }
-
 type EffectiveRole {
 	applicationWide: Boolean!
 	direct: Boolean!
-"""
-True when a direct grant of this role holds in every environment.
-"""
+	"""
+	True when a direct grant of this role holds in every environment.
+	"""
 	everyEnvironment: Boolean!
 	groups: [AccessGroup!]!
 	role: Role!
 }
-
 type Entity {
 	createdAt: DateTime!
 	graphqlPluralName: String!
@@ -598,12 +501,10 @@ type Entity {
 	shareNewRecordsWithTenant: RecordAccessLevel
 	updatedAt: DateTime!
 }
-
 type EntityPage {
 	items: [Entity!]!
 	pageInfo: PageInfo!
 }
-
 type EnumType {
 	createdAt: DateTime!
 	graphqlTypeName: String!
@@ -612,23 +513,19 @@ type EnumType {
 	updatedAt: DateTime!
 	values: [EnumValue!]!
 }
-
 type EnumTypePage {
 	items: [EnumType!]!
 	pageInfo: PageInfo!
 }
-
 type EnumValue {
 	graphqlName: String!
 	value: String!
 }
-
 input EnumValueInput {
 	graphqlName: String
 	value: String!
 }
-
-type Environment implements Deletable{
+type Environment implements Deletable {
 	createdAt: DateTime!
 	deletedAt: DateTime
 	deletionProtected: Boolean!
@@ -637,22 +534,17 @@ type Environment implements Deletable{
 	isDefault: Boolean!
 	name: String!
 	redirectUriSets: [EnvironmentRedirectUris!]!
-	redirectUris(
-		oauthClientId: ID!
-	): [String!]!
+	redirectUris(oauthClientId: ID!): [String!]!
 	updatedAt: DateTime!
 }
-
 input EnvironmentRedirectInput {
 	oauthClientId: ID!
 	uris: [String!]!
 }
-
 type EnvironmentRedirectUris {
 	oauthClientId: ID!
 	uris: [String!]!
 }
-
 type Feedback {
 	apiVersion: String
 	application: Application
@@ -670,28 +562,23 @@ type Feedback {
 	summary: String
 	updatedAt: DateTime!
 }
-
 enum FeedbackKind {
 	bug
 	feature
 }
-
 type FeedbackPage {
 	items: [Feedback!]!
 	pageInfo: PageInfo!
 }
-
 type FeedbackSetting {
 	autoSend: Boolean!
 	id: ID!
 }
-
 enum FeedbackSource {
 	cli
 	plugin
 	web
 }
-
 enum FeedbackStatus {
 	declined
 	fixed
@@ -699,13 +586,11 @@ enum FeedbackStatus {
 	received
 	under_review
 }
-
 type FeedbackStatusChange {
 	changedAt: DateTime!
 	note: String
 	status: FeedbackStatus!
 }
-
 type Field {
 	createdAt: DateTime!
 	defaultValue: JSON
@@ -726,12 +611,10 @@ type Field {
 	type: String!
 	updatedAt: DateTime!
 }
-
 type FieldPage {
 	items: [Field!]!
 	pageInfo: PageInfo!
 }
-
 type File {
 	contentType: String!
 	createdAt: DateTime!
@@ -741,24 +624,20 @@ type File {
 	sizeBytes: Int!
 	status: String!
 }
-
-type GroupRoleAssignment implements AccessGrant{
+type GroupRoleAssignment implements AccessGrant {
 	_accessGrant: Boolean!
 	group: AccessGroup
 	id: ID!
 	role: Role
 }
-
 type Header {
 	name: String!
 	value: String!
 }
-
 type HeldPermission {
 	entityId: ID
 	permission: String!
 }
-
 type ImportProblem {
 	code: String!
 	field: String
@@ -767,472 +646,196 @@ type ImportProblem {
 	message: String!
 	sourceId: String
 }
-
 """
 Every field is optional; an invitation matches when it matches every field given.
 """
 input InvitationFilter {
-"""
-Every field is optional; an invitation matches when it matches every field given.
-"""
 	appTenantId: ID
-"""
-Every field is optional; an invitation matches when it matches every field given.
-"""
+	"""
+	The import that wrote the invitation.
+	"""
 	dataImportId: ID
-"""
-Every field is optional; an invitation matches when it matches every field given.
-"""
 	kind: InvitationKind
-"""
-Every field is optional; an invitation matches when it matches every field given.
-"""
 	status: ApplicationInvitationStatus
 }
-
 enum InvitationKind {
 	email
 	import
 }
-
 enum InvitationScope {
 	app_tenant
 	client
 }
-
 input InviteMemberInput {
 	email: String!
 	groupIds: [ID!]
 	roleIds: [ID!]
 	scope: InvitationScope!
 }
-
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSON
-
 type ModelRevision {
 	createdAt: DateTime!
 	generatorVersion: Int!
 	id: ID!
 }
-
 type ModelRevisionPage {
 	items: [ModelRevision!]!
 	pageInfo: PageInfo!
 }
-
 type Mutation {
-	acceptInvitation(
-		input: AcceptInvitationInput!
-	): TenantMember!
-	addAccessGroupMember(
-		groupId: ID!
-		userId: ID!
-	): AccessGroupMember!
-	addClientGroupMember(
-		groupId: ID!
-		userId: ID!
-	): ClientGroupMember!
-	addDataImportFile(
-		input: AddDataImportFileInput!
-	): DataImportFileUpload!
-	addMember(
-		input: AddMemberInput!
-	): TenantMember!
-	addPlatformGroupMember(
-		groupId: ID!
-		userId: ID!
-	): PlatformGroupMember!
-	approveOAuthAuthorization(
-		input: ApproveOAuthAuthorizationInput!
-	): OAuthRedirect!
-	assignClientGroupRole(
-		groupId: ID!
-		roleId: ID!
-	): ClientGroupRoleAssignment!
-	assignClientRole(
-		input: AssignClientRoleInput!
-	): ClientRoleAssignment!
-	assignPlatformGroupRole(
-		groupId: ID!
-		roleId: ID!
-	): PlatformGroupRoleAssignment!
-	assignPlatformRole(
-		input: AssignPlatformRoleInput!
-	): PlatformRoleAssignment!
+	acceptInvitation(input: AcceptInvitationInput!): TenantMember!
+	addAccessGroupMember(groupId: ID!, userId: ID!): AccessGroupMember!
+	addClientGroupMember(groupId: ID!, userId: ID!): ClientGroupMember!
+	addDataImportFile(input: AddDataImportFileInput!): DataImportFileUpload!
+	addMember(input: AddMemberInput!): TenantMember!
+	addPlatformGroupMember(groupId: ID!, userId: ID!): PlatformGroupMember!
+	approveOAuthAuthorization(input: ApproveOAuthAuthorizationInput!): OAuthRedirect!
+	assignClientGroupRole(groupId: ID!, roleId: ID!): ClientGroupRoleAssignment!
+	assignClientRole(input: AssignClientRoleInput!): ClientRoleAssignment!
+	assignPlatformGroupRole(groupId: ID!, roleId: ID!): PlatformGroupRoleAssignment!
+	assignPlatformRole(input: AssignPlatformRoleInput!): PlatformRoleAssignment!
 	assignRole(
-"""
-Grant the role in every environment of the application, rather than only the current one (application-wide roles only). The caller must not be a deployer, and must be a client admin or hold access.manage.application in every environment, from a platform role, a client role or a grant in every environment. The grantee must be a person. Unless the caller is a client admin granting to someone else, every permission the role carries must be held in every environment.
-"""
-		everyEnvironment: Boolean
-		roleId: ID!
-		userId: ID!
-	): RoleAssignment!
-	assignRoleToGroup(
-		groupId: ID!
-		roleId: ID!
-	): GroupRoleAssignment!
-	checkDataImport(
-		importId: ID!
-	): DataImport!
-	createAccessGroup(
-		name: String!
-	): AccessGroup!
-	createAppIdentity(
-		input: CreateAppIdentityInput!
-	): AppIdentityWithSecret!
-	createAppIdentitySecret(
-		id: ID!
-	): AppIdentityWithSecret!
-	createAppTenant(
-		input: CreateAppTenantInput!
-	): AppTenant!
-	createApplication(
-		input: CreateApplicationInput!
-	): Application!
-	createClient(
-		input: CreateClientInput!
-	): CreateClientPayload!
-	createClientGroup(
-		name: String!
-	): ClientGroup!
-	createClientRole(
-		input: CreateClientRoleInput!
-	): ClientRole!
-	createConstraint(
-		input: CreateConstraintInput!
-	): Constraint!
-	createDataImport(
-		applicationId: ID!
-	): DataImport!
-	createDeployer(
-		input: CreateDeployerInput!
-	): DeployerWithSecret!
-	createEntity(
-		input: CreateEntityInput!
-	): Entity!
-	createEnumType(
-		input: CreateEnumTypeInput!
-	): EnumType!
-	createEnvironment(
-		input: CreateEnvironmentInput!
-	): Environment!
-	createField(
-		input: CreateFieldInput!
-	): Field!
-"""
-Mint an API version of the current model with the latest generator. Needs model.edit.
-"""
+		"""
+		Grant the role in every environment of the application, rather than only the current one (application-wide roles only). The caller must not be a deployer, and must be a client admin or hold access.manage.application in every environment, from a platform role, a client role or a grant in every environment. The grantee must be a person. Unless the caller is a client admin granting to someone else, every permission the role carries must be held in every environment.
+		"""
+		everyEnvironment: Boolean = false
+	roleId: ID!, userId: ID!): RoleAssignment!
+	assignRoleToGroup(groupId: ID!, roleId: ID!): GroupRoleAssignment!
+	checkDataImport(importId: ID!): DataImport!
+	createAccessGroup(name: String!): AccessGroup!
+	createAppIdentity(input: CreateAppIdentityInput!): AppIdentityWithSecret!
+	createAppIdentitySecret(id: ID!): AppIdentityWithSecret!
+	createAppTenant(input: CreateAppTenantInput!): AppTenant!
+	createApplication(input: CreateApplicationInput!): Application!
+	createClient(input: CreateClientInput!): CreateClientPayload!
+	createClientGroup(name: String!): ClientGroup!
+	createClientRole(input: CreateClientRoleInput!): ClientRole!
+	createConstraint(input: CreateConstraintInput!): Constraint!
+	createDataImport(applicationId: ID!): DataImport!
+	createDeployer(input: CreateDeployerInput!): DeployerWithSecret!
+	createEntity(input: CreateEntityInput!): Entity!
+	createEnumType(input: CreateEnumTypeInput!): EnumType!
+	createEnvironment(input: CreateEnvironmentInput!): Environment!
+	createField(input: CreateFieldInput!): Field!
+	"""
+	Mint an API version of the current model with the latest generator. Needs model.edit.
+	"""
 	createModelRevision: ModelRevision!
-	createOAuthClient(
-		input: CreateOAuthClientInput!
-	): OAuthClient!
-	createPlatformGroup(
-		name: String!
-	): PlatformGroup!
-	createPlatformRole(
-		input: CreatePlatformRoleInput!
-	): PlatformRole!
-	createRecord(
-		input: CreateRecordInput!
-	): Record!
-	createRole(
-		input: CreateRoleInput!
-	): Role!
-	createUser(
-		input: CreateUserInput!
-	): User!
-	deactivateAppTenant(
-		input: DeactivateAppTenantInput!
-	): AppTenant! @deprecated(reason: "Use deleteAppTenant.")
-	deactivateApplication(
-		input: DeactivateApplicationInput!
-	): Application! @deprecated(reason: "Use deleteApplication.")
-	deactivateClient(
-		input: DeactivateClientInput!
-	): Client! @deprecated(reason: "Use deleteClient.")
-	deactivateUser(
-		input: DeactivateUserInput!
-	): User! @deprecated(reason: "Use deleteUser.")
-	deleteAccessGroup(
-		id: ID!
-	): AccessGroup!
-	deleteAppIdentity(
-		id: ID!
-	): AppIdentity!
-	deleteAppTenant(
-		input: DeleteAppTenantInput!
-	): AppTenant!
-	deleteApplication(
-		input: DeleteApplicationInput!
-	): Application!
-	deleteClient(
-		input: DeleteClientInput!
-	): Client!
-	deleteClientGroup(
-		id: ID!
-	): ClientGroup!
-	deleteClientRole(
-		id: ID!
-	): ClientRole!
-	deleteConstraint(
-		constraintId: ID!
-	): Constraint!
-"""
-Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
-"""
-	deleteDataImport(
-		importId: ID!
-	): DataImport!
-	deleteDeployer(
-		id: ID!
-	): Deployer!
-	deleteEntity(
-		entityId: ID!
-	): Entity!
-	deleteEnumType(
-		enumTypeId: ID!
-	): EnumType!
-	deleteEnvironment(
-		input: DeleteEnvironmentInput!
-	): Environment!
-	deleteField(
-		fieldId: ID!
-	): Field!
-"""
-Marks an open invitation deleted: its link stops working and sign-in no longer accepts it. Nothing is removed.
-"""
-	deleteInvitation(
-		input: DeleteInvitationInput!
-	): ApplicationInvitation!
-	deleteOAuthClient(
-		id: ID!
-	): OAuthClient!
-	deletePlatformGroup(
-		id: ID!
-	): PlatformGroup!
-	deletePlatformRole(
-		id: ID!
-	): PlatformRole!
-	deleteRecord(
-		input: DeleteRecordInput!
-	): Record!
-	deleteRole(
-		id: ID!
-	): Role!
-	deleteUser(
-		input: DeleteUserInput!
-	): User!
-	denyOAuthAuthorization(
-		input: DenyOAuthAuthorizationInput!
-	): OAuthRedirect!
-	inviteMember(
-		input: InviteMemberInput!
-	): ApplicationInvitation!
-	issueApiToken(
-		appTenantId: ID!
-		oauthClientId: ID!
-	): ApiToken!
+	createOAuthClient(input: CreateOAuthClientInput!): OAuthClient!
+	createPlatformGroup(name: String!): PlatformGroup!
+	createPlatformRole(input: CreatePlatformRoleInput!): PlatformRole!
+	createRecord(input: CreateRecordInput!): Record!
+	createRole(input: CreateRoleInput!): Role!
+	createUser(input: CreateUserInput!): User!
+	deactivateAppTenant(input: DeactivateAppTenantInput!): AppTenant! @deprecated(reason: "Use deleteAppTenant.")
+	deactivateApplication(input: DeactivateApplicationInput!): Application! @deprecated(reason: "Use deleteApplication.")
+	deactivateClient(input: DeactivateClientInput!): Client! @deprecated(reason: "Use deleteClient.")
+	deactivateUser(input: DeactivateUserInput!): User! @deprecated(reason: "Use deleteUser.")
+	deleteAccessGroup(id: ID!): AccessGroup!
+	deleteAppIdentity(id: ID!): AppIdentity!
+	deleteAppTenant(input: DeleteAppTenantInput!): AppTenant!
+	deleteApplication(input: DeleteApplicationInput!): Application!
+	deleteClient(input: DeleteClientInput!): Client!
+	deleteClientGroup(id: ID!): ClientGroup!
+	deleteClientRole(id: ID!): ClientRole!
+	deleteConstraint(constraintId: ID!): Constraint!
+	"""
+	Marks an import deleted. It must not be checking or importing. Nothing it holds or created is removed.
+	"""
+	deleteDataImport(importId: ID!): DataImport!
+	deleteDeployer(id: ID!): Deployer!
+	deleteEntity(entityId: ID!): Entity!
+	deleteEnumType(enumTypeId: ID!): EnumType!
+	deleteEnvironment(input: DeleteEnvironmentInput!): Environment!
+	deleteField(fieldId: ID!): Field!
+	"""
+	Marks an open invitation deleted: its link stops working and sign-in no longer accepts it. Nothing is removed.
+	"""
+	deleteInvitation(input: DeleteInvitationInput!): ApplicationInvitation!
+	deleteOAuthClient(id: ID!): OAuthClient!
+	deletePlatformGroup(id: ID!): PlatformGroup!
+	deletePlatformRole(id: ID!): PlatformRole!
+	deleteRecord(input: DeleteRecordInput!): Record!
+	deleteRole(id: ID!): Role!
+	deleteUser(input: DeleteUserInput!): User!
+	denyOAuthAuthorization(input: DenyOAuthAuthorizationInput!): OAuthRedirect!
+	inviteMember(input: InviteMemberInput!): ApplicationInvitation!
+	issueApiToken(appTenantId: ID!, oauthClientId: ID!): ApiToken!
 	issueRealtimeTicket: RealtimeTicket!
-"""
-Re-issues an import's or a tenant's lapsed membership invitations. No email is sent.
-"""
-	reissueImportInvitations(
-		input: ReissueImportInvitationsInput!
-	): ReissueImportInvitationsResult!
-	removeAccessGroupMember(
-		id: ID!
-	): AccessGroupMember!
-	removeClientGroupMember(
-		id: ID!
-	): ClientGroupMember!
-	removeDataImportFile(
-		fileId: ID!
-		importId: ID!
-	): DataImport!
-	removeEnvironment(
-		input: RemoveEnvironmentInput!
-	): Environment! @deprecated(reason: "Use deleteEnvironment.")
-	removeMember(
-		input: RemoveMemberInput!
-	): TenantMember!
-	removePlatformGroupMember(
-		id: ID!
-	): PlatformGroupMember!
-	renameAccessGroup(
-		id: ID!
-		name: String!
-	): AccessGroup!
-	renameClientGroup(
-		id: ID!
-		name: String!
-	): ClientGroup!
-	renameEnvironment(
-		input: RenameEnvironmentInput!
-	): Environment!
-	renamePlatformGroup(
-		id: ID!
-		name: String!
-	): PlatformGroup!
-"""
-Registers a file for a record's file field and signs its upload. Write the returned fileId as the field's value once the PUT succeeds.
-"""
-	requestRecordFileUpload(
-		input: RequestRecordFileUploadInput!
-	): RecordFileUpload!
-	requestSignIn(
-		input: RequestSignInInput!
-	): AuthOkResult!
-	resendInvitation(
-		input: ResendInvitationInput!
-	): ApplicationInvitation!
-	retireAccessGroup(
-		id: ID!
-	): AccessGroup! @deprecated(reason: "Use deleteAccessGroup.")
-	retireAppIdentity(
-		id: ID!
-	): AppIdentity! @deprecated(reason: "Use deleteAppIdentity.")
-	retireClientGroup(
-		id: ID!
-	): ClientGroup! @deprecated(reason: "Use deleteClientGroup.")
-	retireClientRole(
-		id: ID!
-	): ClientRole! @deprecated(reason: "Use deleteClientRole.")
-	retireConstraint(
-		constraintId: ID!
-	): Constraint! @deprecated(reason: "Use deleteConstraint.")
-	retireDeployer(
-		id: ID!
-	): Deployer! @deprecated(reason: "Use deleteDeployer.")
-	retireEntity(
-		entityId: ID!
-	): Entity! @deprecated(reason: "Use deleteEntity.")
-	retireEnumType(
-		enumTypeId: ID!
-	): EnumType! @deprecated(reason: "Use deleteEnumType.")
-	retireField(
-		fieldId: ID!
-	): Field! @deprecated(reason: "Use deleteField.")
-	retireOAuthClient(
-		id: ID!
-	): OAuthClient! @deprecated(reason: "Use deleteOAuthClient.")
-	retirePlatformGroup(
-		id: ID!
-	): PlatformGroup! @deprecated(reason: "Use deletePlatformGroup.")
-	retirePlatformRole(
-		id: ID!
-	): PlatformRole! @deprecated(reason: "Use deletePlatformRole.")
-	retireRecord(
-		input: RetireRecordInput!
-	): Record! @deprecated(reason: "Use deleteRecord.")
-	retireRole(
-		id: ID!
-	): Role! @deprecated(reason: "Use deleteRole.")
-	revokeAppIdentitySecret(
-		id: ID!
-	): AppIdentity!
-	runDataImport(
-		importId: ID!
-	): DataImport!
-	sendPrompt(
-		input: SendPromptInput!
-	): AiTurn!
-	setEnvironmentDeletionProtection(
-		input: SetEnvironmentDeletionProtectionInput!
-	): Environment!
-	setEnvironmentRedirectUris(
-		input: SetEnvironmentRedirectUrisInput!
-	): Environment!
-	setFeedbackSetting(
-		autoSend: Boolean!
-	): FeedbackSetting!
-	setFeedbackStatus(
-		id: ID!
-		note: String
-		status: FeedbackStatus!
-	): OperatorFeedback!
-	shareRecord(
-		input: ShareRecordInput!
-	): RecordShare!
-	signIn(
-		input: SignInInput!
-	): AuthOkResult!
+	"""
+	Re-issues an import's or a tenant's lapsed membership invitations. No email is sent.
+	"""
+	reissueImportInvitations(input: ReissueImportInvitationsInput!): ReissueImportInvitationsResult!
+	removeAccessGroupMember(id: ID!): AccessGroupMember!
+	removeClientGroupMember(id: ID!): ClientGroupMember!
+	removeDataImportFile(fileId: ID!, importId: ID!): DataImport!
+	removeEnvironment(input: RemoveEnvironmentInput!): Environment! @deprecated(reason: "Use deleteEnvironment.")
+	removeMember(input: RemoveMemberInput!): TenantMember!
+	removePlatformGroupMember(id: ID!): PlatformGroupMember!
+	renameAccessGroup(id: ID!, name: String!): AccessGroup!
+	renameClientGroup(id: ID!, name: String!): ClientGroup!
+	renameEnvironment(input: RenameEnvironmentInput!): Environment!
+	renamePlatformGroup(id: ID!, name: String!): PlatformGroup!
+	"""
+	Registers a file for a record's file field and signs its upload. Write the returned fileId as the field's value once the PUT succeeds.
+	"""
+	requestRecordFileUpload(input: RequestRecordFileUploadInput!): RecordFileUpload!
+	requestSignIn(input: RequestSignInInput!): AuthOkResult!
+	resendInvitation(input: ResendInvitationInput!): ApplicationInvitation!
+	retireAccessGroup(id: ID!): AccessGroup! @deprecated(reason: "Use deleteAccessGroup.")
+	retireAppIdentity(id: ID!): AppIdentity! @deprecated(reason: "Use deleteAppIdentity.")
+	retireClientGroup(id: ID!): ClientGroup! @deprecated(reason: "Use deleteClientGroup.")
+	retireClientRole(id: ID!): ClientRole! @deprecated(reason: "Use deleteClientRole.")
+	retireConstraint(constraintId: ID!): Constraint! @deprecated(reason: "Use deleteConstraint.")
+	retireDeployer(id: ID!): Deployer! @deprecated(reason: "Use deleteDeployer.")
+	retireEntity(entityId: ID!): Entity! @deprecated(reason: "Use deleteEntity.")
+	retireEnumType(enumTypeId: ID!): EnumType! @deprecated(reason: "Use deleteEnumType.")
+	retireField(fieldId: ID!): Field! @deprecated(reason: "Use deleteField.")
+	retireOAuthClient(id: ID!): OAuthClient! @deprecated(reason: "Use deleteOAuthClient.")
+	retirePlatformGroup(id: ID!): PlatformGroup! @deprecated(reason: "Use deletePlatformGroup.")
+	retirePlatformRole(id: ID!): PlatformRole! @deprecated(reason: "Use deletePlatformRole.")
+	retireRecord(input: RetireRecordInput!): Record! @deprecated(reason: "Use deleteRecord.")
+	retireRole(id: ID!): Role! @deprecated(reason: "Use deleteRole.")
+	revokeAppIdentitySecret(id: ID!): AppIdentity!
+	runDataImport(importId: ID!): DataImport!
+	sendPrompt(input: SendPromptInput!): AiTurn!
+	setEnvironmentDeletionProtection(input: SetEnvironmentDeletionProtectionInput!): Environment!
+	setEnvironmentRedirectUris(input: SetEnvironmentRedirectUrisInput!): Environment!
+	setFeedbackSetting(autoSend: Boolean!): FeedbackSetting!
+	setFeedbackStatus(id: ID!, note: String, status: FeedbackStatus!): OperatorFeedback!
+	shareRecord(input: ShareRecordInput!): RecordShare!
+	signIn(input: SignInInput!): AuthOkResult!
 	signOut: AuthOkResult!
-	startConversation(
-		input: StartConversationInput!
-	): Conversation!
-	submitFeedback(
-		input: SubmitFeedbackInput!
-	): Feedback!
-	unassignClientGroupRole(
-		id: ID!
-	): ClientGroupRoleAssignment!
-	unassignClientRole(
-		id: ID!
-	): ClientRoleAssignment!
-	unassignGroupRole(
-		id: ID!
-	): GroupRoleAssignment!
-	unassignPlatformGroupRole(
-		id: ID!
-	): PlatformGroupRoleAssignment!
-	unassignPlatformRole(
-		id: ID!
-	): PlatformRoleAssignment!
-	unassignRole(
-		id: ID!
-	): RoleAssignment!
-	unshareRecord(
-		input: UnshareRecordInput!
-	): RecordShare!
-	updateAppTenant(
-		input: UpdateAppTenantInput!
-	): AppTenant!
-	updateApplication(
-		input: UpdateApplicationInput!
-	): Application!
-	updateClient(
-		input: UpdateClientInput!
-	): Client!
-	updateClientRole(
-		input: UpdateClientRoleInput!
-	): ClientRole!
-	updateEntity(
-		input: UpdateEntityInput!
-	): Entity!
-	updateEnumType(
-		input: UpdateEnumTypeInput!
-	): EnumType!
-	updateField(
-		input: UpdateFieldInput!
-	): Field!
-	updateInvitation(
-		input: UpdateInvitationInput!
-	): ApplicationInvitation!
-	updateOAuthClient(
-		input: UpdateOAuthClientInput!
-	): OAuthClient!
-	updatePlatformRole(
-		input: UpdatePlatformRoleInput!
-	): PlatformRole!
-	updateRecord(
-		input: UpdateRecordInput!
-	): Record!
-	updateRole(
-		input: UpdateRoleInput!
-	): Role!
-	updateUser(
-		input: UpdateUserInput!
-	): User!
+	startConversation(input: StartConversationInput!): Conversation!
+	submitFeedback(input: SubmitFeedbackInput!): Feedback!
+	unassignClientGroupRole(id: ID!): ClientGroupRoleAssignment!
+	unassignClientRole(id: ID!): ClientRoleAssignment!
+	unassignGroupRole(id: ID!): GroupRoleAssignment!
+	unassignPlatformGroupRole(id: ID!): PlatformGroupRoleAssignment!
+	unassignPlatformRole(id: ID!): PlatformRoleAssignment!
+	unassignRole(id: ID!): RoleAssignment!
+	unshareRecord(input: UnshareRecordInput!): RecordShare!
+	updateAppTenant(input: UpdateAppTenantInput!): AppTenant!
+	updateApplication(input: UpdateApplicationInput!): Application!
+	updateClient(input: UpdateClientInput!): Client!
+	updateClientRole(input: UpdateClientRoleInput!): ClientRole!
+	updateEntity(input: UpdateEntityInput!): Entity!
+	updateEnumType(input: UpdateEnumTypeInput!): EnumType!
+	updateField(input: UpdateFieldInput!): Field!
+	updateInvitation(input: UpdateInvitationInput!): ApplicationInvitation!
+	updateOAuthClient(input: UpdateOAuthClientInput!): OAuthClient!
+	updatePlatformRole(input: UpdatePlatformRoleInput!): PlatformRole!
+	updateRecord(input: UpdateRecordInput!): Record!
+	updateRole(input: UpdateRoleInput!): Role!
+	updateUser(input: UpdateUserInput!): User!
 }
-
 type OAuthAppTenantOption {
 	id: ID!
 	name: String!
 }
-
 type OAuthAuthorizationRequest {
 	appTenants: [OAuthAppTenantOption!]!
 	applicationName: String
@@ -1240,30 +843,25 @@ type OAuthAuthorizationRequest {
 	clientName: String!
 	environmentName: String
 }
-
 type OAuthClient {
 	createdAt: DateTime!
 	id: ID!
 	name: String!
 	redirectUris: [String!]!
 }
-
-type OAuthRedirect implements Receipt{
+type OAuthRedirect implements Receipt {
 	_receipt: Boolean!
 	redirectUrl: String!
 }
-
 type OperatorFeedback {
 	feedback: Feedback!
 	id: ID!
 	submitter: User
 }
-
 type OperatorFeedbackPage {
 	items: [OperatorFeedback!]!
 	pageInfo: PageInfo!
 }
-
 input PageContextInput {
 	appTenantId: ID
 	applicationId: ID
@@ -1275,306 +873,171 @@ input PageContextInput {
 	recordId: ID
 	roleId: ID
 }
-
 type PageInfo {
 	hasMore: Boolean!
-"""
-Pass as `cursor` to get the next page. Only `records` issues one: null on every other list and on an empty page.
-"""
+	"""
+	Pass as `cursor` to get the next page. Only `records` issues one: null on every other list and on an empty page.
+	"""
 	nextCursor: String
 	page: Int!
 	pageSize: Int!
 }
-
 input PageInput {
-	page: Int!
-	pageSize: Int!
+	page: Int! = 0
+	pageSize: Int! = 20
 }
-
 type PermissionInfo {
 	entityTargeted: Boolean!
 	key: String!
 	level: String!
 }
-
 type PlatformEffectiveRole {
 	direct: Boolean!
 	groups: [PlatformGroup!]!
 	role: PlatformRole!
 }
-
-type PlatformGroup implements AccessGrant{
+type PlatformGroup implements AccessGrant {
 	_accessGrant: Boolean!
 	id: ID!
 	name: String!
 }
-
-type PlatformGroupMember implements AccessGrant{
+type PlatformGroupMember implements AccessGrant {
 	_accessGrant: Boolean!
 	group: PlatformGroup
 	id: ID!
 	user: User
 }
-
-type PlatformGroupRoleAssignment implements AccessGrant{
+type PlatformGroupRoleAssignment implements AccessGrant {
 	_accessGrant: Boolean!
 	group: PlatformGroup
 	id: ID!
 	role: PlatformRole!
 }
-
-type PlatformRole implements AccessGrant{
+type PlatformRole implements AccessGrant {
 	_accessGrant: Boolean!
 	id: ID!
 	name: String!
 	permissions: [String!]!
 }
-
-type PlatformRoleAssignment implements AccessGrant{
+type PlatformRoleAssignment implements AccessGrant {
 	_accessGrant: Boolean!
 	id: ID!
 	role: PlatformRole!
 	user: User
 }
-
 type PlatformRolePage {
 	items: [PlatformRole!]!
 	pageInfo: PageInfo!
 }
-
 type Query {
-	accessGroupMembers(
-		userId: ID
-	): [AccessGroupMember!]!
+	accessGroupMembers(userId: ID): [AccessGroupMember!]!
 	accessGroups: [AccessGroup!]!
-	aiTurn(
-		id: ID!
-	): AiTurn
-	allApplications(
-		clientId: ID
-		page: PageInput!
-	): ClientApplicationPage!
-	apiSchema(
-		revisionId: ID!
-	): String!
-	apiSchemaDiff(
-		fromRevisionId: ID!
-		toRevisionId: ID!
-	): ApiSchemaDiff!
+	aiTurn(id: ID!): AiTurn
+	allApplications(clientId: ID, page: PageInput! = {page:0,pageSize:20}): ClientApplicationPage!
+	apiSchema(revisionId: ID!): String!
+	apiSchemaDiff(fromRevisionId: ID!, toRevisionId: ID!): ApiSchemaDiff!
 	appIdentities: [AppIdentity!]!
-	appTenant(
-		id: ID!
-	): AppTenant
-	appTenants(
-		includeDeleted: Boolean
-		includeRetired: Boolean
-		page: PageInput!
-	): AppTenantPage!
-	application(
-		id: ID!
-	): Application
-	applications(
-		page: PageInput!
-	): ApplicationPage!
+	appTenant(id: ID!): AppTenant
+	appTenants(includeDeleted: Boolean = false, includeRetired: Boolean = false @deprecated(reason: "Use includeDeleted."), page: PageInput! = {page:0,pageSize:20}): AppTenantPage!
+	application(id: ID!): Application
+	applications(page: PageInput! = {page:0,pageSize:20}): ApplicationPage!
 	callerIsClientAdmin: Boolean!
-	childFields(
-		entityId: ID!
-	): [Field!]!
-	client(
-		id: ID!
-	): Client
-	clientEffectiveRoles(
-		userId: ID!
-	): [ClientEffectiveRole!]!
-	clientGroupMembers(
-		userId: ID
-	): [ClientGroupMember!]!
+	childFields(entityId: ID!): [Field!]!
+	client(id: ID!): Client
+	clientEffectiveRoles(userId: ID!): [ClientEffectiveRole!]!
+	clientGroupMembers(userId: ID): [ClientGroupMember!]!
 	clientGroupRoleAssignments: [ClientGroupRoleAssignment!]!
 	clientGroups: [ClientGroup!]!
-	clientRoleAssignments(
-		userId: ID
-	): [ClientRoleAssignment!]!
+	clientRoleAssignments(userId: ID): [ClientRoleAssignment!]!
 	clientRoles: [ClientRole!]!
-	clients(
-		page: PageInput!
-	): ClientPage!
-	constraints(
-		entityId: ID!
-		page: PageInput!
-	): ConstraintPage!
-	conversation(
-		id: ID!
-	): Conversation
-	conversations(
-		page: PageInput!
-	): ConversationPage!
-	dataImport(
-		id: ID!
-		includeDeleted: Boolean
-	): DataImport
-	dataImports(
-		applicationId: ID!
-		includeDeleted: Boolean
-		page: PageInput!
-	): DataImportPage!
-	effectiveRoles(
-		userId: ID!
-	): [EffectiveRole!]!
-	entities(
-		page: PageInput!
-	): EntityPage!
-	entity(
-		id: ID!
-	): Entity
-	enumType(
-		id: ID!
-	): EnumType
-	enumTypes(
-		page: PageInput!
-	): EnumTypePage!
-	feedbackReport(
-		id: ID!
-	): OperatorFeedback
-	feedbackReports(
-		kind: [FeedbackKind!]
-		page: PageInput!
-		status: [FeedbackStatus!]
-	): OperatorFeedbackPage!
+	clients(page: PageInput! = {page:0,pageSize:20}): ClientPage!
+	constraints(entityId: ID!, page: PageInput! = {page:0,pageSize:20}): ConstraintPage!
+	conversation(id: ID!): Conversation
+	conversations(page: PageInput! = {page:0,pageSize:20}): ConversationPage!
+	dataImport(id: ID!, includeDeleted: Boolean = false): DataImport
+	dataImports(applicationId: ID!, includeDeleted: Boolean = false, page: PageInput! = {page:0,pageSize:20}): DataImportPage!
+	effectiveRoles(userId: ID!): [EffectiveRole!]!
+	entities(page: PageInput! = {page:0,pageSize:20}): EntityPage!
+	entity(id: ID!): Entity
+	enumType(id: ID!): EnumType
+	enumTypes(page: PageInput! = {page:0,pageSize:20}): EnumTypePage!
+	feedbackReport(id: ID!): OperatorFeedback
+	feedbackReports(kind: [FeedbackKind!], page: PageInput! = {page:0,pageSize:20}, status: [FeedbackStatus!]): OperatorFeedbackPage!
 	feedbackSetting: FeedbackSetting!
-	field(
-		id: ID!
-	): Field
-	fields(
-		entityId: ID!
-		page: PageInput!
-	): FieldPage!
+	field(id: ID!): Field
+	fields(entityId: ID!, page: PageInput! = {page:0,pageSize:20}): FieldPage!
 	groupRoleAssignments: [GroupRoleAssignment!]!
-	invitations(
-		page: PageInput!
-		where: InvitationFilter
-	): ApplicationInvitationPage!
-"""
-The generator a version minted now would use.
-"""
+	invitations(page: PageInput! = {page:0,pageSize:20}, where: InvitationFilter): ApplicationInvitationPage!
+	"""
+	The generator a version minted now would use.
+	"""
 	latestGeneratorVersion: Int!
 	me: User
-	members(
-		appTenantId: ID
-		page: PageInput!
-	): TenantMemberPage!
-	modelRevisions(
-		page: PageInput!
-	): ModelRevisionPage!
+	members(appTenantId: ID, page: PageInput! = {page:0,pageSize:20}): TenantMemberPage!
+	modelRevisions(page: PageInput! = {page:0,pageSize:20}): ModelRevisionPage!
 	myEveryEnvironmentPermissions: [HeldPermission!]!
-	myFeedback(
-		page: PageInput!
-	): FeedbackPage!
-	myFeedbackReport(
-		id: ID!
-	): Feedback
-	myPermissions(
-		applicationWide: Boolean
-	): [HeldPermission!]!
+	myFeedback(page: PageInput! = {page:0,pageSize:20}): FeedbackPage!
+	myFeedbackReport(id: ID!): Feedback
+	myPermissions(applicationWide: Boolean = false): [HeldPermission!]!
 	myTenants: [TenantOption!]!
-	oauthAuthorizationRequest(
-		application: ID
-		clientId: ID!
-		environment: ID
-		redirectUri: String!
-	): OAuthAuthorizationRequest!
+	oauthAuthorizationRequest(application: ID, clientId: ID!, environment: ID, redirectUri: String!): OAuthAuthorizationRequest!
 	oauthClients: [OAuthClient!]!
 	permissionCatalog: [PermissionInfo!]!
-	platformEffectiveRoles(
-		userId: ID!
-	): [PlatformEffectiveRole!]!
-	platformGroupMembers(
-		userId: ID
-	): [PlatformGroupMember!]!
+	platformEffectiveRoles(userId: ID!): [PlatformEffectiveRole!]!
+	platformGroupMembers(userId: ID): [PlatformGroupMember!]!
 	platformGroupRoleAssignments: [PlatformGroupRoleAssignment!]!
 	platformGroups: [PlatformGroup!]!
-	platformRole(
-		id: ID!
-	): PlatformRole
-	platformRoleAssignments(
-		userId: ID
-	): [PlatformRoleAssignment!]!
-	platformRolePage(
-		page: PageInput!
-	): PlatformRolePage!
+	platformRole(id: ID!): PlatformRole
+	platformRoleAssignments(userId: ID): [PlatformRoleAssignment!]!
+	platformRolePage(page: PageInput! = {page:0,pageSize:20}): PlatformRolePage!
 	platformRoles: [PlatformRole!]!
-	record(
-		entityId: ID!
-		id: ID!
-	): Record
-	recordAccess(
-		recordId: ID!
-	): RecordAccess!
-	recordAccessExplanation(
-		recordId: ID!
-		userId: ID!
-	): RecordAccessExplanation!
-	recordHistory(
-		entityId: ID!
-		page: PageInput!
-		recordId: ID!
-	): RecordVersionPage!
+	record(entityId: ID!, id: ID!): Record
+	recordAccess(recordId: ID!): RecordAccess!
+	recordAccessExplanation(recordId: ID!, userId: ID!): RecordAccessExplanation!
+	recordHistory(entityId: ID!, page: PageInput! = {page:0,pageSize:20}, recordId: ID!): RecordVersionPage!
 	records(
-"""
-A `nextCursor` from this list: returns the page after it, under the same `orderBy`. `page.page` must be 0 with it.
-"""
+		"""
+		A `nextCursor` from this list: returns the page after it, under the same `orderBy`. `page.page` must be 0 with it.
+		"""
 		cursor: String
-		entityId: ID!
-"""
-One field to order by. Defaults to newest first.
-"""
+	entityId: ID!,
+		"""
+		One field to order by. Defaults to newest first.
+		"""
 		orderBy: RecordOrderInput
-		page: PageInput!
-		reference: RecordReferenceInput
-"""
-Narrow the list to app-tenant records or app-wide records. Defaults to both.
-"""
+	page: PageInput! = {page:0,pageSize:20}, reference: RecordReferenceInput,
+		"""
+		Narrow the list to app-tenant records or app-wide records. Defaults to both.
+		"""
 		scope: RecordScope
-"""
-Conditions every record must meet, keyed by field id or id, createdAt or updatedAt, like {"<field id>": {"lte": 5}}. A related field takes {"some": {…}} or {"none": {…}} and a reference {"is": {…}}, each keyed by the other entity's field ids.
-"""
+
+		"""
+		Conditions every record must meet, keyed by field id or id, createdAt or updatedAt, like {"<field id>": {"lte": 5}}. A related field takes {"some": {…}} or {"none": {…}} and a reference {"is": {…}}, each keyed by the other entity's field ids.
+		"""
 		where: JSON
 	): RecordPage!
-	referencingFields(
-		entityId: ID!
-	): [Field!]!
-	roleAssignments(
-		userId: ID
-	): [RoleAssignment!]!
+	referencingFields(entityId: ID!): [Field!]!
+	roleAssignments(userId: ID): [RoleAssignment!]!
 	roles: [Role!]!
-	user(
-		id: ID!
-	): User
-	users(
-		page: PageInput!
-	): UserPage!
+	user(id: ID!): User
+	users(page: PageInput! = {page:0,pageSize:20}): UserPage!
 }
-
-type RealtimeTicket implements Receipt{
+type RealtimeTicket implements Receipt {
 	_receipt: Boolean!
 	expiresAt: DateTime!
 	secret: String!
 	url: String!
 }
-
 """
 Marks a mutation result that invalidates no cached list: it changes no data a list holds, or the client discards its cache after it.
 """
 interface Receipt {
-"""
-Marks a mutation result that invalidates no cached list: it changes no data a list holds, or the client discards its cache after it.
-"""
 	_receipt: Boolean!
 }
-
 type Record {
-"""
-Whether the record belongs to the application rather than to one app-tenant.
-"""
+	"""
+	Whether the record belongs to the application rather than to one app-tenant.
+	"""
 	appWide: Boolean!
 	createdAt: DateTime!
 	data: JSON!
@@ -1582,19 +1045,17 @@ Whether the record belongs to the application rather than to one app-tenant.
 	files: [RecordFile!]!
 	id: ID!
 	updatedAt: DateTime!
-"""
-The id of this version of the record. Every update changes it. Pass it as expectedVersion to update only if the record hasn't changed since.
-"""
+	"""
+	The id of this version of the record. Every update changes it. Pass it as expectedVersion to update only if the record hasn't changed since.
+	"""
 	version: ID!
 }
-
 type RecordAccess {
 	recordId: ID!
 	rootRecordId: ID
 	shares: [RecordShare!]!
 	targets: [ShareTarget!]!
 }
-
 type RecordAccessExplanation {
 	level: Int!
 	recordId: ID!
@@ -1602,13 +1063,11 @@ type RecordAccessExplanation {
 	summary: String!
 	userId: ID!
 }
-
 enum RecordAccessLevel {
 	edit
 	manage
 	view
 }
-
 type RecordAccessSource {
 	applicationWide: Boolean
 	groupName: String
@@ -1620,7 +1079,6 @@ type RecordAccessSource {
 	viaParentEntityName: String
 	viaParentRecordId: ID
 }
-
 enum RecordAccessSourceKind {
 	deployer
 	group_role
@@ -1631,7 +1089,6 @@ enum RecordAccessSourceKind {
 	share_group
 	share_user
 }
-
 type RecordFile {
 	contentType: String!
 	fieldId: ID!
@@ -1641,40 +1098,36 @@ type RecordFile {
 	url: String!
 	urlExpiresAt: DateTime!
 }
-
-type RecordFileUpload implements Receipt{
+type RecordFileUpload implements Receipt {
 	_receipt: Boolean!
 	expiresAt: DateTime!
 	fileId: ID!
 	headers: [Header!]!
 	url: String!
 }
-
 input RecordOrderInput {
-	direction: SortDirection!
+	direction: SortDirection! = ASC
+	"""
+	A field id, or createdAt or updatedAt.
+	"""
 	field: String!
 }
-
 type RecordPage {
-"""
-Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging, skipping a record that stores no value in the field or stores one of another type. Computed only when selected.
-"""
-	aggregate(
-		fields: [String!]!
-	): JSON!
+	"""
+	Keyed by field id or createdAt / updatedAt: the sum (number fields only), min and max over every record that matches, ignoring paging, skipping a record that stores no value in the field or stores one of another type. Computed only when selected.
+	"""
+	aggregate(fields: [String!]!): JSON!
 	items: [Record!]!
 	pageInfo: PageInfo!
-"""
-How many records match, ignoring paging. Counted only when selected.
-"""
+	"""
+	How many records match, ignoring paging. Counted only when selected.
+	"""
 	totalCount: Int!
 }
-
 input RecordReferenceInput {
 	fieldId: ID!
 	recordId: ID!
 }
-
 """
 Which records a list returns: both kinds, only the app-tenant's own, or only the application's app-wide ones.
 """
@@ -1683,8 +1136,7 @@ enum RecordScope {
 	APP_WIDE
 	TENANT
 }
-
-type RecordShare implements AccessGrant{
+type RecordShare implements AccessGrant {
 	_accessGrant: Boolean!
 	createdAt: DateTime!
 	grantedBy: User
@@ -1695,7 +1147,6 @@ type RecordShare implements AccessGrant{
 	principalType: SharePrincipalType!
 	record: Record
 }
-
 type RecordVersion {
 	current: Boolean!
 	data: JSON!
@@ -1705,54 +1156,41 @@ type RecordVersion {
 	retiredAt: DateTime @deprecated(reason: "Use deletedAt.")
 	versionedAt: DateTime!
 }
-
 type RecordVersionPage {
 	items: [RecordVersion!]!
 	pageInfo: PageInfo!
 }
-
 """
 At least one of dataImportId and appTenantId. With both, only that tenant's invitations from that import.
 """
 input ReissueImportInvitationsInput {
-"""
-At least one of dataImportId and appTenantId. With both, only that tenant's invitations from that import.
-"""
 	appTenantId: ID
-"""
-At least one of dataImportId and appTenantId. With both, only that tenant's invitations from that import.
-"""
 	dataImportId: ID
 }
-
 type ReissueImportInvitationsResult {
-"""
-The import whose invitations were re-issued; null when re-issued by tenant alone.
-"""
+	"""
+	The import whose invitations were re-issued; null when re-issued by tenant alone.
+	"""
 	dataImport: DataImport
-"""
-Lapsed invitations extended 7 days from now.
-"""
+	"""
+	Lapsed invitations extended 7 days from now.
+	"""
 	reissued: Int!
-"""
-Lapsed invitations left as they are: the tenant or role is gone, or you do not hold the role.
-"""
+	"""
+	Lapsed invitations left as they are: the tenant or role is gone, or you do not hold the role.
+	"""
 	skipped: Int!
 }
-
 input RemoveEnvironmentInput {
 	id: ID!
 }
-
 input RemoveMemberInput {
 	id: ID!
 }
-
 input RenameEnvironmentInput {
 	id: ID!
 	name: String!
 }
-
 input RequestRecordFileUploadInput {
 	contentType: String!
 	entityId: ID!
@@ -1761,22 +1199,18 @@ input RequestRecordFileUploadInput {
 	sha256: String!
 	sizeBytes: Float!
 }
-
 input RequestSignInInput {
 	email: String!
 	returnTo: String
 }
-
 input ResendInvitationInput {
 	invitationId: ID!
 }
-
 input RetireRecordInput {
 	entityId: ID!
 	recordId: ID!
 }
-
-type Role implements AccessGrant{
+type Role implements AccessGrant {
 	_accessGrant: Boolean!
 	appTenant: AppTenant
 	id: ID!
@@ -1784,85 +1218,70 @@ type Role implements AccessGrant{
 	name: String!
 	permissions: [RolePermission!]!
 }
-
-type RoleAssignment implements AccessGrant{
+type RoleAssignment implements AccessGrant {
 	_accessGrant: Boolean!
 	appTenant: AppTenant
-"""
-True when the grant holds in every environment of the application; false when it holds in one environment or at an app-tenant.
-"""
+	"""
+	True when the grant holds in every environment of the application; false when it holds in one environment or at an app-tenant.
+	"""
 	everyEnvironment: Boolean!
 	id: ID!
 	role: Role
 	user: User
 }
-
 type RolePermission {
 	entityId: ID
 	permission: String!
 }
-
 input RolePermissionInput {
 	entityId: ID
 	permission: String!
 }
-
 type SchemaChange {
 	description: String!
 	type: String!
 }
-
 input SendPromptInput {
 	conversationId: ID!
 	pageContext: PageContextInput
 	text: String!
 }
-
 input SetEnvironmentDeletionProtectionInput {
 	id: ID!
 	protected: Boolean!
 }
-
 input SetEnvironmentRedirectUrisInput {
 	id: ID!
 	oauthClientId: ID!
 	uris: [String!]!
 }
-
-union SharePrincipal =AccessGroup | User
-
+union SharePrincipal = AccessGroup | User
 enum SharePrincipalType {
 	everyone
 	group
 	user
 }
-
 input ShareRecordInput {
 	level: RecordAccessLevel!
 	principalId: ID
 	principalType: SharePrincipalType!
 	recordId: ID!
 }
-
 type ShareTarget {
 	name: String!
 	principalId: ID!
 	principalType: SharePrincipalType!
 }
-
 input SignInInput {
 	token: String!
 }
-
 enum SortDirection {
 	ASC
 	DESC
 }
-
 input StartConversationInput {
 	title: String
 }
-
 input SubmitFeedbackInput {
 	aboutApplication: Boolean
 	apiVersion: String
@@ -1871,8 +1290,7 @@ input SubmitFeedbackInput {
 	summary: String
 	viaPlugin: Boolean
 }
-
-type TenantMember implements AccessGrant{
+type TenantMember implements AccessGrant {
 	_accessGrant: Boolean!
 	appTenant: AppTenant
 	createdAt: DateTime!
@@ -1880,19 +1298,16 @@ type TenantMember implements AccessGrant{
 	updatedAt: DateTime!
 	user: User!
 }
-
 type TenantMemberPage {
 	items: [TenantMember!]!
 	pageInfo: PageInfo!
 }
-
 type TenantOption {
 	appTenantId: ID
 	applicationId: ID
 	client: Client!
 	member: Boolean!
 }
-
 type TurnStep {
 	aiTurn: AiTurn!
 	id: ID!
@@ -1903,38 +1318,31 @@ type TurnStep {
 	text: String
 	tool: String
 }
-
 enum TurnStepKind {
 	reply
 	thinking
 	toolCall
 }
-
 input UnshareRecordInput {
 	shareId: ID!
 }
-
 input UpdateAppTenantInput {
 	id: ID!
 	name: String!
 }
-
 input UpdateApplicationInput {
 	id: ID!
 	name: String!
 }
-
 input UpdateClientInput {
 	id: ID!
 	name: String!
 }
-
 input UpdateClientRoleInput {
 	id: ID!
 	name: String
 	permissions: [String!]
 }
-
 input UpdateEntityInput {
 	entityId: ID!
 	graphqlPluralName: String
@@ -1943,14 +1351,12 @@ input UpdateEntityInput {
 	name: String
 	shareNewRecordsWithTenant: RecordAccessLevel
 }
-
 input UpdateEnumTypeInput {
 	enumTypeId: ID!
 	graphqlTypeName: String
 	name: String
 	values: [EnumValueInput!]
 }
-
 input UpdateFieldInput {
 	defaultValue: JSON
 	enumTypeId: ID
@@ -1965,45 +1371,41 @@ input UpdateFieldInput {
 	required: Boolean
 	type: String
 }
-
 input UpdateInvitationInput {
 	groupIds: [ID!]!
 	id: ID!
 	roleIds: [ID!]!
 }
-
 input UpdateOAuthClientInput {
 	id: ID!
 	name: String!
 	redirectUris: [String!]!
 }
-
 input UpdatePlatformRoleInput {
 	id: ID!
 	name: String
 	permissions: [String!]
 }
-
 input UpdateRecordInput {
 	clearFieldIds: [ID!]
 	data: JSON!
 	entityId: ID!
+	"""
+	Write only if the record is still at this version. Otherwise nothing is written and the update fails with CONFLICT.
+	"""
 	expectedVersion: ID
 	recordId: ID!
 }
-
 input UpdateRoleInput {
 	id: ID!
 	name: String
 	permissions: [RolePermissionInput!]
 }
-
 input UpdateUserInput {
 	email: String!
 	id: ID!
 	name: String
 }
-
 type User {
 	appTenant: AppTenant
 	application: Application
@@ -2015,15 +1417,11 @@ type User {
 	name: String
 	updatedAt: DateTime!
 }
-
 enum UserKind {
 	APP
 	PERSON
 }
-
 type UserPage {
 	items: [User!]!
 	pageInfo: PageInfo!
 }
-
-

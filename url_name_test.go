@@ -88,6 +88,19 @@ func TestURLNameShowFindsAnEnvironmentByItsIdInCapitals(t *testing.T) {
 	}
 }
 
+func TestEnvsListSiteUrlNamesTheRequestsOwnClient(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	fake.entitlements = append(fake.entitlements, entitlement{clientID: "client-c", clientName: "Gamma"})
+	fake.apps["client-c"] = []fakeRow{{id: "app-c", name: "Ledger"}}
+	fake.environments["app-c"] = []fakeEnv{{id: "env-c", name: "Default", isDefault: true}}
+
+	got := fake.run(t, "envs", "list", "--app", "app-c", "--json")
+
+	if got.exit != exitOK || !strings.Contains(compact(got.stdout), `"siteUrl":"https://app-c--client-c.example.test"`) {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+}
+
 func TestURLNameAnInvalidNameCarriesItsRules(t *testing.T) {
 	fake := signedInFake(t, fresh)
 

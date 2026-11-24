@@ -445,7 +445,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 	case "DeactivateAppTenant", "DeleteAppTenant":
 		f.deactivateAppTenant(w, operation, parts, variables)
 	case "Environments", "EnvironmentRedirectUriSets", "CreateEnvironment", "RenameEnvironment", "SetEnvironmentDeletionProtection", "SetEnvironmentRedirectUris", "RemoveEnvironment", "DeleteEnvironment":
-		f.manageEnvironments(w, operation, appOf(parts), variables)
+		f.manageEnvironments(w, operation, parts[0], appOf(parts), variables)
 	case "ClientUrlName", "RenameClientUrlName", "ApplicationUrlName", "RenameApplicationUrlName", "EnvironmentUrlNames", "RenameEnvironmentUrlName":
 		f.manageURLNames(w, operation, parts, variables)
 	case "ScopedAppTenant":
@@ -1497,7 +1497,7 @@ func removalRefusal(e fakeEnv) (reason, message string) {
 
 // manageEnvironments shares these steps with the server, in order: an application in scope, then
 // access.manage.application for a change, then the change. Names are unique within an application.
-func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app string, variables map[string]any) {
+func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, client, app string, variables map[string]any) {
 	changes := operation != "Environments" && operation != "EnvironmentRedirectUriSets"
 	if changes {
 		f.mutations = append(f.mutations, variables)
@@ -1507,7 +1507,7 @@ func (f *fakeMultiPaaS) manageEnvironments(w http.ResponseWriter, operation, app
 		return
 	}
 	shown := func(e fakeEnv) map[string]any {
-		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.deletionProtected(), "redirectUriSets": e.redirectSets(), "siteUrl": f.siteURL(app, e)}
+		return map[string]any{"id": e.id, "name": e.name, "isDefault": e.isDefault, "deletionProtected": e.deletionProtected(), "redirectUriSets": e.redirectSets(), "siteUrl": f.siteURL(client, app, e)}
 	}
 	input, _ := variables["input"].(map[string]any)
 	name, _ := input["name"].(string)
@@ -1631,14 +1631,14 @@ func (f *fakeMultiPaaS) manageURLNames(w http.ResponseWriter, operation string, 
 		if f.clientRenamed {
 			changeableAt = fakeChangeableAt
 		}
-		return map[string]any{"id": parts[0], "urlName": f.currentURLName(clientKey, "acme-co"), "urlNameChangeableAt": changeableAt, "urlNameHistory": f.urlNameHistory(clientKey, "acme-co")}
+		return map[string]any{"id": parts[0], "urlName": f.currentURLName(clientKey, initialClientURLName(parts[0])), "urlNameChangeableAt": changeableAt, "urlNameHistory": f.urlNameHistory(clientKey, initialClientURLName(parts[0]))}
 	}
 	application := func() map[string]any {
 		return map[string]any{"id": app, "urlName": f.currentURLName("app:"+app, app), "urlNameHistory": f.urlNameHistory("app:"+app, app)}
 	}
 	environment := func(e fakeEnv) map[string]any {
 		key, initial := "env:"+e.id, strings.ToLower(e.name)
-		return map[string]any{"id": e.id, "urlName": f.currentURLName(key, initial), "siteUrl": f.siteURL(app, e), "urlNameHistory": f.urlNameHistory(key, initial)}
+		return map[string]any{"id": e.id, "urlName": f.currentURLName(key, initial), "siteUrl": f.siteURL(parts[0], app, e), "urlNameHistory": f.urlNameHistory(key, initial)}
 	}
 	switch operation {
 	case "ClientUrlName":
@@ -1649,7 +1649,7 @@ func (f *fakeMultiPaaS) manageURLNames(w http.ResponseWriter, operation string, 
 			return
 		}
 		f.clientRenamed = true
-		f.renameURLName(clientKey, "acme-co", name)
+		f.renameURLName(clientKey, initialClientURLName(parts[0]), name)
 		writeData(w, map[string]any{"renameClientUrlName": client()})
 	case "ApplicationUrlName":
 		writeData(w, map[string]any{"me": map[string]any{"application": application()}})
@@ -1698,9 +1698,17 @@ func (f *fakeMultiPaaS) renameURLName(key, initial, name string) {
 	f.urlNames[key] = append([]map[string]any{{"name": name, "claimedAt": fakeRenamedAt, "replacedAt": nil}}, history...)
 }
 
+// initialClientURLName is the URL name the fake gives a client before any rename: acme-co for client-a, the client's id for any other.
+func initialClientURLName(client string) string {
+	if client == "client-a" {
+		return "acme-co"
+	}
+	return client
+}
+
 // siteURL is the address the fake gives an environment's site: <app>--<client> for the default, <env>--<app>--<client> for the rest.
-func (f *fakeMultiPaaS) siteURL(app string, e fakeEnv) string {
-	labels := []string{f.currentURLName("app:"+app, app), f.currentURLName("client:client-a", "acme-co")}
+func (f *fakeMultiPaaS) siteURL(client, app string, e fakeEnv) string {
+	labels := []string{f.currentURLName("app:"+app, app), f.currentURLName("client:"+client, initialClientURLName(client))}
 	if !e.isDefault {
 		labels = append([]string{f.currentURLName("env:"+e.id, strings.ToLower(e.name))}, labels...)
 	}

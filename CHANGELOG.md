@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.15.0...v1.15.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* [MP-316] CLI schema keeps argument defaults, deprecations and field descriptions ([#128](https://github.com/MultiPaaS-Apps/cli/issues/128)) ([918e77c](https://github.com/MultiPaaS-Apps/cli/commit/918e77c09687bfba8eb00849988e248e5cde2757))
+
 ## [1.15.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.14.1...v1.15.0) (2026-11-24)
 
 

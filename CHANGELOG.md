@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.14.0...v1.14.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* [MP-319] say when --env applies on the records and role commands ([#124](https://github.com/MultiPaaS-Apps/cli/issues/124)) ([a39ac34](https://github.com/MultiPaaS-Apps/cli/commit/a39ac34ed49fc3119f193daef3801f2d0ee2439d))
+
 ## [1.14.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.13.0...v1.14.0) (2026-11-23)
 
 

@@ -134,6 +134,8 @@ type Application implements Deletable {
 	id: ID!
 	name: String!
 	updatedAt: DateTime!
+	urlName: String!
+	urlNameHistory: [UrlNameEntry!]!
 }
 type ApplicationInvitation {
 	appTenant: AppTenant
@@ -191,6 +193,9 @@ type Client implements Deletable {
 	id: ID!
 	name: String!
 	updatedAt: DateTime!
+	urlName: String!
+	urlNameChangeableAt: DateTime
+	urlNameHistory: [UrlNameEntry!]!
 }
 type ClientApplication {
 	application: Application!
@@ -535,7 +540,10 @@ type Environment implements Deletable {
 	name: String!
 	redirectUriSets: [EnvironmentRedirectUris!]!
 	redirectUris(oauthClientId: ID!): [String!]!
+	siteUrl: String!
 	updatedAt: DateTime!
+	urlName: String!
+	urlNameHistory: [UrlNameEntry!]!
 }
 input EnvironmentRedirectInput {
 	oauthClientId: ID!
@@ -776,8 +784,11 @@ type Mutation {
 	removeMember(input: RemoveMemberInput!): TenantMember!
 	removePlatformGroupMember(id: ID!): PlatformGroupMember!
 	renameAccessGroup(id: ID!, name: String!): AccessGroup!
+	renameApplicationUrlName(applicationId: ID!, confirmTakeover: Boolean, name: String!): Application!
 	renameClientGroup(id: ID!, name: String!): ClientGroup!
+	renameClientUrlName(clientId: ID!, name: String!): Client!
 	renameEnvironment(input: RenameEnvironmentInput!): Environment!
+	renameEnvironmentUrlName(confirmTakeover: Boolean, environmentId: ID!, name: String!): Environment!
 	renamePlatformGroup(id: ID!, name: String!): PlatformGroup!
 	"""
 	Registers a file for a record's file field and signs its upload. Write the returned fileId as the field's value once the PUT succeeds.
@@ -1405,6 +1416,11 @@ input UpdateUserInput {
 	email: String!
 	id: ID!
 	name: String
+}
+type UrlNameEntry {
+	claimedAt: DateTime!
+	name: String!
+	replacedAt: DateTime
 }
 type User {
 	appTenant: AppTenant

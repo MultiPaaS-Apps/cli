@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.14.1...v1.15.0) (2026-11-24)
+
+
+### Features
+
+* [MP-372] apps delete deletes an application in its client ([#126](https://github.com/MultiPaaS-Apps/cli/issues/126)) ([9a5a7bd](https://github.com/MultiPaaS-Apps/cli/commit/9a5a7bd5ea0952fa0b14eb9f177952cb9587ae85))
+
 ## [1.14.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.14.0...v1.14.1) (2026-11-24)
 
 

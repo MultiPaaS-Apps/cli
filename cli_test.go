@@ -552,6 +552,60 @@ func TestEnvAndTenantTogetherAreRefused(t *testing.T) {
 	}
 }
 
+func TestScopedCommandsHelpSaysTheTenantDecidesTheEnvironment(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	tenant := "the app-tenant's id (from tenants list; default: multipaas.json's testAppTenantId for the same application); the app-tenant decides the environment, so leave --env off"
+	for subject, commands := range map[string][][]string{
+		"records": {{"records", "create"}, {"records", "delete"}, {"records", "get"}, {"records", "list"}, {"records", "update"}, {"records", "upload"}},
+		"roles":   {{"app-identity", "role", "add"}, {"app-identity", "role", "list"}, {"app-identity", "role", "remove"}},
+	} {
+		env := "only with --app-wide: the environment whose app-wide " + subject + " to reach (from envs list; default: multipaas.json's environmentId for the same application, else the application's default environment); refused without --app-wide, with or without --tenant, since an app-tenant already belongs to one environment"
+		for _, command := range commands {
+			help := fake.run(t, append(command, "--help")...)
+			if help.exit != exitOK ||
+				!regexp.MustCompile(`(?m)--env string\s+`+regexp.QuoteMeta(env)+`$`).MatchString(help.stdout) ||
+				!regexp.MustCompile(`(?m)--tenant string\s+`+regexp.QuoteMeta(tenant)+`$`).MatchString(help.stdout) {
+				t.Fatalf("%v --help: exit %d:\n%s", command, help.exit, help.stdout)
+			}
+		}
+	}
+}
+
+func TestEnvHelpNamesMultipaasJSONsEnvironmentAsTheDefault(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	env := "the environment's id (from envs list; default: multipaas.json's environmentId for the same application, else the application's default environment)"
+	help := fake.run(t, "app-identity", "list", "--help")
+	if help.exit != exitOK || !regexp.MustCompile(`(?m)--env string\s+`+regexp.QuoteMeta(env)+`$`).MatchString(help.stdout) {
+		t.Fatalf("exit %d:\n%s", help.exit, help.stdout)
+	}
+}
+
+func TestEnvWithoutAppWideIsRefusedNamingTheCommandsSubject(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	for subject, args := range map[string][]string{
+		"records": {"records", "list", "--app", "app-a-000", "--env", "env-default", "--entity", "entity-1", "--json"},
+		"roles":   {"app-identity", "role", "add", "cid", "--role", "r", "--app", "app-a-000", "--env", "env-default", "--json"},
+	} {
+		got := fake.run(t, args...)
+		assertFailure(t, got, exitRefused, "CLI_ERROR")
+		if !strings.Contains(got.stdout, "--env needs --app-wide: an app-tenant's "+subject+" are reached with --tenant") {
+			t.Fatalf("%s: stdout %s", subject, got.stdout)
+		}
+	}
+	if len(fake.scopes) != 0 {
+		t.Fatalf("sent %v", fake.scopes)
+	}
+}
+
+func TestEmptyEnvRefusalDoesNotNameADefault(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	got := fake.run(t, "app-identity", "list", "--app", "app-a-000", "--env", "", "--json")
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "leave --env off for its default") {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+}
+
 func TestEmptyEnvIsRefusedNotTheDefault(t *testing.T) {
 	fake := signedInFake(t, fresh)
 	commands := [][]string{

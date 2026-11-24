@@ -382,22 +382,22 @@ func (s *session) writeRecord(ctx context.Context, target recordTarget, data str
 }
 
 func recordFlags(cmd *cobra.Command, target *recordTarget) {
-	scopeFlags(cmd, target, "act on the application's app-wide records instead of an app-tenant's", true)
+	scopeFlags(cmd, target, "records", "act on the application's app-wide records instead of an app-tenant's", true)
 	cmd.Flags().StringVar(&target.entityID, "entity", "", "the entity's id (from model show)")
 	_ = cmd.MarkFlagRequired("entity")
 }
 
 // scopeFlags are --app, --tenant and --app-wide: one app-tenant, by default multipaas.json's test app-tenant,
 // or with --app-wide the application itself. With withEnv it adds --env, which names the environment an
-// --app-wide target is in.
-func scopeFlags(cmd *cobra.Command, target *recordTarget, appWideUsage string, withEnv bool) {
+// --app-wide target is in. subject is what the command reaches, "records" or "roles", as its help and errors name it.
+func scopeFlags(cmd *cobra.Command, target *recordTarget, subject, appWideUsage string, withEnv bool) {
 	if withEnv {
 		cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
 			switch {
 			case target.envID != "" && cmd.Flags().Changed("tenant"):
 				return fmt.Errorf("--env and --tenant: choose one; a tenant already belongs to one environment")
 			case target.envID != "" && !target.appWide:
-				return fmt.Errorf("--env needs --app-wide: an app-tenant's records are reached with --tenant, which already belongs to one environment")
+				return fmt.Errorf("--env needs --app-wide: an app-tenant's %s are reached with --tenant, which already belongs to one environment", subject)
 			}
 			return nil
 		}
@@ -405,8 +405,12 @@ func scopeFlags(cmd *cobra.Command, target *recordTarget, appWideUsage string, w
 	appFlag(cmd, &target.appID)
 	if withEnv {
 		envFlagFromProject(cmd, &target.appID, &target.envID, func() bool { return !target.appWide })
+		cmd.Flags().Lookup("env").Usage = "only with --app-wide: the environment whose app-wide " + subject + " to reach (from envs list; " + projectEnvDefault + "); refused without --app-wide, with or without --tenant, since an app-tenant already belongs to one environment"
 	}
 	tenantFlag(cmd, &target.appID, &target.tenantID, func() bool { return target.appWide || target.envID != "" })
+	if withEnv {
+		cmd.Flags().Lookup("tenant").Usage += "; the app-tenant decides the environment, so leave --env off"
+	}
 	cmd.Flags().BoolVar(&target.appWide, "app-wide", false, appWideUsage)
 	cmd.MarkFlagsMutuallyExclusive("tenant", "app-wide")
 }

@@ -630,16 +630,20 @@ func envFlag(cmd *cobra.Command, envID *string) {
 			}
 		}
 		if cmd.Flags().Changed("env") && *envID == "" {
-			return fmt.Errorf("--env is empty: give an environment id from envs list, or leave --env off for the default environment")
+			return fmt.Errorf("--env is empty: give an environment id from envs list, or leave --env off for its default")
 		}
 		return nil
 	}
 }
 
+// projectEnvDefault is the default an --env from envFlagFromProject takes, as its help names it.
+const projectEnvDefault = "default: multipaas.json's environmentId for the same application, else the application's default environment"
+
 // envFlagFromProject is --env, which defaults to multipaas.json's environmentId when that file is for appID.
 // A non-nil skip that returns true leaves --env unset without a default.
 func envFlagFromProject(cmd *cobra.Command, appID, envID *string, skip func() bool) {
 	envFlag(cmd, envID)
+	cmd.Flags().Lookup("env").Usage = "the environment's id (from envs list; " + projectEnvDefault + ")"
 	previous := cmd.PreRunE
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := previous(cmd, args); err != nil {

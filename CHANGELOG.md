@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.15.1...v1.16.0) (2026-11-24)
+
+
+### Features
+
+* [MP-351] show and rename URL names, and list site URLs, in the CLI ([#132](https://github.com/MultiPaaS-Apps/cli/issues/132)) ([46002f7](https://github.com/MultiPaaS-Apps/cli/commit/46002f7ca567e69ae84b45e696380b82a127b86a))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#130](https://github.com/MultiPaaS-Apps/cli/issues/130)) ([bcd1d2b](https://github.com/MultiPaaS-Apps/cli/commit/bcd1d2b69edc1bd2005a1df0b42758aa3745f1f8))
+
 ## [1.15.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.15.0...v1.15.1) (2026-11-24)
 
 

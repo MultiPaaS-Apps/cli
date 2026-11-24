@@ -2,10 +2,7 @@ module github.com/MultiPaaS-Apps/cli
 
 go 1.27.2
 
-tool (
-	github.com/Khan/genqlient
-	github.com/suessflorian/gqlfetch/gqlconvert
-)
+tool github.com/Khan/genqlient
 
 require (
 	github.com/Khan/genqlient v0.8.1
@@ -21,7 +18,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
-	github.com/suessflorian/gqlfetch v0.7.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/tools v0.51.0 // indirect

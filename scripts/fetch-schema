@@ -23,8 +23,8 @@ main() {
     echo "fetch-schema: the response has no data.__schema object" >&2
     exit 1
   fi
-  # gqlconvert prints no default values, so a deprecated non-null input with a default would print as required;
-  # the spec makes every deprecated input optional, so drop its NON_NULL.
+  # The spec makes every deprecated input optional, so a deprecated input with a default loses its NON_NULL and its
+  # type shows it as optional too.
   jq '
     def optional: if .isDeprecated and .type.kind == "NON_NULL" and .defaultValue != null then .type |= .ofType else . end;
     def each_optional: if . == null then . else map(optional) end;
@@ -35,7 +35,7 @@ main() {
       )
       | .directives |= (if . == null then . else map(.args |= each_optional) end)
     )' "$work/response.json" > "$work/optional.json"
-  go tool gqlconvert --file "$work/optional.json" --without-builtins
+  go -C "$(dirname "$0")/.." run ./scripts/printschema < "$work/optional.json"
 }
 
 main "$@"

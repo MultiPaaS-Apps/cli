@@ -40,7 +40,7 @@ func TestFetchSchemaKeepsDeprecatedDefaultedInputsOptional(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fetch-schema failed: %v\n%s", err, stderr)
 	}
-	for _, want := range []string{"legacyLimit: Int\n", "legacyTag: String\n", "includeRetired: Boolean\n", "oldName: String\n"} {
+	for _, want := range []string{"legacyLimit: Int = 10 @deprecated", `legacyTag: String = "x"@deprecated`, "includeRetired: Boolean @deprecated", "oldName: String @deprecated"} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("schema is missing %q:\n%s", want, stdout)
 		}
@@ -57,6 +57,73 @@ func TestFetchSchemaKeepsDeprecatedDefaultedInputsOptional(t *testing.T) {
 	_, queryErrs := gqlparser.LoadQuery(schema, `query { items(filter: {name: "a"}) }`)
 	if len(queryErrs) != 0 {
 		t.Errorf("a query that leaves out the deprecated inputs is invalid: %v", queryErrs)
+	}
+}
+
+func TestFetchSchemaKeepsDefaultValues(t *testing.T) {
+	requireTools(t)
+	server := introspectionServer(t)
+
+	stdout, stderr, err := runFetchSchema(server.URL)
+
+	if err != nil {
+		t.Fatalf("fetch-schema failed: %v\n%s", err, stderr)
+	}
+	for _, want := range []string{"page: PageInput! = {page:0,pageSize:20}", "direction: SortDirection! = ASC", "page: Int! = 0", "pageSize: Int! = 20"} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("schema is missing %q:\n%s", want, stdout)
+		}
+	}
+	schema, gqlErr := gqlparser.LoadSchema(&ast.Source{Name: "schema.graphql", Input: stdout})
+	if gqlErr != nil {
+		t.Fatalf("the printed schema does not load: %v", gqlErr)
+	}
+	_, queryErrs := gqlparser.LoadQuery(schema, `query { pages }`)
+	if len(queryErrs) != 0 {
+		t.Errorf("a query that leaves out the defaulted arguments is invalid: %v", queryErrs)
+	}
+}
+
+func TestFetchSchemaKeepsArgumentAndInputFieldDeprecations(t *testing.T) {
+	requireTools(t)
+	server := introspectionServer(t)
+
+	stdout, stderr, err := runFetchSchema(server.URL)
+
+	if err != nil {
+		t.Fatalf("fetch-schema failed: %v\n%s", err, stderr)
+	}
+	for _, want := range []string{`includeRetired: Boolean @deprecated(reason: "use includeDeleted")`, `oldName: String @deprecated(reason: "use name")`} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("schema is missing %q:\n%s", want, stdout)
+		}
+	}
+}
+
+func TestFetchSchemaKeepsEachFieldsOwnDescription(t *testing.T) {
+	requireTools(t)
+	server := introspectionServer(t)
+
+	stdout, stderr, err := runFetchSchema(server.URL)
+
+	if err != nil {
+		t.Fatalf("fetch-schema failed: %v\n%s", err, stderr)
+	}
+	schema, gqlErr := gqlparser.LoadSchema(&ast.Source{Name: "schema.graphql", Input: stdout})
+	if gqlErr != nil {
+		t.Fatalf("the printed schema does not load: %v", gqlErr)
+	}
+	for _, tc := range []struct{ typ, field, want string }{
+		{"PageInput", "page", "The page, from 0."},
+		{"PageInput", "pageSize", ""},
+		{"Node", "id", "The node's id."},
+	} {
+		if got := schema.Types[tc.typ].Fields.ForName(tc.field).Description; got != tc.want {
+			t.Errorf("%s.%s description = %q, want %q", tc.typ, tc.field, got, tc.want)
+		}
+	}
+	if got := schema.Types["PageInput"].Description; got != "Paging for a list." {
+		t.Errorf("PageInput description = %q, want %q", got, "Paging for a list.")
 	}
 }
 

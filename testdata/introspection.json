@@ -22,6 +22,25 @@
               "type": {"kind": "SCALAR", "name": "String", "ofType": null},
               "isDeprecated": false,
               "deprecationReason": null
+            },
+            {
+              "name": "pages",
+              "description": "",
+              "args": [
+                {"name": "page", "description": "", "type": {"kind": "NON_NULL", "name": null, "ofType": {"kind": "INPUT_OBJECT", "name": "PageInput", "ofType": null}}, "defaultValue": "{page: 0, pageSize: 20}", "isDeprecated": false, "deprecationReason": null},
+                {"name": "direction", "description": "", "type": {"kind": "NON_NULL", "name": null, "ofType": {"kind": "ENUM", "name": "SortDirection", "ofType": null}}, "defaultValue": "ASC", "isDeprecated": false, "deprecationReason": null}
+              ],
+              "type": {"kind": "SCALAR", "name": "String", "ofType": null},
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "node",
+              "description": "",
+              "args": [],
+              "type": {"kind": "INTERFACE", "name": "Node", "ofType": null},
+              "isDeprecated": false,
+              "deprecationReason": null
             }
           ],
           "inputFields": null,
@@ -40,6 +59,56 @@
             {"name": "legacyTag", "description": "", "type": {"kind": "NON_NULL", "name": null, "ofType": {"kind": "SCALAR", "name": "String", "ofType": null}}, "defaultValue": "\"x\"", "isDeprecated": true, "deprecationReason": "no longer used"}
           ],
           "interfaces": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "INPUT_OBJECT",
+          "name": "PageInput",
+          "description": "Paging for a list.",
+          "fields": null,
+          "inputFields": [
+            {"name": "page", "description": "The page, from 0.", "type": {"kind": "NON_NULL", "name": null, "ofType": {"kind": "SCALAR", "name": "Int", "ofType": null}}, "defaultValue": "0", "isDeprecated": false, "deprecationReason": null},
+            {"name": "pageSize", "description": "", "type": {"kind": "NON_NULL", "name": null, "ofType": {"kind": "SCALAR", "name": "Int", "ofType": null}}, "defaultValue": "20", "isDeprecated": false, "deprecationReason": null}
+          ],
+          "interfaces": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "ENUM",
+          "name": "SortDirection",
+          "description": "",
+          "fields": null,
+          "inputFields": null,
+          "interfaces": null,
+          "enumValues": [
+            {"name": "ASC", "description": "", "isDeprecated": false, "deprecationReason": null},
+            {"name": "DESC", "description": "", "isDeprecated": false, "deprecationReason": null}
+          ],
+          "possibleTypes": null
+        },
+        {
+          "kind": "INTERFACE",
+          "name": "Node",
+          "description": "Something with an id.",
+          "fields": [
+            {"name": "id", "description": "The node's id.", "args": [], "type": {"kind": "NON_NULL", "name": null, "ofType": {"kind": "SCALAR", "name": "String", "ofType": null}}, "isDeprecated": false, "deprecationReason": null}
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "enumValues": null,
+          "possibleTypes": [{"kind": "OBJECT", "name": "Thing", "ofType": null}]
+        },
+        {
+          "kind": "OBJECT",
+          "name": "Thing",
+          "description": "",
+          "fields": [
+            {"name": "id", "description": "", "args": [], "type": {"kind": "NON_NULL", "name": null, "ofType": {"kind": "SCALAR", "name": "String", "ofType": null}}, "isDeprecated": false, "deprecationReason": null}
+          ],
+          "inputFields": null,
+          "interfaces": [{"kind": "INTERFACE", "name": "Node", "ofType": null}],
           "enumValues": null,
           "possibleTypes": null
         },

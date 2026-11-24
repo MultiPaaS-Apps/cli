@@ -273,7 +273,7 @@ func appIdentityRoleList(command commandFunc) *cobra.Command {
 		}, err
 	})
 	cmd.Args = oneID(&clientID)
-	scopeFlags(cmd, &target, "list the roles held across the application instead of in an app-tenant", true)
+	scopeFlags(cmd, &target, "roles", "list the roles held across the application instead of in an app-tenant", true)
 	return cmd
 }
 
@@ -304,7 +304,7 @@ func appIdentityRoleAdd(command commandFunc) *cobra.Command {
 		}, err
 	})
 	cmd.Args = oneID(&clientID)
-	scopeFlags(cmd, &target, "give the role across the application instead of in an app-tenant", true)
+	scopeFlags(cmd, &target, "roles", "give the role across the application instead of in an app-tenant", true)
 	cmd.Flags().StringVar(&roleKey, "role", "", "the role's key or id (from roles list)")
 	_ = cmd.MarkFlagRequired("role")
 	return cmd
@@ -345,7 +345,7 @@ func appIdentityRoleRemove(command commandFunc) *cobra.Command {
 		}, err
 	})
 	cmd.Args = oneID(&clientID)
-	scopeFlags(cmd, &target, "remove a role held across the application instead of in an app-tenant", true)
+	scopeFlags(cmd, &target, "roles", "remove a role held across the application instead of in an app-tenant", true)
 	cmd.Flags().StringVar(&roleKey, "role", "", "the role's key or id (from roles list)")
 	_ = cmd.MarkFlagRequired("role")
 	return cmd

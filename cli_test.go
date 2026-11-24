@@ -207,7 +207,7 @@ func TestEnvsCreateThenListShowsIt(t *testing.T) {
 		t.Fatalf("scope %q", last)
 	}
 	listed := fake.run(t, "envs", "list", "--app", "app-a-000", "--json")
-	if compact(listed.stdout) != `[{"id":"env-default","name":"Default","isDefault":true,"deletionProtected":true},{"id":"env-new-2","name":"test","isDefault":false,"deletionProtected":false}]` {
+	if compact(listed.stdout) != `[{"id":"env-default","name":"Default","isDefault":true,"deletionProtected":true,"siteUrl":"https://app-a-000--acme-co.example.test"},{"id":"env-new-2","name":"test","isDefault":false,"deletionProtected":false,"siteUrl":"https://test--app-a-000--acme-co.example.test"}]` {
 		t.Fatalf("list %s", listed.stdout)
 	}
 	renamed := fake.run(t, "envs", "rename", "--app", "app-a-000", "--env", "env-new-2", "--name", "staging", "--json")

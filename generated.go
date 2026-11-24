@@ -393,6 +393,112 @@ var AllApplicationInvitationStatus = []ApplicationInvitationStatus{
 	ApplicationInvitationStatusPending,
 }
 
+// ApplicationUrlNameMeUser includes the requested fields of the GraphQL type User.
+type ApplicationUrlNameMeUser struct {
+	Application ApplicationUrlNameMeUserApplication `json:"application"`
+}
+
+// GetApplication returns ApplicationUrlNameMeUser.Application, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameMeUser) GetApplication() ApplicationUrlNameMeUserApplication {
+	return v.Application
+}
+
+// ApplicationUrlNameMeUserApplication includes the requested fields of the GraphQL type Application.
+type ApplicationUrlNameMeUserApplication struct {
+	Id             string                                                          `json:"id"`
+	UrlName        string                                                          `json:"urlName"`
+	UrlNameHistory []ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry `json:"urlNameHistory"`
+}
+
+// GetId returns ApplicationUrlNameMeUserApplication.Id, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameMeUserApplication) GetId() string { return v.Id }
+
+// GetUrlName returns ApplicationUrlNameMeUserApplication.UrlName, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameMeUserApplication) GetUrlName() string { return v.UrlName }
+
+// GetUrlNameHistory returns ApplicationUrlNameMeUserApplication.UrlNameHistory, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameMeUserApplication) GetUrlNameHistory() []ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry {
+	return v.UrlNameHistory
+}
+
+// ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry includes the requested fields of the GraphQL type UrlNameEntry.
+type ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry struct {
+	UrlNameEntryParts `json:"-"`
+}
+
+// GetName returns ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry.Name, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry) GetName() string {
+	return v.UrlNameEntryParts.Name
+}
+
+// GetClaimedAt returns ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry.ClaimedAt, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry) GetClaimedAt() string {
+	return v.UrlNameEntryParts.ClaimedAt
+}
+
+// GetReplacedAt returns ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry.ReplacedAt, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry) GetReplacedAt() *string {
+	return v.UrlNameEntryParts.ReplacedAt
+}
+
+func (v *ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.UrlNameEntryParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry struct {
+	Name string `json:"name"`
+
+	ClaimedAt string `json:"claimedAt"`
+
+	ReplacedAt *string `json:"replacedAt"`
+}
+
+func (v *ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry) __premarshalJSON() (*__premarshalApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry, error) {
+	var retval __premarshalApplicationUrlNameMeUserApplicationUrlNameHistoryUrlNameEntry
+
+	retval.Name = v.UrlNameEntryParts.Name
+	retval.ClaimedAt = v.UrlNameEntryParts.ClaimedAt
+	retval.ReplacedAt = v.UrlNameEntryParts.ReplacedAt
+	return &retval, nil
+}
+
+// ApplicationUrlNameResponse is returned by ApplicationUrlName on success.
+type ApplicationUrlNameResponse struct {
+	Me ApplicationUrlNameMeUser `json:"me"`
+}
+
+// GetMe returns ApplicationUrlNameResponse.Me, and is useful for accessing the field via an interface.
+func (v *ApplicationUrlNameResponse) GetMe() ApplicationUrlNameMeUser { return v.Me }
+
 // ApplicationsApplicationsApplicationPage includes the requested fields of the GraphQL type ApplicationPage.
 type ApplicationsApplicationsApplicationPage struct {
 	Items    []ApplicationsApplicationsApplicationPageItemsApplication `json:"items"`
@@ -646,6 +752,114 @@ type CheckDataImportResponse struct {
 func (v *CheckDataImportResponse) GetCheckDataImport() CheckDataImportCheckDataImport {
 	return v.CheckDataImport
 }
+
+// ClientUrlNameMeUser includes the requested fields of the GraphQL type User.
+type ClientUrlNameMeUser struct {
+	Client ClientUrlNameMeUserClient `json:"client"`
+}
+
+// GetClient returns ClientUrlNameMeUser.Client, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUser) GetClient() ClientUrlNameMeUserClient { return v.Client }
+
+// ClientUrlNameMeUserClient includes the requested fields of the GraphQL type Client.
+type ClientUrlNameMeUserClient struct {
+	Id                  string                                                `json:"id"`
+	UrlName             string                                                `json:"urlName"`
+	UrlNameChangeableAt *string                                               `json:"urlNameChangeableAt"`
+	UrlNameHistory      []ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry `json:"urlNameHistory"`
+}
+
+// GetId returns ClientUrlNameMeUserClient.Id, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUserClient) GetId() string { return v.Id }
+
+// GetUrlName returns ClientUrlNameMeUserClient.UrlName, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUserClient) GetUrlName() string { return v.UrlName }
+
+// GetUrlNameChangeableAt returns ClientUrlNameMeUserClient.UrlNameChangeableAt, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUserClient) GetUrlNameChangeableAt() *string { return v.UrlNameChangeableAt }
+
+// GetUrlNameHistory returns ClientUrlNameMeUserClient.UrlNameHistory, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUserClient) GetUrlNameHistory() []ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry {
+	return v.UrlNameHistory
+}
+
+// ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry includes the requested fields of the GraphQL type UrlNameEntry.
+type ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry struct {
+	UrlNameEntryParts `json:"-"`
+}
+
+// GetName returns ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry.Name, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry) GetName() string {
+	return v.UrlNameEntryParts.Name
+}
+
+// GetClaimedAt returns ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry.ClaimedAt, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry) GetClaimedAt() string {
+	return v.UrlNameEntryParts.ClaimedAt
+}
+
+// GetReplacedAt returns ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry.ReplacedAt, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry) GetReplacedAt() *string {
+	return v.UrlNameEntryParts.ReplacedAt
+}
+
+func (v *ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.UrlNameEntryParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry struct {
+	Name string `json:"name"`
+
+	ClaimedAt string `json:"claimedAt"`
+
+	ReplacedAt *string `json:"replacedAt"`
+}
+
+func (v *ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry) __premarshalJSON() (*__premarshalClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry, error) {
+	var retval __premarshalClientUrlNameMeUserClientUrlNameHistoryUrlNameEntry
+
+	retval.Name = v.UrlNameEntryParts.Name
+	retval.ClaimedAt = v.UrlNameEntryParts.ClaimedAt
+	retval.ReplacedAt = v.UrlNameEntryParts.ReplacedAt
+	return &retval, nil
+}
+
+// ClientUrlNameResponse is returned by ClientUrlName on success.
+type ClientUrlNameResponse struct {
+	Me ClientUrlNameMeUser `json:"me"`
+}
+
+// GetMe returns ClientUrlNameResponse.Me, and is useful for accessing the field via an interface.
+func (v *ClientUrlNameResponse) GetMe() ClientUrlNameMeUser { return v.Me }
 
 // ConstraintParts includes the GraphQL fields of Constraint requested by the fragment ConstraintParts.
 type ConstraintParts struct {
@@ -3993,6 +4207,130 @@ type EnvironmentRedirectUriSetsResponse struct {
 // GetMe returns EnvironmentRedirectUriSetsResponse.Me, and is useful for accessing the field via an interface.
 func (v *EnvironmentRedirectUriSetsResponse) GetMe() EnvironmentRedirectUriSetsMeUser { return v.Me }
 
+// EnvironmentUrlNamesMeUser includes the requested fields of the GraphQL type User.
+type EnvironmentUrlNamesMeUser struct {
+	Application EnvironmentUrlNamesMeUserApplication `json:"application"`
+}
+
+// GetApplication returns EnvironmentUrlNamesMeUser.Application, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUser) GetApplication() EnvironmentUrlNamesMeUserApplication {
+	return v.Application
+}
+
+// EnvironmentUrlNamesMeUserApplication includes the requested fields of the GraphQL type Application.
+type EnvironmentUrlNamesMeUserApplication struct {
+	Environments []EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment `json:"environments"`
+}
+
+// GetEnvironments returns EnvironmentUrlNamesMeUserApplication.Environments, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplication) GetEnvironments() []EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment {
+	return v.Environments
+}
+
+// EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment includes the requested fields of the GraphQL type Environment.
+type EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment struct {
+	Id             string                                                                                  `json:"id"`
+	UrlName        string                                                                                  `json:"urlName"`
+	SiteUrl        string                                                                                  `json:"siteUrl"`
+	UrlNameHistory []EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry `json:"urlNameHistory"`
+}
+
+// GetId returns EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment) GetId() string { return v.Id }
+
+// GetUrlName returns EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment.UrlName, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment) GetUrlName() string {
+	return v.UrlName
+}
+
+// GetSiteUrl returns EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment.SiteUrl, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment) GetSiteUrl() string {
+	return v.SiteUrl
+}
+
+// GetUrlNameHistory returns EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment.UrlNameHistory, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironment) GetUrlNameHistory() []EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry {
+	return v.UrlNameHistory
+}
+
+// EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry includes the requested fields of the GraphQL type UrlNameEntry.
+type EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry struct {
+	UrlNameEntryParts `json:"-"`
+}
+
+// GetName returns EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry.Name, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry) GetName() string {
+	return v.UrlNameEntryParts.Name
+}
+
+// GetClaimedAt returns EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry.ClaimedAt, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry) GetClaimedAt() string {
+	return v.UrlNameEntryParts.ClaimedAt
+}
+
+// GetReplacedAt returns EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry.ReplacedAt, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry) GetReplacedAt() *string {
+	return v.UrlNameEntryParts.ReplacedAt
+}
+
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.UrlNameEntryParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalEnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry struct {
+	Name string `json:"name"`
+
+	ClaimedAt string `json:"claimedAt"`
+
+	ReplacedAt *string `json:"replacedAt"`
+}
+
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *EnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry) __premarshalJSON() (*__premarshalEnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry, error) {
+	var retval __premarshalEnvironmentUrlNamesMeUserApplicationEnvironmentsEnvironmentUrlNameHistoryUrlNameEntry
+
+	retval.Name = v.UrlNameEntryParts.Name
+	retval.ClaimedAt = v.UrlNameEntryParts.ClaimedAt
+	retval.ReplacedAt = v.UrlNameEntryParts.ReplacedAt
+	return &retval, nil
+}
+
+// EnvironmentUrlNamesResponse is returned by EnvironmentUrlNames on success.
+type EnvironmentUrlNamesResponse struct {
+	Me EnvironmentUrlNamesMeUser `json:"me"`
+}
+
+// GetMe returns EnvironmentUrlNamesResponse.Me, and is useful for accessing the field via an interface.
+func (v *EnvironmentUrlNamesResponse) GetMe() EnvironmentUrlNamesMeUser { return v.Me }
+
 // EnvironmentsMeUser includes the requested fields of the GraphQL type User.
 type EnvironmentsMeUser struct {
 	Application EnvironmentsMeUserApplication `json:"application"`
@@ -4014,7 +4352,11 @@ func (v *EnvironmentsMeUserApplication) GetEnvironments() []EnvironmentsMeUserAp
 // EnvironmentsMeUserApplicationEnvironmentsEnvironment includes the requested fields of the GraphQL type Environment.
 type EnvironmentsMeUserApplicationEnvironmentsEnvironment struct {
 	EnvironmentParts `json:"-"`
+	SiteUrl          string `json:"siteUrl"`
 }
+
+// GetSiteUrl returns EnvironmentsMeUserApplicationEnvironmentsEnvironment.SiteUrl, and is useful for accessing the field via an interface.
+func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) GetSiteUrl() string { return v.SiteUrl }
 
 // GetId returns EnvironmentsMeUserApplicationEnvironmentsEnvironment.Id, and is useful for accessing the field via an interface.
 func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) GetId() string {
@@ -4062,6 +4404,8 @@ func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) UnmarshalJSON(b [
 }
 
 type __premarshalEnvironmentsMeUserApplicationEnvironmentsEnvironment struct {
+	SiteUrl string `json:"siteUrl"`
+
 	Id string `json:"id"`
 
 	Name string `json:"name"`
@@ -4082,6 +4426,7 @@ func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) MarshalJSON() ([]
 func (v *EnvironmentsMeUserApplicationEnvironmentsEnvironment) __premarshalJSON() (*__premarshalEnvironmentsMeUserApplicationEnvironmentsEnvironment, error) {
 	var retval __premarshalEnvironmentsMeUserApplicationEnvironmentsEnvironment
 
+	retval.SiteUrl = v.SiteUrl
 	retval.Id = v.EnvironmentParts.Id
 	retval.Name = v.EnvironmentParts.Name
 	retval.IsDefault = v.EnvironmentParts.IsDefault
@@ -6112,6 +6457,210 @@ func (v *RemoveEnvironmentResponse) GetRemoveEnvironment() RemoveEnvironmentRemo
 	return v.RemoveEnvironment
 }
 
+// RenameApplicationUrlNameRenameApplicationUrlNameApplication includes the requested fields of the GraphQL type Application.
+type RenameApplicationUrlNameRenameApplicationUrlNameApplication struct {
+	Id             string                                                                                  `json:"id"`
+	UrlName        string                                                                                  `json:"urlName"`
+	UrlNameHistory []RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry `json:"urlNameHistory"`
+}
+
+// GetId returns RenameApplicationUrlNameRenameApplicationUrlNameApplication.Id, and is useful for accessing the field via an interface.
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplication) GetId() string { return v.Id }
+
+// GetUrlName returns RenameApplicationUrlNameRenameApplicationUrlNameApplication.UrlName, and is useful for accessing the field via an interface.
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplication) GetUrlName() string {
+	return v.UrlName
+}
+
+// GetUrlNameHistory returns RenameApplicationUrlNameRenameApplicationUrlNameApplication.UrlNameHistory, and is useful for accessing the field via an interface.
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplication) GetUrlNameHistory() []RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry {
+	return v.UrlNameHistory
+}
+
+// RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry includes the requested fields of the GraphQL type UrlNameEntry.
+type RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry struct {
+	UrlNameEntryParts `json:"-"`
+}
+
+// GetName returns RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry.Name, and is useful for accessing the field via an interface.
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry) GetName() string {
+	return v.UrlNameEntryParts.Name
+}
+
+// GetClaimedAt returns RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry.ClaimedAt, and is useful for accessing the field via an interface.
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry) GetClaimedAt() string {
+	return v.UrlNameEntryParts.ClaimedAt
+}
+
+// GetReplacedAt returns RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry.ReplacedAt, and is useful for accessing the field via an interface.
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry) GetReplacedAt() *string {
+	return v.UrlNameEntryParts.ReplacedAt
+}
+
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.UrlNameEntryParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry struct {
+	Name string `json:"name"`
+
+	ClaimedAt string `json:"claimedAt"`
+
+	ReplacedAt *string `json:"replacedAt"`
+}
+
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry) __premarshalJSON() (*__premarshalRenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry, error) {
+	var retval __premarshalRenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHistoryUrlNameEntry
+
+	retval.Name = v.UrlNameEntryParts.Name
+	retval.ClaimedAt = v.UrlNameEntryParts.ClaimedAt
+	retval.ReplacedAt = v.UrlNameEntryParts.ReplacedAt
+	return &retval, nil
+}
+
+// RenameApplicationUrlNameResponse is returned by RenameApplicationUrlName on success.
+type RenameApplicationUrlNameResponse struct {
+	RenameApplicationUrlName RenameApplicationUrlNameRenameApplicationUrlNameApplication `json:"renameApplicationUrlName"`
+}
+
+// GetRenameApplicationUrlName returns RenameApplicationUrlNameResponse.RenameApplicationUrlName, and is useful for accessing the field via an interface.
+func (v *RenameApplicationUrlNameResponse) GetRenameApplicationUrlName() RenameApplicationUrlNameRenameApplicationUrlNameApplication {
+	return v.RenameApplicationUrlName
+}
+
+// RenameClientUrlNameRenameClientUrlNameClient includes the requested fields of the GraphQL type Client.
+type RenameClientUrlNameRenameClientUrlNameClient struct {
+	Id                  string                                                                   `json:"id"`
+	UrlName             string                                                                   `json:"urlName"`
+	UrlNameChangeableAt *string                                                                  `json:"urlNameChangeableAt"`
+	UrlNameHistory      []RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry `json:"urlNameHistory"`
+}
+
+// GetId returns RenameClientUrlNameRenameClientUrlNameClient.Id, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameRenameClientUrlNameClient) GetId() string { return v.Id }
+
+// GetUrlName returns RenameClientUrlNameRenameClientUrlNameClient.UrlName, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameRenameClientUrlNameClient) GetUrlName() string { return v.UrlName }
+
+// GetUrlNameChangeableAt returns RenameClientUrlNameRenameClientUrlNameClient.UrlNameChangeableAt, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameRenameClientUrlNameClient) GetUrlNameChangeableAt() *string {
+	return v.UrlNameChangeableAt
+}
+
+// GetUrlNameHistory returns RenameClientUrlNameRenameClientUrlNameClient.UrlNameHistory, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameRenameClientUrlNameClient) GetUrlNameHistory() []RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry {
+	return v.UrlNameHistory
+}
+
+// RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry includes the requested fields of the GraphQL type UrlNameEntry.
+type RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry struct {
+	UrlNameEntryParts `json:"-"`
+}
+
+// GetName returns RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry.Name, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry) GetName() string {
+	return v.UrlNameEntryParts.Name
+}
+
+// GetClaimedAt returns RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry.ClaimedAt, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry) GetClaimedAt() string {
+	return v.UrlNameEntryParts.ClaimedAt
+}
+
+// GetReplacedAt returns RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry.ReplacedAt, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry) GetReplacedAt() *string {
+	return v.UrlNameEntryParts.ReplacedAt
+}
+
+func (v *RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.UrlNameEntryParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry struct {
+	Name string `json:"name"`
+
+	ClaimedAt string `json:"claimedAt"`
+
+	ReplacedAt *string `json:"replacedAt"`
+}
+
+func (v *RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry) __premarshalJSON() (*__premarshalRenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry, error) {
+	var retval __premarshalRenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry
+
+	retval.Name = v.UrlNameEntryParts.Name
+	retval.ClaimedAt = v.UrlNameEntryParts.ClaimedAt
+	retval.ReplacedAt = v.UrlNameEntryParts.ReplacedAt
+	return &retval, nil
+}
+
+// RenameClientUrlNameResponse is returned by RenameClientUrlName on success.
+type RenameClientUrlNameResponse struct {
+	RenameClientUrlName RenameClientUrlNameRenameClientUrlNameClient `json:"renameClientUrlName"`
+}
+
+// GetRenameClientUrlName returns RenameClientUrlNameResponse.RenameClientUrlName, and is useful for accessing the field via an interface.
+func (v *RenameClientUrlNameResponse) GetRenameClientUrlName() RenameClientUrlNameRenameClientUrlNameClient {
+	return v.RenameClientUrlName
+}
+
 type RenameEnvironmentInput struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
@@ -6203,6 +6752,112 @@ type RenameEnvironmentResponse struct {
 // GetRenameEnvironment returns RenameEnvironmentResponse.RenameEnvironment, and is useful for accessing the field via an interface.
 func (v *RenameEnvironmentResponse) GetRenameEnvironment() RenameEnvironmentRenameEnvironment {
 	return v.RenameEnvironment
+}
+
+// RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment includes the requested fields of the GraphQL type Environment.
+type RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment struct {
+	Id             string                                                                                  `json:"id"`
+	UrlName        string                                                                                  `json:"urlName"`
+	SiteUrl        string                                                                                  `json:"siteUrl"`
+	UrlNameHistory []RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry `json:"urlNameHistory"`
+}
+
+// GetId returns RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment) GetId() string { return v.Id }
+
+// GetUrlName returns RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment.UrlName, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment) GetUrlName() string {
+	return v.UrlName
+}
+
+// GetSiteUrl returns RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment.SiteUrl, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment) GetSiteUrl() string {
+	return v.SiteUrl
+}
+
+// GetUrlNameHistory returns RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment.UrlNameHistory, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment) GetUrlNameHistory() []RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry {
+	return v.UrlNameHistory
+}
+
+// RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry includes the requested fields of the GraphQL type UrlNameEntry.
+type RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry struct {
+	UrlNameEntryParts `json:"-"`
+}
+
+// GetName returns RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry.Name, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry) GetName() string {
+	return v.UrlNameEntryParts.Name
+}
+
+// GetClaimedAt returns RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry.ClaimedAt, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry) GetClaimedAt() string {
+	return v.UrlNameEntryParts.ClaimedAt
+}
+
+// GetReplacedAt returns RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry.ReplacedAt, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry) GetReplacedAt() *string {
+	return v.UrlNameEntryParts.ReplacedAt
+}
+
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.UrlNameEntryParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalRenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry struct {
+	Name string `json:"name"`
+
+	ClaimedAt string `json:"claimedAt"`
+
+	ReplacedAt *string `json:"replacedAt"`
+}
+
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry) __premarshalJSON() (*__premarshalRenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry, error) {
+	var retval __premarshalRenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHistoryUrlNameEntry
+
+	retval.Name = v.UrlNameEntryParts.Name
+	retval.ClaimedAt = v.UrlNameEntryParts.ClaimedAt
+	retval.ReplacedAt = v.UrlNameEntryParts.ReplacedAt
+	return &retval, nil
+}
+
+// RenameEnvironmentUrlNameResponse is returned by RenameEnvironmentUrlName on success.
+type RenameEnvironmentUrlNameResponse struct {
+	RenameEnvironmentUrlName RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment `json:"renameEnvironmentUrlName"`
+}
+
+// GetRenameEnvironmentUrlName returns RenameEnvironmentUrlNameResponse.RenameEnvironmentUrlName, and is useful for accessing the field via an interface.
+func (v *RenameEnvironmentUrlNameResponse) GetRenameEnvironmentUrlName() RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment {
+	return v.RenameEnvironmentUrlName
 }
 
 type RequestRecordFileUploadInput struct {
@@ -9003,6 +9658,22 @@ func (v *UpdateRoleUpdateRole) __premarshalJSON() (*__premarshalUpdateRoleUpdate
 	return &retval, nil
 }
 
+// UrlNameEntryParts includes the GraphQL fields of UrlNameEntry requested by the fragment UrlNameEntryParts.
+type UrlNameEntryParts struct {
+	Name       string  `json:"name"`
+	ClaimedAt  string  `json:"claimedAt"`
+	ReplacedAt *string `json:"replacedAt"`
+}
+
+// GetName returns UrlNameEntryParts.Name, and is useful for accessing the field via an interface.
+func (v *UrlNameEntryParts) GetName() string { return v.Name }
+
+// GetClaimedAt returns UrlNameEntryParts.ClaimedAt, and is useful for accessing the field via an interface.
+func (v *UrlNameEntryParts) GetClaimedAt() string { return v.ClaimedAt }
+
+// GetReplacedAt returns UrlNameEntryParts.ReplacedAt, and is useful for accessing the field via an interface.
+func (v *UrlNameEntryParts) GetReplacedAt() *string { return v.ReplacedAt }
+
 // __AddDataImportFileInput is used internally by genqlient
 type __AddDataImportFileInput struct {
 	Input map[string]any `json:"input"`
@@ -9523,6 +10194,34 @@ type __RemoveEnvironmentInput struct {
 // GetInput returns __RemoveEnvironmentInput.Input, and is useful for accessing the field via an interface.
 func (v *__RemoveEnvironmentInput) GetInput() RemoveEnvironmentInput { return v.Input }
 
+// __RenameApplicationUrlNameInput is used internally by genqlient
+type __RenameApplicationUrlNameInput struct {
+	ApplicationId   string `json:"applicationId"`
+	Name            string `json:"name"`
+	ConfirmTakeover bool   `json:"confirmTakeover"`
+}
+
+// GetApplicationId returns __RenameApplicationUrlNameInput.ApplicationId, and is useful for accessing the field via an interface.
+func (v *__RenameApplicationUrlNameInput) GetApplicationId() string { return v.ApplicationId }
+
+// GetName returns __RenameApplicationUrlNameInput.Name, and is useful for accessing the field via an interface.
+func (v *__RenameApplicationUrlNameInput) GetName() string { return v.Name }
+
+// GetConfirmTakeover returns __RenameApplicationUrlNameInput.ConfirmTakeover, and is useful for accessing the field via an interface.
+func (v *__RenameApplicationUrlNameInput) GetConfirmTakeover() bool { return v.ConfirmTakeover }
+
+// __RenameClientUrlNameInput is used internally by genqlient
+type __RenameClientUrlNameInput struct {
+	ClientId string `json:"clientId"`
+	Name     string `json:"name"`
+}
+
+// GetClientId returns __RenameClientUrlNameInput.ClientId, and is useful for accessing the field via an interface.
+func (v *__RenameClientUrlNameInput) GetClientId() string { return v.ClientId }
+
+// GetName returns __RenameClientUrlNameInput.Name, and is useful for accessing the field via an interface.
+func (v *__RenameClientUrlNameInput) GetName() string { return v.Name }
+
 // __RenameEnvironmentInput is used internally by genqlient
 type __RenameEnvironmentInput struct {
 	Input RenameEnvironmentInput `json:"input"`
@@ -9530,6 +10229,22 @@ type __RenameEnvironmentInput struct {
 
 // GetInput returns __RenameEnvironmentInput.Input, and is useful for accessing the field via an interface.
 func (v *__RenameEnvironmentInput) GetInput() RenameEnvironmentInput { return v.Input }
+
+// __RenameEnvironmentUrlNameInput is used internally by genqlient
+type __RenameEnvironmentUrlNameInput struct {
+	EnvironmentId   string `json:"environmentId"`
+	Name            string `json:"name"`
+	ConfirmTakeover bool   `json:"confirmTakeover"`
+}
+
+// GetEnvironmentId returns __RenameEnvironmentUrlNameInput.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *__RenameEnvironmentUrlNameInput) GetEnvironmentId() string { return v.EnvironmentId }
+
+// GetName returns __RenameEnvironmentUrlNameInput.Name, and is useful for accessing the field via an interface.
+func (v *__RenameEnvironmentUrlNameInput) GetName() string { return v.Name }
+
+// GetConfirmTakeover returns __RenameEnvironmentUrlNameInput.ConfirmTakeover, and is useful for accessing the field via an interface.
+func (v *__RenameEnvironmentUrlNameInput) GetConfirmTakeover() bool { return v.ConfirmTakeover }
 
 // __RequestRecordFileUploadInput is used internally by genqlient
 type __RequestRecordFileUploadInput struct {
@@ -10046,6 +10761,47 @@ func AppTenants(
 	return data_, err_
 }
 
+// The query executed by ApplicationUrlName.
+const ApplicationUrlName_Operation = `
+query ApplicationUrlName {
+	me {
+		application {
+			id
+			urlName
+			urlNameHistory {
+				... UrlNameEntryParts
+			}
+		}
+	}
+}
+fragment UrlNameEntryParts on UrlNameEntry {
+	name
+	claimedAt
+	replacedAt
+}
+`
+
+func ApplicationUrlName(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *ApplicationUrlNameResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ApplicationUrlName",
+		Query:  ApplicationUrlName_Operation,
+	}
+
+	data_ = &ApplicationUrlNameResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Applications.
 const Applications_Operation = `
 query Applications ($page: PageInput!) {
@@ -10209,6 +10965,48 @@ func CheckDataImport(
 	}
 
 	data_ = &CheckDataImportResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by ClientUrlName.
+const ClientUrlName_Operation = `
+query ClientUrlName {
+	me {
+		client {
+			id
+			urlName
+			urlNameChangeableAt
+			urlNameHistory {
+				... UrlNameEntryParts
+			}
+		}
+	}
+}
+fragment UrlNameEntryParts on UrlNameEntry {
+	name
+	claimedAt
+	replacedAt
+}
+`
+
+func ClientUrlName(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *ClientUrlNameResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ClientUrlName",
+		Query:  ClientUrlName_Operation,
+	}
+
+	data_ = &ClientUrlNameResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -11772,6 +12570,50 @@ func EnvironmentRedirectUriSets(
 	return data_, err_
 }
 
+// The query executed by EnvironmentUrlNames.
+const EnvironmentUrlNames_Operation = `
+query EnvironmentUrlNames {
+	me {
+		application {
+			environments {
+				id
+				urlName
+				siteUrl
+				urlNameHistory {
+					... UrlNameEntryParts
+				}
+			}
+		}
+	}
+}
+fragment UrlNameEntryParts on UrlNameEntry {
+	name
+	claimedAt
+	replacedAt
+}
+`
+
+func EnvironmentUrlNames(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *EnvironmentUrlNamesResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "EnvironmentUrlNames",
+		Query:  EnvironmentUrlNames_Operation,
+	}
+
+	data_ = &EnvironmentUrlNamesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Environments.
 const Environments_Operation = `
 query Environments {
@@ -11779,6 +12621,7 @@ query Environments {
 		application {
 			environments {
 				... EnvironmentParts
+				siteUrl
 			}
 		}
 	}
@@ -12749,6 +13592,99 @@ func RemoveEnvironment(
 	return data_, err_
 }
 
+// The mutation executed by RenameApplicationUrlName.
+const RenameApplicationUrlName_Operation = `
+mutation RenameApplicationUrlName ($applicationId: ID!, $name: String!, $confirmTakeover: Boolean) {
+	renameApplicationUrlName(applicationId: $applicationId, name: $name, confirmTakeover: $confirmTakeover) {
+		id
+		urlName
+		urlNameHistory {
+			... UrlNameEntryParts
+		}
+	}
+}
+fragment UrlNameEntryParts on UrlNameEntry {
+	name
+	claimedAt
+	replacedAt
+}
+`
+
+func RenameApplicationUrlName(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	applicationId string,
+	name string,
+	confirmTakeover bool,
+) (data_ *RenameApplicationUrlNameResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RenameApplicationUrlName",
+		Query:  RenameApplicationUrlName_Operation,
+		Variables: &__RenameApplicationUrlNameInput{
+			ApplicationId:   applicationId,
+			Name:            name,
+			ConfirmTakeover: confirmTakeover,
+		},
+	}
+
+	data_ = &RenameApplicationUrlNameResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RenameClientUrlName.
+const RenameClientUrlName_Operation = `
+mutation RenameClientUrlName ($clientId: ID!, $name: String!) {
+	renameClientUrlName(clientId: $clientId, name: $name) {
+		id
+		urlName
+		urlNameChangeableAt
+		urlNameHistory {
+			... UrlNameEntryParts
+		}
+	}
+}
+fragment UrlNameEntryParts on UrlNameEntry {
+	name
+	claimedAt
+	replacedAt
+}
+`
+
+func RenameClientUrlName(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	clientId string,
+	name string,
+) (data_ *RenameClientUrlNameResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RenameClientUrlName",
+		Query:  RenameClientUrlName_Operation,
+		Variables: &__RenameClientUrlNameInput{
+			ClientId: clientId,
+			Name:     name,
+		},
+	}
+
+	data_ = &RenameClientUrlNameResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by RenameEnvironment.
 const RenameEnvironment_Operation = `
 mutation RenameEnvironment ($input: RenameEnvironmentInput!) {
@@ -12778,6 +13714,54 @@ func RenameEnvironment(
 	}
 
 	data_ = &RenameEnvironmentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RenameEnvironmentUrlName.
+const RenameEnvironmentUrlName_Operation = `
+mutation RenameEnvironmentUrlName ($environmentId: ID!, $name: String!, $confirmTakeover: Boolean) {
+	renameEnvironmentUrlName(environmentId: $environmentId, name: $name, confirmTakeover: $confirmTakeover) {
+		id
+		urlName
+		siteUrl
+		urlNameHistory {
+			... UrlNameEntryParts
+		}
+	}
+}
+fragment UrlNameEntryParts on UrlNameEntry {
+	name
+	claimedAt
+	replacedAt
+}
+`
+
+func RenameEnvironmentUrlName(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	environmentId string,
+	name string,
+	confirmTakeover bool,
+) (data_ *RenameEnvironmentUrlNameResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RenameEnvironmentUrlName",
+		Query:  RenameEnvironmentUrlName_Operation,
+		Variables: &__RenameEnvironmentUrlNameInput{
+			EnvironmentId:   environmentId,
+			Name:            name,
+			ConfirmTakeover: confirmTakeover,
+		},
+	}
+
+	data_ = &RenameEnvironmentUrlNameResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

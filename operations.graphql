@@ -934,6 +934,7 @@ query Environments {
     application {
       environments {
         ...EnvironmentParts
+        siteUrl
       }
     }
   }
@@ -1030,5 +1031,86 @@ mutation DeleteDeployer($id: ID!) {
 mutation RetireDeployer($id: ID!) {
   retireDeployer(id: $id) {
     id
+  }
+}
+
+fragment UrlNameEntryParts on UrlNameEntry {
+  name
+  claimedAt
+  # @genqlient(pointer: true)
+  replacedAt
+}
+
+query ClientUrlName {
+  me {
+    client {
+      id
+      urlName
+      # @genqlient(pointer: true)
+      urlNameChangeableAt
+      urlNameHistory {
+        ...UrlNameEntryParts
+      }
+    }
+  }
+}
+
+mutation RenameClientUrlName($clientId: ID!, $name: String!) {
+  renameClientUrlName(clientId: $clientId, name: $name) {
+    id
+    urlName
+    # @genqlient(pointer: true)
+    urlNameChangeableAt
+    urlNameHistory {
+      ...UrlNameEntryParts
+    }
+  }
+}
+
+query ApplicationUrlName {
+  me {
+    application {
+      id
+      urlName
+      urlNameHistory {
+        ...UrlNameEntryParts
+      }
+    }
+  }
+}
+
+mutation RenameApplicationUrlName($applicationId: ID!, $name: String!, $confirmTakeover: Boolean) {
+  renameApplicationUrlName(applicationId: $applicationId, name: $name, confirmTakeover: $confirmTakeover) {
+    id
+    urlName
+    urlNameHistory {
+      ...UrlNameEntryParts
+    }
+  }
+}
+
+query EnvironmentUrlNames {
+  me {
+    application {
+      environments {
+        id
+        urlName
+        siteUrl
+        urlNameHistory {
+          ...UrlNameEntryParts
+        }
+      }
+    }
+  }
+}
+
+mutation RenameEnvironmentUrlName($environmentId: ID!, $name: String!, $confirmTakeover: Boolean) {
+  renameEnvironmentUrlName(environmentId: $environmentId, name: $name, confirmTakeover: $confirmTakeover) {
+    id
+    urlName
+    siteUrl
+    urlNameHistory {
+      ...UrlNameEntryParts
+    }
   }
 }

@@ -22,19 +22,40 @@ func envsCommands(command commandFunc) *cobra.Command {
 func envsList(command commandFunc) *cobra.Command {
 	var appID string
 	cmd := command("list", "List an application's environments", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		list := []EnvironmentParts{}
+		list := []listedEnvironment{}
 		scope, err := s.appScope(ctx, appID, "")
 		if err == nil {
-			list, err = s.environmentsIn(ctx, scope)
+			list, err = s.listedEnvironmentsIn(ctx, scope)
 		}
 		return list, func(out io.Writer) {
-			table(out, "NAME\tID\tDEFAULT\tPROTECTED", list, func(e EnvironmentParts) string {
-				return e.Name + "\t" + e.Id + "\t" + strconv.FormatBool(e.IsDefault) + "\t" + strconv.FormatBool(e.DeletionProtected)
+			table(out, "NAME\tID\tDEFAULT\tPROTECTED\tSITE URL", list, func(e listedEnvironment) string {
+				return e.Name + "\t" + e.Id + "\t" + strconv.FormatBool(e.IsDefault) + "\t" + strconv.FormatBool(e.DeletionProtected) + "\t" + e.SiteURL
 			})
 		}, err
 	})
 	appFlag(cmd, &appID)
 	return cmd
+}
+
+// listedEnvironment is an environment as envs list shows it: its parts, and the address its site is served at.
+type listedEnvironment struct {
+	EnvironmentParts
+	SiteURL string `json:"siteUrl"`
+}
+
+// listedEnvironmentsIn lists the environments of the application scope names, each with its site URL.
+func (s *session) listedEnvironmentsIn(ctx context.Context, scope string) ([]listedEnvironment, error) {
+	list := []listedEnvironment{}
+	err := s.call(ctx, scope, func(client graphql.Client) error {
+		response, err := Environments(ctx, client)
+		if err == nil {
+			for _, item := range response.Me.Application.Environments {
+				list = append(list, listedEnvironment{EnvironmentParts: item.EnvironmentParts, SiteURL: item.SiteUrl})
+			}
+		}
+		return err
+	})
+	return list, err
 }
 
 // environmentsIn lists the environments of the application scope names.

@@ -306,7 +306,38 @@ func fromGraphQL(err error) error {
 	failure := &cliError{exit: exit, Code: code, Message: refusals[0].Message}
 	failure.FieldErrors = fieldErrorsOf(refusals[0].Extensions["fieldErrors"])
 	failure.Reason, _ = refusals[0].Extensions["reason"].(string)
+	failure.Rules = stringsOf(refusals[0].Extensions["rules"])
+	failure.ChangeableAt, _ = refusals[0].Extensions["changeableAt"].(string)
+	failure.PreviousOwner = previousOwnerOf(refusals[0].Extensions["previousOwner"])
 	return failure
+}
+
+// stringsOf reads a list-of-strings extension, such as URL_NAME_INVALID's rules; anything else is dropped.
+func stringsOf(extension any) []string {
+	items, _ := extension.([]any)
+	var out []string
+	for _, item := range items {
+		if text, ok := item.(string); ok {
+			out = append(out, text)
+		}
+	}
+	return out
+}
+
+// previousOwnerOf reads a takeover refusal's previousOwner extension; one that does not decode is dropped.
+func previousOwnerOf(extension any) *previousOwner {
+	if extension == nil {
+		return nil
+	}
+	data, err := json.Marshal(extension)
+	if err != nil {
+		return nil
+	}
+	var owner previousOwner
+	if err := json.Unmarshal(data, &owner); err != nil || owner.ID == "" {
+		return nil
+	}
+	return &owner
 }
 
 // fieldErrorsOf reads a refusal's fieldErrors extension, which arrives as untyped JSON; one that does not decode is dropped.

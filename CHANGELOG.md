@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.13.0...v1.14.0) (2026-11-23)
+
+
+### Features
+
+* [MP-346] apps mcp-url says which environment the URL is for ([#122](https://github.com/MultiPaaS-Apps/cli/issues/122)) ([4984cd2](https://github.com/MultiPaaS-Apps/cli/commit/4984cd2824aa68f191ab6a74c7c2815af1012a0a))
+
 ## [1.13.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.12.0...v1.13.0) (2026-11-23)
 
 

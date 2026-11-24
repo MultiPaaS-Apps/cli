@@ -2758,6 +2758,35 @@ func (v *DeleteAppTenantResponse) GetDeleteAppTenant() DeleteAppTenantDeleteAppT
 	return v.DeleteAppTenant
 }
 
+// DeleteApplicationDeleteApplication includes the requested fields of the GraphQL type Application.
+type DeleteApplicationDeleteApplication struct {
+	Id         string  `json:"id"`
+	DestroysAt *string `json:"destroysAt"`
+}
+
+// GetId returns DeleteApplicationDeleteApplication.Id, and is useful for accessing the field via an interface.
+func (v *DeleteApplicationDeleteApplication) GetId() string { return v.Id }
+
+// GetDestroysAt returns DeleteApplicationDeleteApplication.DestroysAt, and is useful for accessing the field via an interface.
+func (v *DeleteApplicationDeleteApplication) GetDestroysAt() *string { return v.DestroysAt }
+
+type DeleteApplicationInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns DeleteApplicationInput.Id, and is useful for accessing the field via an interface.
+func (v *DeleteApplicationInput) GetId() string { return v.Id }
+
+// DeleteApplicationResponse is returned by DeleteApplication on success.
+type DeleteApplicationResponse struct {
+	DeleteApplication DeleteApplicationDeleteApplication `json:"deleteApplication"`
+}
+
+// GetDeleteApplication returns DeleteApplicationResponse.DeleteApplication, and is useful for accessing the field via an interface.
+func (v *DeleteApplicationResponse) GetDeleteApplication() DeleteApplicationDeleteApplication {
+	return v.DeleteApplication
+}
+
 // DeleteConstraintDeleteConstraint includes the requested fields of the GraphQL type Constraint.
 type DeleteConstraintDeleteConstraint struct {
 	ConstraintParts `json:"-"`
@@ -9204,6 +9233,14 @@ type __DeleteAppTenantInput struct {
 // GetInput returns __DeleteAppTenantInput.Input, and is useful for accessing the field via an interface.
 func (v *__DeleteAppTenantInput) GetInput() DeleteAppTenantInput { return v.Input }
 
+// __DeleteApplicationInput is used internally by genqlient
+type __DeleteApplicationInput struct {
+	Input DeleteApplicationInput `json:"input"`
+}
+
+// GetInput returns __DeleteApplicationInput.Input, and is useful for accessing the field via an interface.
+func (v *__DeleteApplicationInput) GetInput() DeleteApplicationInput { return v.Input }
+
 // __DeleteConstraintInput is used internally by genqlient
 type __DeleteConstraintInput struct {
 	ConstraintId string `json:"constraintId"`
@@ -11122,6 +11159,41 @@ func DeleteAppTenant(
 	}
 
 	data_ = &DeleteAppTenantResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteApplication.
+const DeleteApplication_Operation = `
+mutation DeleteApplication ($input: DeleteApplicationInput!) {
+	deleteApplication(input: $input) {
+		id
+		destroysAt
+	}
+}
+`
+
+func DeleteApplication(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input DeleteApplicationInput,
+) (data_ *DeleteApplicationResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteApplication",
+		Query:  DeleteApplication_Operation,
+		Variables: &__DeleteApplicationInput{
+			Input: input,
+		},
+	}
+
+	data_ = &DeleteApplicationResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

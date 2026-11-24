@@ -76,13 +76,14 @@ type fakeMultiPaaS struct {
 	oauthClients                 []map[string]any            // the application's sign-in clients
 	appIdentities                []map[string]any            // the application's app identities
 	identitySeq                  int                         // app identities created so far; ids are never reused
+	appsMinted                   map[string]int              // client id -> application ids handed out, so a delete never frees one
 	deployers                    []map[string]any            // the application's deployers
 	deployerSeq                  int                         // deployers created so far; ids are never reused
 	secretSeq                    int                         // app identity secrets created so far; ids are never reused
 	noManageOAuth                bool                        // the signed-in user lacks application.manage_oauth
 	scopedEnvNull                bool                        // an app-tenant-level read returns the app-tenant's environment as null
-	removeNoData                 bool                        // removeEnvironment and deleteAppTenant answer HTTP 200 with {"data":null} and no errors
-	deleteNoDate                 bool                        // deleteEnvironment and deleteAppTenant answer without destroysAt
+	removeNoData                 bool                        // removeEnvironment, deleteAppTenant and deleteApplication answer HTTP 200 with {"data":null} and no errors
+	deleteNoDate                 bool                        // deleteEnvironment, deleteAppTenant and deleteApplication answer without destroysAt
 	deployerID, deployerSecret   string                      // the deployer the fake knows; empty for none
 	envClientID, envClientSecret string                      // MULTIPAAS_CLIENT_ID and _SECRET the CLI runs with
 	deployerTokens               map[string]bool             // access tokens minted by the client-credentials grant
@@ -171,7 +172,7 @@ func newFakeMultiPaaS(t *testing.T) *fakeMultiPaaS {
 	fake := &fakeMultiPaaS{
 		t: t, accessTTL: 3600,
 		codes: map[string]pendingCode{}, chains: map[string]*chain{},
-		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envsMinted: map[string]int{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
+		apps: map[string][]fakeRow{}, tenants: map[string][]fakeRow{}, scopedApps: map[string]fakeRow{}, environments: map[string][]fakeEnv{}, envsMinted: map[string]int{}, appsMinted: map[string]int{}, envTenants: map[string][]fakeRow{}, refused: map[string]bool{},
 		release: make(chan struct{}), accessTokens: map[string]bool{}, deployerTokens: map[string]bool{},
 		entities: map[string][]map[string]any{}, fields: map[string][]map[string]any{}, enumTypes: map[string][]map[string]any{}, constraints: map[string][]map[string]any{}, revisions: map[string]int{}, generators: map[string][]int{},
 		records: map[string][]map[string]any{},
@@ -418,6 +419,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		writeData(w, map[string]any{"applications": page(f.apps[parts[0]], variables)})
 	case "CreateApplication":
 		f.createApplication(w, parts, variables)
+	case "DeleteApplication":
+		f.deleteApplication(w, parts, variables)
 	case "CreateAppTenant":
 		f.createAppTenant(w, parts, variables)
 	case "AppTenants":
@@ -990,9 +993,41 @@ func (f *fakeMultiPaaS) createApplication(w http.ResponseWriter, parts []string,
 		return
 	}
 	name, _ := variables["input"].(map[string]any)["name"].(string)
-	created := fakeRow{id: fmt.Sprintf("app-new-%d", len(f.apps[client])+1), name: name}
+	f.appsMinted[client] = max(f.appsMinted[client], len(f.apps[client])) + 1
+	created := fakeRow{id: fmt.Sprintf("app-new-%d", f.appsMinted[client]), name: name}
 	f.apps[client] = append(f.apps[client], created)
 	writeData(w, map[string]any{"createApplication": map[string]any{"id": created.id, "name": created.name}})
+}
+
+// deleteApplication shares these steps with the server, in order: a client in scope, a live application of that client,
+// then access.manage.application, then the delete.
+func (f *fakeMultiPaaS) deleteApplication(w http.ResponseWriter, parts []string, variables map[string]any) {
+	f.mutations = append(f.mutations, variables)
+	if f.removeNoData {
+		writeData(w, nil)
+		return
+	}
+	client := parts[0]
+	if client == "" {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	id, _ := variables["input"].(map[string]any)["id"].(string)
+	at := slices.IndexFunc(f.apps[client], func(row fakeRow) bool { return row.id == id })
+	if at < 0 {
+		graphQLRefusal(w, "NOT_FOUND", "application not found")
+		return
+	}
+	if f.noManageApp {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	f.apps[client] = slices.Delete(f.apps[client], at, at+1)
+	answer := map[string]any{"id": id}
+	if !f.deleteNoDate {
+		answer["destroysAt"] = "2026-12-15T12:00:00.000Z"
+	}
+	writeData(w, map[string]any{"deleteApplication": answer})
 }
 
 // createAppTenant shares these steps with the server, in order: an application in scope, then

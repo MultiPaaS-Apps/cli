@@ -168,6 +168,7 @@ type ApplicationPage {
 input ApproveOAuthAuthorizationInput {
 	appTenantId: ID
 	application: ID
+	canWrite: Boolean
 	clientId: ID!
 	codeChallenge: String!
 	environment: ID

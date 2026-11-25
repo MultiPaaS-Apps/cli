@@ -243,6 +243,7 @@ func TestAppIdentityRoleAddWithEnvGrantsInThatEnvironment(t *testing.T) {
 
 func TestAppIdentityRoleAddAtATenantOfAnotherEnvironmentFindsTheIdentityThere(t *testing.T) {
 	fake := projectFake(t)
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-other", name: "Other"})
 	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-o", name: "Other env", env: "env-other"})
 	fake.appIdentities = []map[string]any{{"id": "app-identity-1", "name": "nightly sync", "environment": map[string]any{"id": "env-other"}, "user": map[string]any{"id": "service-user-1"},
 		"createdAt": "x", "secrets": []map[string]any{}}}
@@ -294,13 +295,19 @@ func TestAppIdentityRoleAddAtATenantLooksTheIdentityUpInTheTenantScope(t *testin
 	fake.run(t, "app-identity", "create", "--app", "app-a-000", "--name", "nightly sync", "--json")
 	fake.run(t, "roles", "create", "--app", "app-a-000", "--key", "sync", "--name", "Sync job", "--json")
 	fake.scopes = nil
+	var lookupScopes []string
+	fake.onGraphQL = func(operation string) {
+		if operation == "AppIdentities" {
+			lookupScopes = append(lookupScopes, fake.scopes[len(fake.scopes)-1])
+		}
+	}
 
 	got := fake.run(t, "app-identity", "role", "add", "app-identity-1", "--app", "app-a-000", "--tenant", "tenant-a", "--role", "sync", "--json")
 	if got.exit != exitOK {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
-	if slices.Contains(fake.scopes, "client-a/app-a-000") || !slices.Contains(fake.scopes, "client-a/app-a-000/tenant-a") {
-		t.Fatalf("the identity lookup left the app-tenant's scope: %v", fake.scopes)
+	if len(lookupScopes) == 0 || slices.ContainsFunc(lookupScopes, func(scope string) bool { return scope != "client-a/app-a-000/tenant-a" }) {
+		t.Fatalf("the identity lookup left the app-tenant's scope: %v", lookupScopes)
 	}
 }
 

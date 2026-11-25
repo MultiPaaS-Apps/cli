@@ -160,13 +160,12 @@ func tenantsInvitationUpdate(command commandFunc) *cobra.Command {
 	return cmd
 }
 
-// accessHelp is what tenants invite needs, which the server refuses alike as UNAUTHORIZED, as it does an app-tenant the
-// caller can't reach.
-const accessHelp = "It needs access management (access.manage) in the app-tenant, and every role given must carry only permissions you hold there. The server refuses with UNAUTHORIZED a lack of either, and an app-tenant you can't reach."
+// accessHelp is what tenants invite needs, which the server refuses alike as UNAUTHORIZED.
+const accessHelp = "It needs access management (access.manage) in the app-tenant, and every role given must carry only permissions you hold there. The server refuses with UNAUTHORIZED a lack of either."
 
 // updateAccessHelp is what tenants invitation update needs and the refusal each lack gets: the CLI's own NOT_FOUND for an
-// invitation it cannot list, the server's UNAUTHORIZED for a new role or an app-tenant it cannot reach.
-const updateAccessHelp = "It needs access management (access.manage) in the app-tenant. Without it, or when the invitation lists a role or group carrying a permission you don't hold there, the invitation is not listed, and the command refuses with NOT_FOUND: it never sends the update, so nothing changes. Every role given must carry only permissions you hold there. The server refuses with UNAUTHORIZED a role that doesn't, and an app-tenant you can't reach."
+// invitation it cannot list, the server's UNAUTHORIZED for a new role.
+const updateAccessHelp = "It needs access management (access.manage) in the app-tenant. Without it, or when the invitation lists a role or group carrying a permission you don't hold there, the invitation is not listed, and the command refuses with NOT_FOUND: it never sends the update, so nothing changes. Every role given must carry only permissions you hold there. The server refuses with UNAUTHORIZED a role that doesn't."
 
 // roleFlag is --role, repeatable: each a role's key or id, as roles list prints them.
 func roleFlag(cmd *cobra.Command, values *[]string) {
@@ -194,8 +193,8 @@ func grantableRoleIDs(ctx context.Context, client graphql.Client, values []strin
 }
 
 // accessRefusal says what an UNAUTHORIZED from inviting or changing an invitation can mean. The server answers a caller
-// without access management, one giving a role with a permission the caller lacks, and one whose app-tenant it can't
-// reach with the same code and message.
+// without access management and one giving a role with a permission the caller lacks with the same code and message.
+// For a person, an app-tenant they can't reach never gets this far: appScope refuses it with NOT_FOUND first.
 func accessRefusal(err error, target recordTarget) error {
 	if err == nil {
 		return nil
@@ -205,7 +204,7 @@ func accessRefusal(err error, target recordTarget) error {
 		return err
 	}
 	hinted := *failure
-	hinted.Message += ": check that app-tenant " + target.tenantID + " is the one you meant and that you can reach it; there you need access management, and every role given must carry only permissions you hold there"
+	hinted.Message += ": in app-tenant " + target.tenantID + " you need access management, and every role given must carry only permissions you hold there"
 	return &hinted
 }
 

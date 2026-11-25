@@ -5,7 +5,6 @@
 
 ### Features
 
-* [MP-362] refuse a --tenant the caller can't reach before sending ([#136](https://github.com/MultiPaaS-Apps/cli/issues/136)) ([557cd25](https://github.com/MultiPaaS-Apps/cli/commit/557cd254ea6368810b416cc23c3be78e7ad2ca07))
 * [MP-362] refuse a --tenant the caller can't reach before sending ([#136](https://github.com/MultiPaaS-Apps/cli/issues/136)) ([dbd86bc](https://github.com/MultiPaaS-Apps/cli/commit/dbd86bcaaf965f384f0e106ef123413a3a9f2584))
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.17.0...v1.17.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* [MP-342] point the keep-this-line remedy at its guide section ([#137](https://github.com/MultiPaaS-Apps/cli/issues/137)) ([8367923](https://github.com/MultiPaaS-Apps/cli/commit/8367923029ec9e8c4318d4c14642ab4b3847fbac))
+
 ## [1.17.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.16.0...v1.17.0) (2026-11-25)
 
 

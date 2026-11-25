@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -48,6 +49,21 @@ func TestRecordsListAppWideActsAtApplicationScope(t *testing.T) {
 	}
 	if !reflect.DeepEqual(fake.recordScopes, []string{"APP_WIDE"}) {
 		t.Fatalf("sent scopes %v", fake.recordScopes)
+	}
+}
+
+func TestRecordsListInAnAppTenantYouCantReachIsRefusedBeforeSending(t *testing.T) {
+	fake := projectFake(t)
+	sent := fake.watchScope("client-a/app-a-000/tenant-zz")
+
+	got := fake.run(t, "records", "list", "--app", "app-a-000", "--tenant", "tenant-zz", "--entity", "entity-1", "--json")
+
+	assertFailure(t, got, exitRefused, "NOT_FOUND")
+	if want := "no app-tenant tenant-zz of application app-a-000 that you can reach"; !strings.Contains(got.stdout, want) {
+		t.Fatalf("stdout %s does not say %q", got.stdout, want)
+	}
+	if probes := slices.DeleteFunc(*sent, func(operation string) bool { return operation == "Me" }); len(probes) != 0 {
+		t.Fatalf("sent %v in the unreachable app-tenant's scope", probes)
 	}
 }
 

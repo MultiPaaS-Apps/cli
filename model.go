@@ -563,7 +563,8 @@ func (s *session) latestVersion(ctx context.Context, scope string) (string, erro
 }
 
 // appScope is the scope sent for appID, or for its app-tenant tenantID when that is not "": the first
-// entitlement that reaches it. An app-tenant-level entitlement reaches only its own app-tenant.
+// entitlement that reaches it. An app-tenant-level entitlement reaches only its own app-tenant; one above it
+// reaches an app-tenant the server lets it enter.
 func (s *session) appScope(ctx context.Context, appID, tenantID string) (string, error) {
 	deployer, err := s.deployer()
 	if err != nil {
@@ -587,16 +588,41 @@ func (s *session) appScope(ctx context.Context, appID, tenantID string) (string,
 		if err != nil {
 			return "", err
 		}
-		for _, candidate := range apps {
-			if candidate.ID == appID {
-				return strings.TrimSuffix(entitlement.Client.Id+"/"+appID+"/"+tenantID, "/"), nil
-			}
+		if !slices.ContainsFunc(apps, func(candidate app) bool { return candidate.ID == appID }) {
+			continue
+		}
+		scope := entitlement.Client.Id + "/" + appID
+		if tenantID == "" {
+			return scope, nil
+		}
+		scope += "/" + tenantID
+		entered, err := s.entersScope(ctx, scope)
+		if err != nil {
+			return "", err
+		}
+		if entered {
+			return scope, nil
 		}
 	}
 	if tenantID != "" {
 		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no app-tenant " + tenantID + " of application " + appID + " that you can reach"}
 	}
 	return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "no application " + appID + " that you can reach"}
+}
+
+// entersScope is whether the server lets the caller act in scope, asked with a query no permission gates. The server
+// checks entry before any resolver runs and refuses what the caller can't enter, an unknown, deleted or
+// other-application's app-tenant and one in a removed environment included, with UNAUTHORIZED. call has already
+// refreshed the token once by then, so that UNAUTHORIZED is the entry refusal. Any other error is passed on.
+func (s *session) entersScope(ctx context.Context, scope string) (bool, error) {
+	err := s.call(ctx, scope, func(client graphql.Client) error {
+		_, err := Me(ctx, client)
+		return err
+	})
+	if err != nil && asCLIError(err).Code == "UNAUTHORIZED" {
+		return false, nil
+	}
+	return err == nil, err
 }
 
 // envScope is the scope sent for an environment: the server resolves it to the environment's application.

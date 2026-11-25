@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -78,6 +79,77 @@ func TestTenantsInviteWithoutATenantIsRefusedBeforeAnyRequest(t *testing.T) {
 	}
 }
 
+func TestTenantsInviteOfAnAppTenantYouCantReachIsRefusedBeforeSending(t *testing.T) {
+	for name, tenant := range map[string]string{"unknown": "tenant-zz", "another application's": "tenant-b"} {
+		t.Run(name, func(t *testing.T) {
+			fake := invitationFake(t)
+			sent := fake.watchScope("client-a/app-a-000/" + tenant)
+
+			got := fake.run(t, "tenants", "invite", "--app", "app-a-000", "--tenant", tenant, "--email", "ann@example.com", "--role", "reviewer", "--json")
+
+			assertFailure(t, got, exitRefused, "NOT_FOUND")
+			if want := "no app-tenant " + tenant + " of application app-a-000 that you can reach"; !strings.Contains(got.stdout, want) {
+				t.Fatalf("stdout %s does not say %q", got.stdout, want)
+			}
+			if len(fake.mutations) != 0 || len(fake.emailed) != 0 {
+				t.Fatalf("sent %v, emailed %v", fake.mutations, fake.emailed)
+			}
+			if probes := slices.DeleteFunc(*sent, func(operation string) bool { return operation == "Me" }); len(probes) != 0 {
+				t.Fatalf("sent %v in app-tenant %s's scope", probes, tenant)
+			}
+		})
+	}
+}
+
+func TestTenantsMembersOfAnAppTenantInAnotherEnvironmentIsSentInItsScope(t *testing.T) {
+	fake := invitationFake(t)
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-two", name: "Staging"})
+	fake.envTenants["env-two"] = []fakeRow{{id: "tenant-t", name: "Staging tenant"}}
+
+	got := fake.run(t, "tenants", "members", "--app", "app-a-000", "--tenant", "tenant-t", "--json")
+
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-t" {
+		t.Fatalf("scope %q", last)
+	}
+}
+
+func TestTenantsMembersOfAnAppTenantTheServerEntersButDoesNotListIsSentInItsScope(t *testing.T) {
+	fake := invitationFake(t)
+	fake.unlisted = []string{"tenant-a"}
+
+	got := fake.run(t, "tenants", "members", "--app", "app-a-000", "--tenant", "tenant-a", "--json")
+
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+	if last := fake.scopes[len(fake.scopes)-1]; last != "client-a/app-a-000/tenant-a" {
+		t.Fatalf("scope %q", last)
+	}
+}
+
+func TestTenantsMembersOfAnAppTenantInARemovedEnvironmentIsRefusedBeforeSending(t *testing.T) {
+	fake := invitationFake(t)
+	fake.environments["app-a-000"] = append(fake.environments["app-a-000"], fakeEnv{id: "env-two", name: "Staging"})
+	fake.tenants["app-a-000"] = append(fake.tenants["app-a-000"], fakeRow{id: "tenant-t", name: "Staging tenant", env: "env-two"})
+	if removed := fake.run(t, "envs", "remove", "--app", "app-a-000", "--env", "env-two", "--json"); removed.exit != exitOK {
+		t.Fatalf("exit %d: %s %s", removed.exit, removed.stdout, removed.stderr)
+	}
+	sent := fake.watchScope("client-a/app-a-000/tenant-t")
+
+	got := fake.run(t, "tenants", "members", "--app", "app-a-000", "--tenant", "tenant-t", "--json")
+
+	assertFailure(t, got, exitRefused, "NOT_FOUND")
+	if want := "no app-tenant tenant-t of application app-a-000 that you can reach"; !strings.Contains(got.stdout, want) {
+		t.Fatalf("stdout %s does not say %q", got.stdout, want)
+	}
+	if probes := slices.DeleteFunc(*sent, func(operation string) bool { return operation == "Me" }); len(probes) != 0 {
+		t.Fatalf("sent %v in the removed environment's app-tenant scope", probes)
+	}
+}
+
 func TestTenantsInviteRefusalsTheCLIMakes(t *testing.T) {
 	fake := invitationFake(t)
 	invite := func(email string, roles ...string) result {
@@ -100,7 +172,7 @@ func TestTenantsInviteRefusalsTheCLIMakes(t *testing.T) {
 func TestTenantsInviteUnauthorizedNamesBothCauses(t *testing.T) {
 	fake := invitationFake(t)
 	fake.refuseInvitation = [2]string{"UNAUTHORIZED", "unauthorized"}
-	want := "unauthorized: check that app-tenant tenant-a is the one you meant and that you can reach it; there you need access management, and every role given must carry only permissions you hold there"
+	want := "unauthorized: in app-tenant tenant-a you need access management, and every role given must carry only permissions you hold there"
 	args := []string{"tenants", "invite", "--app", "app-a-000", "--tenant", "tenant-a", "--email", "ann@example.com", "--role", "reviewer", "--role", "editor"}
 
 	asJSON := fake.run(t, append(args, "--json")...)
@@ -341,7 +413,7 @@ func TestTenantsInvitationUpdateRefusalsOfTheNewRoles(t *testing.T) {
 	fake.refuseInvitation = [2]string{"UNAUTHORIZED", "unauthorized"}
 	got := runInvitationUpdate(t, fake, "invitation-1", "role-tenant")
 	assertFailure(t, got, exitRefused, "UNAUTHORIZED")
-	if want := "unauthorized: check that app-tenant tenant-a is the one you meant and that you can reach it; there you need access management, and every role given must carry only permissions you hold there"; !strings.Contains(got.stdout, want) {
+	if want := "unauthorized: in app-tenant tenant-a you need access management, and every role given must carry only permissions you hold there"; !strings.Contains(got.stdout, want) {
 		t.Fatalf("stdout %s does not say %q", got.stdout, want)
 	}
 	if roles := fake.invitationRows[0]["roles"]; !reflect.DeepEqual(roles, []map[string]any{{"id": "role-1", "key": "reviewer", "name": "Reviewer"}}) {
@@ -357,7 +429,7 @@ func TestTenantsInvitationUpdateUnauthorizedReadCarriesTheHint(t *testing.T) {
 	got := runInvitationUpdate(t, fake, "invitation-1", "editor")
 
 	assertFailure(t, got, exitRefused, "UNAUTHORIZED")
-	if want := "unauthorized: check that app-tenant tenant-a is the one you meant and that you can reach it; there you need access management, and every role given must carry only permissions you hold there"; !strings.Contains(got.stdout, want) {
+	if want := "unauthorized: in app-tenant tenant-a you need access management, and every role given must carry only permissions you hold there"; !strings.Contains(got.stdout, want) {
 		t.Fatalf("stdout %s does not say %q", got.stdout, want)
 	}
 	if len(fake.mutations) != 0 {

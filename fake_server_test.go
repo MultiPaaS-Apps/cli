@@ -33,6 +33,7 @@ type fakeMultiPaaS struct {
 	codes           map[string]pendingCode      // code -> what it was issued for
 	chains          map[string]*chain           // any token ever minted -> its chain
 	refreshes       int                         // refresh grants answered
+	unlisted        []string                    // app-tenant ids AppTenants leaves out though a client-level caller can still enter them
 	revokes         []url.Values                // revoke forms received
 	entitlements    []entitlement               // what myTenants answers
 	apps            map[string][]fakeRow        // client id -> its apps
@@ -437,6 +438,7 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		} else if len(parts) >= 2 {
 			apps = f.tenantsInEnvironment(parts[1], f.defaultEnvironment(parts[1]))
 		}
+		apps = slices.DeleteFunc(apps, func(row fakeRow) bool { return slices.Contains(f.unlisted, row.id) })
 		includeDeleted, _ := variables["includeDeleted"].(bool)
 		if includeRetired, _ := variables["includeRetired"].(bool); !includeRetired && !includeDeleted {
 			apps = slices.DeleteFunc(apps, func(row fakeRow) bool { return row.retiredAt != "" })
@@ -636,11 +638,41 @@ func (f *fakeMultiPaaS) entitled(scope string) bool {
 	}
 	parts = append(parts, "", "")
 	for _, e := range f.entitlements {
-		if e.clientID == parts[0] && (e.appTenantID == "" || (e.appTenantID == parts[2] && e.applicationID == parts[1])) {
+		if e.clientID == parts[0] && e.appTenantID == "" && f.enterable(parts[1], parts[2]) {
+			return true
+		}
+		if e.clientID == parts[0] && e.appTenantID != "" && e.appTenantID == parts[2] && e.applicationID == parts[1] {
 			return true
 		}
 	}
 	return false
+}
+
+// watchScope records the operation of every request sent in scope, in a slice it returns a pointer to.
+func (f *fakeMultiPaaS) watchScope(scope string) *[]string {
+	var seen []string
+	f.onGraphQL = func(operation string) {
+		if f.scopes[len(f.scopes)-1] == scope {
+			seen = append(seen, operation)
+		}
+	}
+	return &seen
+}
+
+// enterable is whether a client-level caller may enter an app-tenant of app: none named is the application itself, else
+// one that exists, in a live environment of that application, and isn't deleted.
+func (f *fakeMultiPaaS) enterable(app, tenant string) bool {
+	if tenant == "" {
+		return true
+	}
+	row, found := f.tenantRow(app, tenant)
+	if !found || row.retiredAt != "" {
+		return false
+	}
+	if len(f.environments[app]) == 0 {
+		return row.env == f.defaultEnvironment(app)
+	}
+	return slices.ContainsFunc(f.environments[app], func(e fakeEnv) bool { return e.id == row.env })
 }
 
 func (f *fakeMultiPaaS) mint(w http.ResponseWriter, current *chain) {

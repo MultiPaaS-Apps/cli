@@ -25,8 +25,10 @@ multipaas tenants members --app <app id> --tenant <app-tenant id>   # its member
 multipaas tenants invitation update --app <app id> --tenant <app-tenant id> --invitation <invitation id> --role <role key>   # the roles given replace the invitation's
 multipaas model show --app <app id>
 multipaas entity create --app <app id> --name Order
+multipaas entity update --app <app id> --id <entity id> --description "A customer order"   # agents see it; --description '' clears it
 multipaas field add --app <app id> --entity <entity id> --type text --name Title --required
 multipaas enum create --app <app id> --name Status --values "Open,In progress,Done"
+multipaas enum update --app <app id> --id <enum id> --values "Open,Done" --value-description "Open=Not started"   # replaces the values; Open gets a description, Done none; Open= would clear Open's
 multipaas field add --app <app id> --entity <entity id> --type enum --name Status --enum-type <enum id>
 multipaas field add --app <app id> --entity <entity id> --type number --name Priority --default 3 --not-null
 multipaas field add --app <app id> --entity <entity id> --type text --name Tags --list --default '["a"]'   # a text or enum field that holds a list of values

@@ -47,9 +47,9 @@ func deleteCases() []deleteCase {
 }
 
 const (
-	entityJSON      = `{"apiVersion":"rev-1","entity":{"id":"entity-1","name":"","graphqlTypeName":"","graphqlPluralName":"","managed":false,"shareNewRecordsWithTenant":null}}`
-	enumJSON        = `{"apiVersion":"rev-1","enumType":{"id":"enum-1","name":"","graphqlTypeName":"","values":null}}`
-	fieldJSON       = `{"apiVersion":"rev-1","field":{"id":"field-1","entity":{"id":""},"name":null,"graphqlFieldName":"","type":"","maxFileBytes":null,"required":false,"notNull":false,"list":false,"defaultValue":null,"enumValues":null,"enumType":null,"isLifecycle":false,"isParent":false,"referencesEntity":null,"relatedField":null}}`
+	entityJSON      = `{"apiVersion":"rev-1","entity":{"id":"entity-1","name":"","graphqlTypeName":"","graphqlPluralName":"","managed":false,"shareNewRecordsWithTenant":null,"description":null}}`
+	enumJSON        = `{"apiVersion":"rev-1","enumType":{"id":"enum-1","name":"","graphqlTypeName":"","description":null,"values":null}}`
+	fieldJSON       = `{"apiVersion":"rev-1","field":{"id":"field-1","entity":{"id":""},"name":null,"graphqlFieldName":"","description":null,"type":"","maxFileBytes":null,"required":false,"notNull":false,"list":false,"defaultValue":null,"enumValues":null,"enumType":null,"isLifecycle":false,"isParent":false,"referencesEntity":null,"relatedField":null}}`
 	constraintJSON  = `{"apiVersion":"rev-1","constraint":{"id":"constraint-1","entity":{"id":""},"kind":"","fields":{"items":null}}}`
 	recordJSON      = `{"record":{"id":"record-9","appWide":false,"data":{"field-1":"a"},"createdAt":"x","updatedAt":"x","version":"v1","files":[]}}`
 	appIdentityJSON = `{"appIdentity":{"id":"app-identity-1","name":"nightly sync","environment":{"id":"env-default"},"user":{"id":"service-user-1"},"createdAt":"2026-10-27T00:00:00.000Z","secrets":[{"id":"secret-1","lastFour":"0001","createdAt":"2026-10-27T00:00:00.000Z","lastUsedAt":null}]}}`

@@ -1708,6 +1708,9 @@ func (v *CreateEntityCreateEntity) GetShareNewRecordsWithTenant() *RecordAccessL
 	return v.EntityParts.ShareNewRecordsWithTenant
 }
 
+// GetDescription returns CreateEntityCreateEntity.Description, and is useful for accessing the field via an interface.
+func (v *CreateEntityCreateEntity) GetDescription() *string { return v.EntityParts.Description }
+
 func (v *CreateEntityCreateEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -1745,6 +1748,8 @@ type __premarshalCreateEntityCreateEntity struct {
 	Managed bool `json:"managed"`
 
 	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
+
+	Description *string `json:"description"`
 }
 
 func (v *CreateEntityCreateEntity) MarshalJSON() ([]byte, error) {
@@ -1764,6 +1769,7 @@ func (v *CreateEntityCreateEntity) __premarshalJSON() (*__premarshalCreateEntity
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
 	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
+	retval.Description = v.EntityParts.Description
 	return &retval, nil
 }
 
@@ -1790,6 +1796,9 @@ func (v *CreateEnumTypeCreateEnumType) GetName() string { return v.EnumTypeParts
 func (v *CreateEnumTypeCreateEnumType) GetGraphqlTypeName() string {
 	return v.EnumTypeParts.GraphqlTypeName
 }
+
+// GetDescription returns CreateEnumTypeCreateEnumType.Description, and is useful for accessing the field via an interface.
+func (v *CreateEnumTypeCreateEnumType) GetDescription() *string { return v.EnumTypeParts.Description }
 
 // GetValues returns CreateEnumTypeCreateEnumType.Values, and is useful for accessing the field via an interface.
 func (v *CreateEnumTypeCreateEnumType) GetValues() []EnumTypePartsValuesEnumValue {
@@ -1828,6 +1837,8 @@ type __premarshalCreateEnumTypeCreateEnumType struct {
 
 	GraphqlTypeName string `json:"graphqlTypeName"`
 
+	Description *string `json:"description"`
+
 	Values []EnumTypePartsValuesEnumValue `json:"values"`
 }
 
@@ -1845,6 +1856,7 @@ func (v *CreateEnumTypeCreateEnumType) __premarshalJSON() (*__premarshalCreateEn
 	retval.Id = v.EnumTypeParts.Id
 	retval.Name = v.EnumTypeParts.Name
 	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Description = v.EnumTypeParts.Description
 	retval.Values = v.EnumTypeParts.Values
 	return &retval, nil
 }
@@ -1958,6 +1970,9 @@ func (v *CreateFieldCreateField) GetName() *string { return v.FieldParts.Name }
 // GetGraphqlFieldName returns CreateFieldCreateField.GraphqlFieldName, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
 
+// GetDescription returns CreateFieldCreateField.Description, and is useful for accessing the field via an interface.
+func (v *CreateFieldCreateField) GetDescription() *string { return v.FieldParts.Description }
+
 // GetType returns CreateFieldCreateField.Type, and is useful for accessing the field via an interface.
 func (v *CreateFieldCreateField) GetType() string { return v.FieldParts.Type }
 
@@ -2032,6 +2047,8 @@ type __premarshalCreateFieldCreateField struct {
 
 	GraphqlFieldName string `json:"graphqlFieldName"`
 
+	Description *string `json:"description"`
+
 	Type string `json:"type"`
 
 	MaxFileBytes *float64 `json:"maxFileBytes"`
@@ -2072,6 +2089,7 @@ func (v *CreateFieldCreateField) __premarshalJSON() (*__premarshalCreateFieldCre
 	retval.Entity = v.FieldParts.Entity
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Description = v.FieldParts.Description
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
@@ -3270,6 +3288,9 @@ func (v *DeleteEntityDeleteEntity) GetShareNewRecordsWithTenant() *RecordAccessL
 	return v.EntityParts.ShareNewRecordsWithTenant
 }
 
+// GetDescription returns DeleteEntityDeleteEntity.Description, and is useful for accessing the field via an interface.
+func (v *DeleteEntityDeleteEntity) GetDescription() *string { return v.EntityParts.Description }
+
 func (v *DeleteEntityDeleteEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -3307,6 +3328,8 @@ type __premarshalDeleteEntityDeleteEntity struct {
 	Managed bool `json:"managed"`
 
 	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
+
+	Description *string `json:"description"`
 }
 
 func (v *DeleteEntityDeleteEntity) MarshalJSON() ([]byte, error) {
@@ -3326,6 +3349,7 @@ func (v *DeleteEntityDeleteEntity) __premarshalJSON() (*__premarshalDeleteEntity
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
 	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
+	retval.Description = v.EntityParts.Description
 	return &retval, nil
 }
 
@@ -3352,6 +3376,9 @@ func (v *DeleteEnumTypeDeleteEnumType) GetName() string { return v.EnumTypeParts
 func (v *DeleteEnumTypeDeleteEnumType) GetGraphqlTypeName() string {
 	return v.EnumTypeParts.GraphqlTypeName
 }
+
+// GetDescription returns DeleteEnumTypeDeleteEnumType.Description, and is useful for accessing the field via an interface.
+func (v *DeleteEnumTypeDeleteEnumType) GetDescription() *string { return v.EnumTypeParts.Description }
 
 // GetValues returns DeleteEnumTypeDeleteEnumType.Values, and is useful for accessing the field via an interface.
 func (v *DeleteEnumTypeDeleteEnumType) GetValues() []EnumTypePartsValuesEnumValue {
@@ -3390,6 +3417,8 @@ type __premarshalDeleteEnumTypeDeleteEnumType struct {
 
 	GraphqlTypeName string `json:"graphqlTypeName"`
 
+	Description *string `json:"description"`
+
 	Values []EnumTypePartsValuesEnumValue `json:"values"`
 }
 
@@ -3407,6 +3436,7 @@ func (v *DeleteEnumTypeDeleteEnumType) __premarshalJSON() (*__premarshalDeleteEn
 	retval.Id = v.EnumTypeParts.Id
 	retval.Name = v.EnumTypeParts.Name
 	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Description = v.EnumTypeParts.Description
 	retval.Values = v.EnumTypeParts.Values
 	return &retval, nil
 }
@@ -3466,6 +3496,9 @@ func (v *DeleteFieldDeleteField) GetName() *string { return v.FieldParts.Name }
 
 // GetGraphqlFieldName returns DeleteFieldDeleteField.GraphqlFieldName, and is useful for accessing the field via an interface.
 func (v *DeleteFieldDeleteField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetDescription returns DeleteFieldDeleteField.Description, and is useful for accessing the field via an interface.
+func (v *DeleteFieldDeleteField) GetDescription() *string { return v.FieldParts.Description }
 
 // GetType returns DeleteFieldDeleteField.Type, and is useful for accessing the field via an interface.
 func (v *DeleteFieldDeleteField) GetType() string { return v.FieldParts.Type }
@@ -3541,6 +3574,8 @@ type __premarshalDeleteFieldDeleteField struct {
 
 	GraphqlFieldName string `json:"graphqlFieldName"`
 
+	Description *string `json:"description"`
+
 	Type string `json:"type"`
 
 	MaxFileBytes *float64 `json:"maxFileBytes"`
@@ -3581,6 +3616,7 @@ func (v *DeleteFieldDeleteField) __premarshalJSON() (*__premarshalDeleteFieldDel
 	retval.Entity = v.FieldParts.Entity
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Description = v.FieldParts.Description
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
@@ -3884,6 +3920,11 @@ func (v *EntitiesEntitiesEntityPageItemsEntity) GetShareNewRecordsWithTenant() *
 	return v.EntityParts.ShareNewRecordsWithTenant
 }
 
+// GetDescription returns EntitiesEntitiesEntityPageItemsEntity.Description, and is useful for accessing the field via an interface.
+func (v *EntitiesEntitiesEntityPageItemsEntity) GetDescription() *string {
+	return v.EntityParts.Description
+}
+
 func (v *EntitiesEntitiesEntityPageItemsEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -3921,6 +3962,8 @@ type __premarshalEntitiesEntitiesEntityPageItemsEntity struct {
 	Managed bool `json:"managed"`
 
 	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
+
+	Description *string `json:"description"`
 }
 
 func (v *EntitiesEntitiesEntityPageItemsEntity) MarshalJSON() ([]byte, error) {
@@ -3940,6 +3983,7 @@ func (v *EntitiesEntitiesEntityPageItemsEntity) __premarshalJSON() (*__premarsha
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
 	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
+	retval.Description = v.EntityParts.Description
 	return &retval, nil
 }
 
@@ -3967,6 +4011,7 @@ type EntityParts struct {
 	GraphqlPluralName         string             `json:"graphqlPluralName"`
 	Managed                   bool               `json:"managed"`
 	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
+	Description               *string            `json:"description"`
 }
 
 // GetId returns EntityParts.Id, and is useful for accessing the field via an interface.
@@ -3989,11 +4034,15 @@ func (v *EntityParts) GetShareNewRecordsWithTenant() *RecordAccessLevel {
 	return v.ShareNewRecordsWithTenant
 }
 
+// GetDescription returns EntityParts.Description, and is useful for accessing the field via an interface.
+func (v *EntityParts) GetDescription() *string { return v.Description }
+
 // EnumTypeParts includes the GraphQL fields of EnumType requested by the fragment EnumTypeParts.
 type EnumTypeParts struct {
 	Id              string                         `json:"id"`
 	Name            string                         `json:"name"`
 	GraphqlTypeName string                         `json:"graphqlTypeName"`
+	Description     *string                        `json:"description"`
 	Values          []EnumTypePartsValuesEnumValue `json:"values"`
 }
 
@@ -4006,13 +4055,17 @@ func (v *EnumTypeParts) GetName() string { return v.Name }
 // GetGraphqlTypeName returns EnumTypeParts.GraphqlTypeName, and is useful for accessing the field via an interface.
 func (v *EnumTypeParts) GetGraphqlTypeName() string { return v.GraphqlTypeName }
 
+// GetDescription returns EnumTypeParts.Description, and is useful for accessing the field via an interface.
+func (v *EnumTypeParts) GetDescription() *string { return v.Description }
+
 // GetValues returns EnumTypeParts.Values, and is useful for accessing the field via an interface.
 func (v *EnumTypeParts) GetValues() []EnumTypePartsValuesEnumValue { return v.Values }
 
 // EnumTypePartsValuesEnumValue includes the requested fields of the GraphQL type EnumValue.
 type EnumTypePartsValuesEnumValue struct {
-	Value       string `json:"value"`
-	GraphqlName string `json:"graphqlName"`
+	Value       string  `json:"value"`
+	GraphqlName string  `json:"graphqlName"`
+	Description *string `json:"description"`
 }
 
 // GetValue returns EnumTypePartsValuesEnumValue.Value, and is useful for accessing the field via an interface.
@@ -4020,6 +4073,9 @@ func (v *EnumTypePartsValuesEnumValue) GetValue() string { return v.Value }
 
 // GetGraphqlName returns EnumTypePartsValuesEnumValue.GraphqlName, and is useful for accessing the field via an interface.
 func (v *EnumTypePartsValuesEnumValue) GetGraphqlName() string { return v.GraphqlName }
+
+// GetDescription returns EnumTypePartsValuesEnumValue.Description, and is useful for accessing the field via an interface.
+func (v *EnumTypePartsValuesEnumValue) GetDescription() *string { return v.Description }
 
 // EnumTypesEnumTypesEnumTypePage includes the requested fields of the GraphQL type EnumTypePage.
 type EnumTypesEnumTypesEnumTypePage struct {
@@ -4051,6 +4107,11 @@ func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) GetName() string { return 
 // GetGraphqlTypeName returns EnumTypesEnumTypesEnumTypePageItemsEnumType.GraphqlTypeName, and is useful for accessing the field via an interface.
 func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) GetGraphqlTypeName() string {
 	return v.EnumTypeParts.GraphqlTypeName
+}
+
+// GetDescription returns EnumTypesEnumTypesEnumTypePageItemsEnumType.Description, and is useful for accessing the field via an interface.
+func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) GetDescription() *string {
+	return v.EnumTypeParts.Description
 }
 
 // GetValues returns EnumTypesEnumTypesEnumTypePageItemsEnumType.Values, and is useful for accessing the field via an interface.
@@ -4090,6 +4151,8 @@ type __premarshalEnumTypesEnumTypesEnumTypePageItemsEnumType struct {
 
 	GraphqlTypeName string `json:"graphqlTypeName"`
 
+	Description *string `json:"description"`
+
 	Values []EnumTypePartsValuesEnumValue `json:"values"`
 }
 
@@ -4107,6 +4170,7 @@ func (v *EnumTypesEnumTypesEnumTypePageItemsEnumType) __premarshalJSON() (*__pre
 	retval.Id = v.EnumTypeParts.Id
 	retval.Name = v.EnumTypeParts.Name
 	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Description = v.EnumTypeParts.Description
 	retval.Values = v.EnumTypeParts.Values
 	return &retval, nil
 }
@@ -4605,6 +4669,9 @@ func (v *FieldField) GetName() *string { return v.FieldParts.Name }
 // GetGraphqlFieldName returns FieldField.GraphqlFieldName, and is useful for accessing the field via an interface.
 func (v *FieldField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
 
+// GetDescription returns FieldField.Description, and is useful for accessing the field via an interface.
+func (v *FieldField) GetDescription() *string { return v.FieldParts.Description }
+
 // GetType returns FieldField.Type, and is useful for accessing the field via an interface.
 func (v *FieldField) GetType() string { return v.FieldParts.Type }
 
@@ -4677,6 +4744,8 @@ type __premarshalFieldField struct {
 
 	GraphqlFieldName string `json:"graphqlFieldName"`
 
+	Description *string `json:"description"`
+
 	Type string `json:"type"`
 
 	MaxFileBytes *float64 `json:"maxFileBytes"`
@@ -4717,6 +4786,7 @@ func (v *FieldField) __premarshalJSON() (*__premarshalFieldField, error) {
 	retval.Entity = v.FieldParts.Entity
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Description = v.FieldParts.Description
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
@@ -4738,6 +4808,7 @@ type FieldParts struct {
 	Entity           FieldPartsEntity            `json:"entity"`
 	Name             *string                     `json:"name"`
 	GraphqlFieldName string                      `json:"graphqlFieldName"`
+	Description      *string                     `json:"description"`
 	Type             string                      `json:"type"`
 	MaxFileBytes     *float64                    `json:"maxFileBytes"`
 	Required         bool                        `json:"required"`
@@ -4763,6 +4834,9 @@ func (v *FieldParts) GetName() *string { return v.Name }
 
 // GetGraphqlFieldName returns FieldParts.GraphqlFieldName, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetGraphqlFieldName() string { return v.GraphqlFieldName }
+
+// GetDescription returns FieldParts.Description, and is useful for accessing the field via an interface.
+func (v *FieldParts) GetDescription() *string { return v.Description }
 
 // GetType returns FieldParts.Type, and is useful for accessing the field via an interface.
 func (v *FieldParts) GetType() string { return v.Type }
@@ -4875,6 +4949,9 @@ func (v *FieldsFieldsFieldPageItemsField) GetGraphqlFieldName() string {
 	return v.FieldParts.GraphqlFieldName
 }
 
+// GetDescription returns FieldsFieldsFieldPageItemsField.Description, and is useful for accessing the field via an interface.
+func (v *FieldsFieldsFieldPageItemsField) GetDescription() *string { return v.FieldParts.Description }
+
 // GetType returns FieldsFieldsFieldPageItemsField.Type, and is useful for accessing the field via an interface.
 func (v *FieldsFieldsFieldPageItemsField) GetType() string { return v.FieldParts.Type }
 
@@ -4955,6 +5032,8 @@ type __premarshalFieldsFieldsFieldPageItemsField struct {
 
 	GraphqlFieldName string `json:"graphqlFieldName"`
 
+	Description *string `json:"description"`
+
 	Type string `json:"type"`
 
 	MaxFileBytes *float64 `json:"maxFileBytes"`
@@ -4995,6 +5074,7 @@ func (v *FieldsFieldsFieldPageItemsField) __premarshalJSON() (*__premarshalField
 	retval.Entity = v.FieldParts.Entity
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Description = v.FieldParts.Description
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
@@ -7163,6 +7243,9 @@ func (v *RetireEntityRetireEntity) GetShareNewRecordsWithTenant() *RecordAccessL
 	return v.EntityParts.ShareNewRecordsWithTenant
 }
 
+// GetDescription returns RetireEntityRetireEntity.Description, and is useful for accessing the field via an interface.
+func (v *RetireEntityRetireEntity) GetDescription() *string { return v.EntityParts.Description }
+
 func (v *RetireEntityRetireEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -7200,6 +7283,8 @@ type __premarshalRetireEntityRetireEntity struct {
 	Managed bool `json:"managed"`
 
 	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
+
+	Description *string `json:"description"`
 }
 
 func (v *RetireEntityRetireEntity) MarshalJSON() ([]byte, error) {
@@ -7219,6 +7304,7 @@ func (v *RetireEntityRetireEntity) __premarshalJSON() (*__premarshalRetireEntity
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
 	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
+	retval.Description = v.EntityParts.Description
 	return &retval, nil
 }
 
@@ -7247,6 +7333,9 @@ func (v *RetireEnumTypeRetireEnumType) GetName() string { return v.EnumTypeParts
 func (v *RetireEnumTypeRetireEnumType) GetGraphqlTypeName() string {
 	return v.EnumTypeParts.GraphqlTypeName
 }
+
+// GetDescription returns RetireEnumTypeRetireEnumType.Description, and is useful for accessing the field via an interface.
+func (v *RetireEnumTypeRetireEnumType) GetDescription() *string { return v.EnumTypeParts.Description }
 
 // GetValues returns RetireEnumTypeRetireEnumType.Values, and is useful for accessing the field via an interface.
 func (v *RetireEnumTypeRetireEnumType) GetValues() []EnumTypePartsValuesEnumValue {
@@ -7285,6 +7374,8 @@ type __premarshalRetireEnumTypeRetireEnumType struct {
 
 	GraphqlTypeName string `json:"graphqlTypeName"`
 
+	Description *string `json:"description"`
+
 	Values []EnumTypePartsValuesEnumValue `json:"values"`
 }
 
@@ -7302,6 +7393,7 @@ func (v *RetireEnumTypeRetireEnumType) __premarshalJSON() (*__premarshalRetireEn
 	retval.Id = v.EnumTypeParts.Id
 	retval.Name = v.EnumTypeParts.Name
 	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Description = v.EnumTypeParts.Description
 	retval.Values = v.EnumTypeParts.Values
 	return &retval, nil
 }
@@ -7330,6 +7422,9 @@ func (v *RetireFieldRetireField) GetName() *string { return v.FieldParts.Name }
 
 // GetGraphqlFieldName returns RetireFieldRetireField.GraphqlFieldName, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetDescription returns RetireFieldRetireField.Description, and is useful for accessing the field via an interface.
+func (v *RetireFieldRetireField) GetDescription() *string { return v.FieldParts.Description }
 
 // GetType returns RetireFieldRetireField.Type, and is useful for accessing the field via an interface.
 func (v *RetireFieldRetireField) GetType() string { return v.FieldParts.Type }
@@ -7405,6 +7500,8 @@ type __premarshalRetireFieldRetireField struct {
 
 	GraphqlFieldName string `json:"graphqlFieldName"`
 
+	Description *string `json:"description"`
+
 	Type string `json:"type"`
 
 	MaxFileBytes *float64 `json:"maxFileBytes"`
@@ -7445,6 +7542,7 @@ func (v *RetireFieldRetireField) __premarshalJSON() (*__premarshalRetireFieldRet
 	retval.Entity = v.FieldParts.Entity
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Description = v.FieldParts.Description
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
@@ -8914,6 +9012,9 @@ func (v *UpdateEntityUpdateEntity) GetShareNewRecordsWithTenant() *RecordAccessL
 	return v.EntityParts.ShareNewRecordsWithTenant
 }
 
+// GetDescription returns UpdateEntityUpdateEntity.Description, and is useful for accessing the field via an interface.
+func (v *UpdateEntityUpdateEntity) GetDescription() *string { return v.EntityParts.Description }
+
 func (v *UpdateEntityUpdateEntity) UnmarshalJSON(b []byte) error {
 
 	if string(b) == "null" {
@@ -8951,6 +9052,8 @@ type __premarshalUpdateEntityUpdateEntity struct {
 	Managed bool `json:"managed"`
 
 	ShareNewRecordsWithTenant *RecordAccessLevel `json:"shareNewRecordsWithTenant"`
+
+	Description *string `json:"description"`
 }
 
 func (v *UpdateEntityUpdateEntity) MarshalJSON() ([]byte, error) {
@@ -8970,6 +9073,7 @@ func (v *UpdateEntityUpdateEntity) __premarshalJSON() (*__premarshalUpdateEntity
 	retval.GraphqlPluralName = v.EntityParts.GraphqlPluralName
 	retval.Managed = v.EntityParts.Managed
 	retval.ShareNewRecordsWithTenant = v.EntityParts.ShareNewRecordsWithTenant
+	retval.Description = v.EntityParts.Description
 	return &retval, nil
 }
 
@@ -8998,6 +9102,9 @@ func (v *UpdateEnumTypeUpdateEnumType) GetName() string { return v.EnumTypeParts
 func (v *UpdateEnumTypeUpdateEnumType) GetGraphqlTypeName() string {
 	return v.EnumTypeParts.GraphqlTypeName
 }
+
+// GetDescription returns UpdateEnumTypeUpdateEnumType.Description, and is useful for accessing the field via an interface.
+func (v *UpdateEnumTypeUpdateEnumType) GetDescription() *string { return v.EnumTypeParts.Description }
 
 // GetValues returns UpdateEnumTypeUpdateEnumType.Values, and is useful for accessing the field via an interface.
 func (v *UpdateEnumTypeUpdateEnumType) GetValues() []EnumTypePartsValuesEnumValue {
@@ -9036,6 +9143,8 @@ type __premarshalUpdateEnumTypeUpdateEnumType struct {
 
 	GraphqlTypeName string `json:"graphqlTypeName"`
 
+	Description *string `json:"description"`
+
 	Values []EnumTypePartsValuesEnumValue `json:"values"`
 }
 
@@ -9053,6 +9162,7 @@ func (v *UpdateEnumTypeUpdateEnumType) __premarshalJSON() (*__premarshalUpdateEn
 	retval.Id = v.EnumTypeParts.Id
 	retval.Name = v.EnumTypeParts.Name
 	retval.GraphqlTypeName = v.EnumTypeParts.GraphqlTypeName
+	retval.Description = v.EnumTypeParts.Description
 	retval.Values = v.EnumTypeParts.Values
 	return &retval, nil
 }
@@ -9081,6 +9191,9 @@ func (v *UpdateFieldUpdateField) GetName() *string { return v.FieldParts.Name }
 
 // GetGraphqlFieldName returns UpdateFieldUpdateField.GraphqlFieldName, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetGraphqlFieldName() string { return v.FieldParts.GraphqlFieldName }
+
+// GetDescription returns UpdateFieldUpdateField.Description, and is useful for accessing the field via an interface.
+func (v *UpdateFieldUpdateField) GetDescription() *string { return v.FieldParts.Description }
 
 // GetType returns UpdateFieldUpdateField.Type, and is useful for accessing the field via an interface.
 func (v *UpdateFieldUpdateField) GetType() string { return v.FieldParts.Type }
@@ -9156,6 +9269,8 @@ type __premarshalUpdateFieldUpdateField struct {
 
 	GraphqlFieldName string `json:"graphqlFieldName"`
 
+	Description *string `json:"description"`
+
 	Type string `json:"type"`
 
 	MaxFileBytes *float64 `json:"maxFileBytes"`
@@ -9196,6 +9311,7 @@ func (v *UpdateFieldUpdateField) __premarshalJSON() (*__premarshalUpdateFieldUpd
 	retval.Entity = v.FieldParts.Entity
 	retval.Name = v.FieldParts.Name
 	retval.GraphqlFieldName = v.FieldParts.GraphqlFieldName
+	retval.Description = v.FieldParts.Description
 	retval.Type = v.FieldParts.Type
 	retval.MaxFileBytes = v.FieldParts.MaxFileBytes
 	retval.Required = v.FieldParts.Required
@@ -11438,6 +11554,7 @@ fragment EntityParts on Entity {
 	graphqlPluralName
 	managed
 	shareNewRecordsWithTenant
+	description
 }
 `
 
@@ -11477,9 +11594,11 @@ fragment EnumTypeParts on EnumType {
 	id
 	name
 	graphqlTypeName
+	description
 	values {
 		value
 		graphqlName
+		description
 	}
 }
 `
@@ -11563,6 +11682,7 @@ fragment FieldParts on Field {
 	}
 	name
 	graphqlFieldName
+	description
 	type
 	maxFileBytes
 	required
@@ -12184,6 +12304,7 @@ fragment EntityParts on Entity {
 	graphqlPluralName
 	managed
 	shareNewRecordsWithTenant
+	description
 }
 `
 
@@ -12223,9 +12344,11 @@ fragment EnumTypeParts on EnumType {
 	id
 	name
 	graphqlTypeName
+	description
 	values {
 		value
 		graphqlName
+		description
 	}
 }
 `
@@ -12304,6 +12427,7 @@ fragment FieldParts on Field {
 	}
 	name
 	graphqlFieldName
+	description
 	type
 	maxFileBytes
 	required
@@ -12464,6 +12588,7 @@ fragment EntityParts on Entity {
 	graphqlPluralName
 	managed
 	shareNewRecordsWithTenant
+	description
 }
 `
 
@@ -12508,9 +12633,11 @@ fragment EnumTypeParts on EnumType {
 	id
 	name
 	graphqlTypeName
+	description
 	values {
 		value
 		graphqlName
+		description
 	}
 }
 `
@@ -12707,6 +12834,7 @@ fragment FieldParts on Field {
 	}
 	name
 	graphqlFieldName
+	description
 	type
 	maxFileBytes
 	required
@@ -12773,6 +12901,7 @@ fragment FieldParts on Field {
 	}
 	name
 	graphqlFieldName
+	description
 	type
 	maxFileBytes
 	required
@@ -13966,6 +14095,7 @@ fragment EntityParts on Entity {
 	graphqlPluralName
 	managed
 	shareNewRecordsWithTenant
+	description
 }
 `
 
@@ -14005,9 +14135,11 @@ fragment EnumTypeParts on EnumType {
 	id
 	name
 	graphqlTypeName
+	description
 	values {
 		value
 		graphqlName
+		description
 	}
 }
 `
@@ -14051,6 +14183,7 @@ fragment FieldParts on Field {
 	}
 	name
 	graphqlFieldName
+	description
 	type
 	maxFileBytes
 	required
@@ -14761,6 +14894,7 @@ fragment EntityParts on Entity {
 	graphqlPluralName
 	managed
 	shareNewRecordsWithTenant
+	description
 }
 `
 
@@ -14800,9 +14934,11 @@ fragment EnumTypeParts on EnumType {
 	id
 	name
 	graphqlTypeName
+	description
 	values {
 		value
 		graphqlName
+		description
 	}
 }
 `
@@ -14846,6 +14982,7 @@ fragment FieldParts on Field {
 	}
 	name
 	graphqlFieldName
+	description
 	type
 	maxFileBytes
 	required

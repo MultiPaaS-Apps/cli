@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.18.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.17.1...v1.18.0) (2026-11-26)
+
+
+### Features
+
+* [MP-340] print the changed list in versions diff ([#140](https://github.com/MultiPaaS-Apps/cli/issues/140)) ([dbc5aac](https://github.com/MultiPaaS-Apps/cli/commit/dbc5aac6e714beb0171939e46582c116732a9e90))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#141](https://github.com/MultiPaaS-Apps/cli/issues/141)) ([efc4849](https://github.com/MultiPaaS-Apps/cli/commit/efc484993574bc40984054afb83c0f529e28a5ff))
+
 ## [1.17.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.17.0...v1.17.1) (2026-11-25)
 
 

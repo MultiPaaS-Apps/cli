@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.19.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.18.0...v1.19.0) (2026-11-26)
+
+
+### Features
+
+* [MP-349] set, clear and show model descriptions from the CLI ([#139](https://github.com/MultiPaaS-Apps/cli/issues/139)) ([3f12db3](https://github.com/MultiPaaS-Apps/cli/commit/3f12db3ea1868f7f78bbf905a047381db02578a8))
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#144](https://github.com/MultiPaaS-Apps/cli/issues/144)) ([82c2cd9](https://github.com/MultiPaaS-Apps/cli/commit/82c2cd98ef046c1be3ad613ae055059fbe305088))
+* update the webapp-api schema ([#146](https://github.com/MultiPaaS-Apps/cli/issues/146)) ([466e0bb](https://github.com/MultiPaaS-Apps/cli/commit/466e0bbf9a46e3adf9cba9ffe052cf85f4af3c99))
+
 ## [1.18.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.17.1...v1.18.0) (2026-11-26)
 
 

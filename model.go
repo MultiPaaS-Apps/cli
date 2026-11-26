@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/spf13/cobra"
@@ -19,7 +20,8 @@ type commandFunc func(use, short string, do func(context.Context, *session) (any
 
 // option is one input a model command takes: its flag, the input field it sets, its help, its kind
 // ("string", "bool", "int", "list", "values" for an enum's VALUE or VALUE=GRAPHQL_NAME entries, "null" for a switch that
-// clears its field, "false" for one that sets it false, or "level" for a share level that sends null for off), and a flag it can't be given with.
+// clears its field, "false" for one that sets it false, "level" for a share level that sends null for off, or
+// "value-descriptions" for repeatable VALUE=TEXT entries that set the description of the value of that name in --values), and a flag it can't be given with.
 type option struct {
 	flag, field, usage, kind string
 	excludes                 string
@@ -35,12 +37,15 @@ type mutation func(ctx context.Context, client graphql.Client, input map[string]
 // modelCommands are model show and the entity, enum, field and constraint commands. Each change prints the
 // row it changed and the API version the model is at after it.
 func modelCommands(command commandFunc) []*cobra.Command {
+	description := option{flag: "description", field: "description", usage: "Plain-language meaning (up to 1000 characters); '' clears it"}
+	valueDescriptions := option{flag: "value-description", field: "values", kind: "value-descriptions", usage: "VALUE=TEXT, a value's plain-language meaning (up to 1000 characters; VALUE= clears it); repeatable, only with --values, and VALUE must be one of them"}
 	entityID := option{flag: "id", field: "entityId", usage: "the entity's id (from model show)", required: true}
 	enumID := option{flag: "id", field: "enumTypeId", usage: "the enum type's id (from model show)", required: true}
 	enumValues := option{flag: "values", field: "values", kind: "values", usage: "the enum's values, comma-separated; VALUE=API_NAME sets a value's GraphQL name (a value containing = needs one, e.g. a=b=A_EQ_B)"}
 	fieldID := option{flag: "id", field: "fieldId", usage: "the field's id (from model show)", required: true}
 	fieldOptions := []option{
 		{flag: "name", field: "name", usage: "the field's display name"},
+		description,
 		{flag: "api-name", field: "graphqlFieldName", usage: "its GraphQL field name (default: from the name)"},
 		{flag: "required", field: "required", usage: "a record must have a value", kind: "bool"},
 		{flag: "not-null", field: "notNull", usage: "the field always holds a value: a record without one gets the default, and existing records without one are given it (needs --default, or a default already set)", kind: "bool"},
@@ -58,12 +63,14 @@ func modelCommands(command commandFunc) []*cobra.Command {
 			change(command, "create", "Declare an entity", "entity", createEntity,
 				option{flag: "name", field: "name", usage: "the entity's name", required: true},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its GraphQL type name (default: from the name), not one the generated API has for itself, such as Query, User or File"},
-				option{flag: "plural-name", field: "graphqlPluralName", usage: "its GraphQL plural name (default: from the name)"}),
-			change(command, "update", "Rename an entity, change whether it is managed, or share its new records with the app-tenant", "entity", updateEntity,
+				option{flag: "plural-name", field: "graphqlPluralName", usage: "its GraphQL plural name (default: from the name)"},
+				description),
+			change(command, "update", "Rename an entity, set or change its description, change whether it is managed, or share its new records with the app-tenant", "entity", updateEntity,
 				entityID,
 				option{flag: "name", field: "name", usage: "the entity's new name"},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its new GraphQL type name, not one the generated API has for itself, such as Query, User or File"},
 				option{flag: "plural-name", field: "graphqlPluralName", usage: "its new GraphQL plural name"},
+				description,
 				option{flag: "managed", field: "managed", usage: "whether the entity is managed", kind: "bool"},
 				option{flag: "share-with-tenant", field: "shareNewRecordsWithTenant", usage: "share each new record with everyone in its app-tenant: view, edit, or off to stop", kind: "level"}),
 			change(command, "delete", "Delete an entity", "entity", deleteEntity, entityID),
@@ -73,12 +80,16 @@ func modelCommands(command commandFunc) []*cobra.Command {
 			change(command, "create", "Declare an enum type", "enumType", createEnumType,
 				option{flag: "name", field: "name", usage: "the enum's name", required: true},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its GraphQL type name (default: from the name), not one the generated API has for itself, such as Query, User or File"},
-				withRequired(enumValues)),
-			change(command, "update", "Rename an enum type or replace its values", "enumType", updateEnumType,
+				description,
+				withRequired(enumValues),
+				valueDescriptions),
+			change(command, "update", "Rename an enum type, set or change its description, or replace its values (each with its own description)", "enumType", updateEnumType,
 				enumID,
 				option{flag: "name", field: "name", usage: "the enum's new name"},
 				option{flag: "type-name", field: "graphqlTypeName", usage: "its new GraphQL type name, not one the generated API has for itself, such as Query, User or File"},
-				withUsage(enumValues, enumValues.usage+". Replaces the whole list: a value left out is removed (refused while a record or a field default holds it), and a name not given goes back to its default")),
+				description,
+				withUsage(enumValues, enumValues.usage+". Replaces the whole list: a value left out is removed (refused while a record or a field default holds it), and a name not given goes back to its default"),
+				withUsage(valueDescriptions, valueDescriptions.usage+". The list replaces the old one, so a value with no description here has none afterwards")),
 			change(command, "delete", "Delete an enum type", "enumType", deleteEnumType, enumID),
 			deprecatedAs(change(command, "retire", "Retire an enum type", "enumType", retireEnumType, enumID), "enum retire", "enum delete"),
 		),
@@ -123,7 +134,10 @@ func change(command commandFunc, use, short, noun string, mutate mutation, optio
 	var appID string
 	var cmd *cobra.Command
 	cmd = command(use, short, func(ctx context.Context, s *session) (any, func(io.Writer), error) {
-		input := readInput(cmd, options)
+		input, err := readInput(cmd, options)
+		if err != nil {
+			return nil, nil, err
+		}
 		var changed row
 		version, err := s.change(ctx, appID, func(client graphql.Client) (err error) {
 			changed, err = mutate(ctx, client, input)
@@ -148,6 +162,8 @@ func change(command commandFunc, use, short, noun string, mutate mutation, optio
 			cmd.Flags().Int64(o.flag, 0, o.usage)
 		case "list", "values":
 			cmd.Flags().StringSlice(o.flag, nil, o.usage)
+		case "value-descriptions":
+			cmd.Flags().StringArray(o.flag, nil, o.usage)
 		default:
 			cmd.Flags().String(o.flag, "", o.usage)
 		}
@@ -165,13 +181,23 @@ func change(command commandFunc, use, short, noun string, mutate mutation, optio
 
 // readInput is the mutation input from the flags given on the command line, so an update changes only what was named.
 // A "null" or "false" flag sends null or false for its input field, and nothing when given =false.
-func readInput(cmd *cobra.Command, options []option) map[string]any {
+// A "value-descriptions" flag sets the description of the enum values named in --values, and is refused without them.
+func readInput(cmd *cobra.Command, options []option) (map[string]any, error) {
 	input := map[string]any{}
 	for _, o := range options {
 		if !cmd.Flags().Changed(o.flag) {
 			continue
 		}
 		switch o.kind {
+		case "value-descriptions":
+			entries, _ := cmd.Flags().GetStringArray(o.flag)
+			values, ok := input["values"].([]map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("--%s needs --values, which replaces the whole list of values", o.flag)
+			}
+			if err := describeValues(values, entries, o.flag); err != nil {
+				return nil, err
+			}
 		case "bool":
 			input[o.field], _ = cmd.Flags().GetBool(o.flag)
 		case "int":
@@ -200,7 +226,36 @@ func readInput(cmd *cobra.Command, options []option) map[string]any {
 			input[o.field], _ = cmd.Flags().GetString(o.flag)
 		}
 	}
-	return input
+	return input, nil
+}
+
+// describeValues sets each entry's description on the value it names. An entry is VALUE, then "=", then the text;
+// whitespace before VALUE and between VALUE and "=" is ignored. When several values' names fit, the longest wins, so
+// a value name may itself contain "=".
+func describeValues(values []map[string]any, entries []string, flag string) error {
+	for _, entry := range entries {
+		if !strings.Contains(entry, "=") {
+			return fmt.Errorf("--%s %q is not VALUE=TEXT", flag, entry)
+		}
+		entry = strings.TrimLeftFunc(entry, unicode.IsSpace)
+		matched, text := -1, ""
+		for i, v := range values {
+			name, _ := v["value"].(string)
+			rest, found := strings.CutPrefix(entry, name)
+			if rest = strings.TrimLeftFunc(rest, unicode.IsSpace); !found || !strings.HasPrefix(rest, "=") {
+				continue
+			}
+			if matched < 0 || len(name) > len(values[matched]["value"].(string)) {
+				matched, text = i, rest[1:]
+			}
+		}
+		if matched < 0 {
+			name, _, _ := strings.Cut(entry, "=")
+			return fmt.Errorf("--%s names %q, which is not one of --values", flag, strings.TrimSpace(name))
+		}
+		values[matched]["description"] = text
+	}
+	return nil
 }
 
 // enumValueInputs turns VALUE or VALUE=GRAPHQL_NAME entries into EnumValueInput objects, splitting on the last "="
@@ -717,7 +772,10 @@ func printModel(out io.Writer, shown shownModel) {
 	fmt.Fprintf(out, "API version %s\n", shown.APIVersion)
 	for _, entity := range shown.Entities {
 		fmt.Fprintf(out, "\n%s (%s, managed %t%s)  %s\n", entity.Name, entity.GraphqlTypeName, entity.Managed, sharesNewRecords(entity.ShareNewRecordsWithTenant), entity.Id)
-		table(out, "  FIELD\tTYPE\tREQUIRED\tNOT NULL\tDEFAULT\tID", entity.Fields, func(f FieldParts) string {
+		if entity.Description != nil {
+			fmt.Fprintf(out, "  %s\n", oneLine(*entity.Description, math.MaxInt))
+		}
+		table(out, "  FIELD\tTYPE\tREQUIRED\tNOT NULL\tDEFAULT\tID\tDESCRIPTION", entity.Fields, func(f FieldParts) string {
 			kind := f.Type
 			if f.List {
 				kind = "list-of-" + kind
@@ -728,7 +786,7 @@ func printModel(out io.Writer, shown shownModel) {
 			if f.MaxFileBytes != nil {
 				kind += fmt.Sprintf(" (max %d bytes)", int64(*f.MaxFileBytes))
 			}
-			return "  " + f.GraphqlFieldName + "\t" + kind + "\t" + strconv.FormatBool(f.Required) + "\t" + strconv.FormatBool(f.NotNull) + "\t" + shownDefault(f.DefaultValue) + "\t" + f.Id
+			return "  " + f.GraphqlFieldName + "\t" + kind + "\t" + strconv.FormatBool(f.Required) + "\t" + strconv.FormatBool(f.NotNull) + "\t" + shownDefault(f.DefaultValue) + "\t" + f.Id + "\t" + shownDescription(f.Description, 60)
 		})
 		for _, constraint := range entity.Constraints {
 			ids := []string{}
@@ -760,10 +818,36 @@ func shownDefault(value *json.RawMessage) string {
 func printEnums(out io.Writer, enums []EnumTypeParts) {
 	for _, enum := range enums {
 		fmt.Fprintf(out, "\nenum %s (%s)  %s\n", enum.Name, enum.GraphqlTypeName, enum.Id)
+		if enum.Description != nil {
+			fmt.Fprintf(out, "  %s\n", oneLine(*enum.Description, math.MaxInt))
+		}
 		for _, value := range enum.Values {
-			fmt.Fprintf(out, "  %s = %s\n", value.Value, value.GraphqlName)
+			fmt.Fprintf(out, "  %s = %s%s\n", value.Value, value.GraphqlName, valueNote(value.Description))
 		}
 	}
+}
+
+func valueNote(description *string) string {
+	if description == nil {
+		return ""
+	}
+	return "  " + oneLine(*description, math.MaxInt)
+}
+
+// shownDescription is a description on one line, cut to max characters with an ellipsis, or "-" when there is none.
+func shownDescription(description *string, max int) string {
+	if description == nil {
+		return "-"
+	}
+	return oneLine(*description, max)
+}
+
+func oneLine(text string, max int) string {
+	text = strings.Join(strings.Fields(text), " ")
+	if runes := []rune(text); len(runes) > max {
+		return string(runes[:max-1]) + "…"
+	}
+	return text
 }
 
 func group(use, short string, children ...*cobra.Command) *cobra.Command {

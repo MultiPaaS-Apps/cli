@@ -173,14 +173,14 @@ func TestModelShowPrintsEachFieldsDefaultAndNotNull(t *testing.T) {
 	}
 	lines := map[string][]string{}
 	for _, line := range strings.Split(got.stdout, "\n") {
-		if words := strings.Fields(line); len(words) == 6 {
+		if words := strings.Fields(line); len(words) == 7 {
 			lines[words[0]] = words
 		}
 	}
 	for name, want := range map[string][]string{
-		"priority": {"priority", "number", "false", "true", "3", "field-1"},
-		"code":     {"code", "text", "false", "false", `"3"`, "field-2"},
-		"note":     {"note", "text", "false", "false", "-", "field-3"},
+		"priority": {"priority", "number", "false", "true", "3", "field-1", "-"},
+		"code":     {"code", "text", "false", "false", `"3"`, "field-2", "-"},
+		"note":     {"note", "text", "false", "false", "-", "field-3", "-"},
 	} {
 		if !reflect.DeepEqual(lines[name], want) {
 			t.Fatalf("%s printed %v, want %v, in %q", name, lines[name], want, got.stdout)
@@ -350,7 +350,7 @@ func TestModelShowMarksAListField(t *testing.T) {
 	}
 	types := map[string]string{}
 	for _, line := range strings.Split(got.stdout, "\n") {
-		if words := strings.Fields(line); len(words) == 6 {
+		if words := strings.Fields(line); len(words) == 7 {
 			types[words[0]] = words[1]
 		}
 	}
@@ -574,4 +574,136 @@ func TestModelShowPrintsTheTenantShareLevel(t *testing.T) {
 	if !strings.Contains(got.stdout, "managed true, shares new records: view)") {
 		t.Fatalf("shown %q", got.stdout)
 	}
+}
+
+func TestDescriptionFlagsSendTheTextAndAnEmptyOneClearsIt(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		args []string
+		want map[string]any
+	}{
+		{"entity_create", []string{"entity", "create", "--name", "Order", "--description", "A customer order"}, map[string]any{"name": "Order", "description": "A customer order"}},
+		{"entity_update_clear", []string{"entity", "update", "--id", "entity-1", "--description", ""}, map[string]any{"entityId": "entity-1", "description": ""}},
+		{"field_add", []string{"field", "add", "--entity", "entity-1", "--type", "text", "--name", "Note", "--description", "Free text"}, map[string]any{"entityId": "entity-1", "type": "text", "name": "Note", "description": "Free text"}},
+		{"field_update_clear", []string{"field", "update", "--id", "field-1", "--description", ""}, map[string]any{"fieldId": "field-1", "description": ""}},
+		{"enum_update", []string{"enum", "update", "--id", "enum-1", "--description", "Where it stands"}, map[string]any{"enumTypeId": "enum-1", "description": "Where it stands"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			fake := signedInFake(t, fresh)
+			fake.fields["entity-1"] = []map[string]any{{"id": "field-1", "graphqlFieldName": "note", "type": "text"}}
+			args := append([]string{c.args[0], c.args[1], "--app", "app-a-000", "--json"}, c.args[2:]...)
+			got := fake.run(t, args...)
+			if got.exit != exitOK {
+				t.Fatalf("%v: exit %d: %s", c.args, got.exit, got.stdout)
+			}
+			if want := map[string]any{"input": c.want}; len(fake.mutations) != 1 || !reflect.DeepEqual(fake.mutations[0], want) {
+				t.Fatalf("%v: sent %v, want %v", c.args, fake.mutations, want)
+			}
+		})
+	}
+}
+
+func TestValueDescriptionsAreSentOnTheirValuesByLongestMatchingName(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		flags []string
+		want  []any
+	}{
+		{"leading_whitespace_is_ignored", []string{"--values", "Open", "--value-description", " Open=x"}, []any{
+			map[string]any{"value": "Open", "description": "x"},
+		}},
+		{"tab_before_equals_is_ignored", []string{"--values", "Done", "--value-description", "Done\t=y"}, []any{
+			map[string]any{"value": "Done", "description": "y"},
+		}},
+		{"text_after_the_matched_name", []string{"--values", "Open,N/A=NOT_APPLICABLE", "--value-description", "Open=Not started, yet", "--value-description", "N/A=a=b"}, []any{
+			map[string]any{"value": "Open", "description": "Not started, yet"},
+			map[string]any{"value": "N/A", "graphqlName": "NOT_APPLICABLE", "description": "a=b"},
+		}},
+		{"value_name_containing_equals", []string{"--values", "a=b=A_EQ_B,a", "--value-description", "a=b=Text", "--value-description", "a=Plain"}, []any{
+			map[string]any{"value": "a=b", "graphqlName": "A_EQ_B", "description": "Text"},
+			map[string]any{"value": "a", "description": "Plain"},
+		}},
+		{"plain_value_text_containing_equals", []string{"--values", "Open", "--value-description", "Open=x=y"}, []any{
+			map[string]any{"value": "Open", "description": "x=y"},
+		}},
+		{"empty_text_sends_empty", []string{"--values", "Open,Done", "--value-description", "Done="}, []any{
+			map[string]any{"value": "Open"},
+			map[string]any{"value": "Done", "description": ""},
+		}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			fake := signedInFake(t, fresh)
+			got := fake.run(t, append([]string{"enum", "create", "--app", "app-a-000", "--name", "Status", "--json"}, c.flags...)...)
+			if got.exit != exitOK {
+				t.Fatalf("exit %d: %s", got.exit, got.stdout)
+			}
+			want := map[string]any{"input": map[string]any{"name": "Status", "values": c.want}}
+			if !reflect.DeepEqual(fake.mutations[0], want) {
+				t.Fatalf("sent %v, want %v", fake.mutations[0], want)
+			}
+		})
+	}
+}
+
+func TestValueDescriptionIsRefusedWithoutValuesOrForAnUnknownValue(t *testing.T) {
+	for _, c := range []struct {
+		name    string
+		args    []string
+		message string
+	}{
+		{"without_values", []string{"enum", "update", "--id", "enum-1", "--value-description", "Open=x"}, "--value-description needs --values"},
+		{"unknown_value", []string{"enum", "update", "--id", "enum-1", "--values", "Open", "--value-description", "Closed=x"}, `names "Closed", which is not one of --values`},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			fake := signedInFake(t, fresh)
+			args := append([]string{c.args[0], c.args[1], "--app", "app-a-000"}, c.args[2:]...)
+			got := fake.run(t, args...)
+			if got.exit != exitRefused || !strings.Contains(got.stdout+got.stderr, c.message) || len(fake.mutations) != 0 {
+				t.Fatalf("%v: exit %d, printed %q %q, sent %v", c.args, got.exit, got.stdout, got.stderr, fake.mutations)
+			}
+		})
+	}
+}
+
+func TestModelShowPrintsEntityFieldAndEnumDescriptions(t *testing.T) {
+	fake := signedInFake(t, fresh)
+	long := strings.Repeat("x", 70)
+	fake.entities["app-a-000"] = append(fake.entities["app-a-000"], map[string]any{"id": "entity-1", "name": "Order", "description": "A customer order"})
+	fake.fields["entity-1"] = []map[string]any{
+		{"id": "field-1", "graphqlFieldName": "note", "type": "text", "description": "Free text"},
+		{"id": "field-2", "graphqlFieldName": "memo", "type": "text", "description": long},
+	}
+	fake.enumTypes["app-a-000"] = []map[string]any{{"id": "enum-1", "name": "Status", "graphqlTypeName": "Status", "description": "Where it stands",
+		"values": []map[string]any{{"value": "Open", "graphqlName": "OPEN", "description": "Not started"}, {"value": "Done", "graphqlName": "DONE"}}}}
+	got := fake.run(t, "model", "show", "--app", "app-a-000")
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	for name, want := range map[string]string{
+		"entity_line":        "  A customer order\n",
+		"description_column": "DESCRIPTION",
+		"field_description":  "field-1  Free text\n",
+		"truncated_to_60":    "field-2  " + strings.Repeat("x", 59) + "…\n",
+		"enum_line":          "  Where it stands\n",
+		"value_line":         "  Open = OPEN  Not started\n",
+		"value_without":      "  Done = DONE\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			if !strings.Contains(got.stdout, want) {
+				t.Fatalf("no %q in %q", want, got.stdout)
+			}
+		})
+	}
+	t.Run("json", func(t *testing.T) {
+		asJSON := fake.run(t, "model", "show", "--app", "app-a-000", "--json")
+		var shown struct {
+			Entities []struct{ Fields []map[string]any }
+			Enums    []struct{ Values []map[string]any }
+		}
+		decode(t, asJSON.stdout, &shown)
+		entity := shown.Entities[len(shown.Entities)-1]
+		if entity.Fields[1]["description"] != long || shown.Enums[0].Values[0]["description"] != "Not started" {
+			t.Fatalf("json %s", asJSON.stdout)
+		}
+	})
 }

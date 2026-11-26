@@ -112,6 +112,8 @@ fragment EntityParts on Entity {
   managed
   # @genqlient(pointer: true)
   shareNewRecordsWithTenant
+  # @genqlient(pointer: true)
+  description
 }
 
 fragment FieldParts on Field {
@@ -122,6 +124,8 @@ fragment FieldParts on Field {
   # @genqlient(pointer: true)
   name
   graphqlFieldName
+  # @genqlient(pointer: true)
+  description
   type
   # @genqlient(pointer: true)
   maxFileBytes
@@ -152,9 +156,13 @@ fragment EnumTypeParts on EnumType {
   id
   name
   graphqlTypeName
+  # @genqlient(pointer: true)
+  description
   values {
     value
     graphqlName
+    # @genqlient(pointer: true)
+    description
   }
 }
 

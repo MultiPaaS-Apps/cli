@@ -519,7 +519,19 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 			change := func(kind string) []map[string]any {
 				return []map[string]any{{"type": kind, "description": from + " to " + to}}
 			}
-			writeData(w, map[string]any{"apiSchemaDiff": map[string]any{"breaking": change("FIELD_REMOVED"), "dangerous": []map[string]any{}, "added": change("FIELD_ADDED"), "changed": change("DESCRIPTION_CHANGED")}})
+			lists := map[string][]map[string]any{
+				"breaking":  change("FIELD_REMOVED"),
+				"dangerous": {},
+				"added":     change("FIELD_ADDED"),
+				"changed":   change("DESCRIPTION_CHANGED"),
+			}
+			selected := map[string]any{}
+			for name, list := range lists {
+				if regexp.MustCompile(`\b` + name + `\s*\{`).MatchString(f.lastQuery) {
+					selected[name] = list
+				}
+			}
+			writeData(w, map[string]any{"apiSchemaDiff": selected})
 		}
 	case "Records", "RecordsCount", "RecordsAggregate":
 		scope, _ := variables["scope"].(string)

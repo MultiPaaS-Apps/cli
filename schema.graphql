@@ -498,7 +498,9 @@ type EffectiveRole {
 	role: Role!
 }
 type Entity {
+	constraints: [Constraint!]!
 	createdAt: DateTime!
+	fields(page: PageInput! = {page:0,pageSize:20}): FieldPage!
 	graphqlPluralName: String!
 	graphqlTypeName: String!
 	id: ID!
@@ -685,6 +687,11 @@ input InviteMemberInput {
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSON
+type Model {
+	apiVersion: ID
+	entities: EntityPage!
+	enumTypes: EnumTypePage!
+}
 type ModelRevision {
 	createdAt: DateTime!
 	generatorVersion: Int!
@@ -986,6 +993,7 @@ type Query {
 	latestGeneratorVersion: Int!
 	me: User
 	members(appTenantId: ID, page: PageInput! = {page:0,pageSize:20}): TenantMemberPage!
+	model(page: PageInput! = {page:0,pageSize:20}): Model!
 	modelRevisions(page: PageInput! = {page:0,pageSize:20}): ModelRevisionPage!
 	myEveryEnvironmentPermissions: [HeldPermission!]!
 	myFeedback(page: PageInput! = {page:0,pageSize:20}): FeedbackPage!

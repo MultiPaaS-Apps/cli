@@ -170,7 +170,7 @@ type versionsDiffResult struct {
 
 func versionsDiff(command commandFunc) *cobra.Command {
 	var appID, from, to string
-	cmd := command("diff", "Show what changed between two API versions: breaking, dangerous and added", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	cmd := command("diff", "Show what changed between two API versions: breaking, dangerous, added and changed", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		if from == "" {
 			config, err := readProject()
 			if err != nil {
@@ -221,7 +221,7 @@ func printVersionsDiff(out io.Writer, diff versionsDiffResult, appID string) {
 	sections := []struct {
 		heading string
 		changes []schemaChange
-	}{{"Breaking", diff.Breaking}, {"Dangerous", diff.Dangerous}, {"Added", diff.Added}}
+	}{{"Breaking", diff.Breaking}, {"Dangerous", diff.Dangerous}, {"Added", diff.Added}, {"Changed", diff.Changed}}
 	none := true
 	for _, section := range sections {
 		if len(section.changes) == 0 {

@@ -367,6 +367,11 @@ query ApiSchemaDiff($fromRevisionId: ID!, $toRevisionId: ID!) {
       type
       description
     }
+    # @genqlient(typename: "schemaChange")
+    changed {
+      type
+      description
+    }
   }
 }
 

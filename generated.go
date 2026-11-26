@@ -10519,6 +10519,7 @@ type versionDiff struct {
 	Breaking  []schemaChange `json:"breaking"`
 	Dangerous []schemaChange `json:"dangerous"`
 	Added     []schemaChange `json:"added"`
+	Changed   []schemaChange `json:"changed"`
 }
 
 // GetBreaking returns versionDiff.Breaking, and is useful for accessing the field via an interface.
@@ -10529,6 +10530,9 @@ func (v *versionDiff) GetDangerous() []schemaChange { return v.Dangerous }
 
 // GetAdded returns versionDiff.Added, and is useful for accessing the field via an interface.
 func (v *versionDiff) GetAdded() []schemaChange { return v.Added }
+
+// GetChanged returns versionDiff.Changed, and is useful for accessing the field via an interface.
+func (v *versionDiff) GetChanged() []schemaChange { return v.Changed }
 
 // The mutation executed by AddDataImportFile.
 const AddDataImportFile_Operation = `
@@ -10630,6 +10634,10 @@ query ApiSchemaDiff ($fromRevisionId: ID!, $toRevisionId: ID!) {
 			description
 		}
 		added {
+			type
+			description
+		}
+		changed {
 			type
 			description
 		}

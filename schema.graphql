@@ -68,6 +68,7 @@ enum AiTurnStatus {
 type ApiSchemaDiff {
 	added: [SchemaChange!]!
 	breaking: [SchemaChange!]!
+	changed: [SchemaChange!]!
 	dangerous: [SchemaChange!]!
 }
 type ApiToken implements Receipt {

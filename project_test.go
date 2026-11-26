@@ -320,7 +320,7 @@ func TestVersionsDiffComparesThePinWithTheNewest(t *testing.T) {
 	fake.revisions["app-a-000"] = 3
 	fake.run(t, "init", "--app", "app-a-000", "--tenant", "tenant-a", "--api-version", "rev-1", "--json")
 	got := fake.run(t, "versions", "diff", "--json")
-	want := `{"from":"rev-1","to":"rev-3","breaking":[{"type":"FIELD_REMOVED","description":"rev-1 to rev-3"}],"dangerous":[],"added":[{"type":"FIELD_ADDED","description":"rev-1 to rev-3"}],"upgradeAvailable":false}`
+	want := `{"from":"rev-1","to":"rev-3","breaking":[{"type":"FIELD_REMOVED","description":"rev-1 to rev-3"}],"dangerous":[],"added":[{"type":"FIELD_ADDED","description":"rev-1 to rev-3"}],"changed":[{"type":"DESCRIPTION_CHANGED","description":"rev-1 to rev-3"}],"upgradeAvailable":false}`
 	if compact(got.stdout) != want {
 		t.Fatalf("exit %d: %s", got.exit, got.stdout)
 	}
@@ -330,7 +330,7 @@ func TestVersionsDiffTakesFromAndToAndPrintsEachKindUnderItsHeading(t *testing.T
 	fake := projectFake(t)
 	fake.revisions["app-a-000"] = 3
 	got := fake.run(t, "versions", "diff", "--app", "app-a-000", "--from", "rev-3", "--to", "rev-2")
-	want := "API version rev-3 to rev-2\n\nBreaking:\n  rev-3 to rev-2\n\nAdded:\n  rev-3 to rev-2\n"
+	want := "API version rev-3 to rev-2\n\nBreaking:\n  rev-3 to rev-2\n\nAdded:\n  rev-3 to rev-2\n\nChanged:\n  rev-3 to rev-2\n"
 	if got.exit != 0 || got.stdout != want {
 		t.Fatalf("exit %d: %q", got.exit, got.stdout)
 	}

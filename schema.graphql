@@ -32,6 +32,11 @@ type AccessGroupMember implements AccessGrant {
 	id: ID!
 	user: User
 }
+type AccountPlanAssignment {
+	clientId: ID!
+	plan: Plan!
+	startsAt: DateTime!
+}
 input AddDataImportFileInput {
 	contentType: String!
 	entityId: ID
@@ -44,6 +49,13 @@ input AddDataImportFileInput {
 input AddMemberInput {
 	appTenantId: ID
 	userId: ID!
+}
+type AiModelCost {
+	cacheReadPerMTok: Float!
+	cacheWritePerMTok: Float!
+	inputPerMTok: Float!
+	model: String!
+	outputPerMTok: Float!
 }
 type AiTurn {
 	conversation: Conversation!
@@ -68,6 +80,7 @@ enum AiTurnStatus {
 type ApiSchemaDiff {
 	added: [SchemaChange!]!
 	breaking: [SchemaChange!]!
+	changed: [SchemaChange!]!
 	dangerous: [SchemaChange!]!
 }
 type ApiToken implements Receipt {
@@ -703,6 +716,7 @@ type ModelRevisionPage {
 }
 type Mutation {
 	acceptInvitation(input: AcceptInvitationInput!): TenantMember!
+	activatePlan(id: ID!): Plan!
 	addAccessGroupMember(groupId: ID!, userId: ID!): AccessGroupMember!
 	addClientGroupMember(groupId: ID!, userId: ID!): ClientGroupMember!
 	addDataImportFile(input: AddDataImportFileInput!): DataImportFileUpload!
@@ -711,6 +725,7 @@ type Mutation {
 	approveOAuthAuthorization(input: ApproveOAuthAuthorizationInput!): OAuthRedirect!
 	assignClientGroupRole(groupId: ID!, roleId: ID!): ClientGroupRoleAssignment!
 	assignClientRole(input: AssignClientRoleInput!): ClientRoleAssignment!
+	assignPlan(clientId: ID!, planId: ID!): AccountPlanAssignment!
 	assignPlatformGroupRole(groupId: ID!, roleId: ID!): PlatformGroupRoleAssignment!
 	assignPlatformRole(input: AssignPlatformRoleInput!): PlatformRoleAssignment!
 	assignRole(
@@ -741,6 +756,8 @@ type Mutation {
 	"""
 	createModelRevision: ModelRevision!
 	createOAuthClient(input: CreateOAuthClientInput!): OAuthClient!
+	createPlan: Plan!
+	createPlanFromCopy(planId: ID!): Plan!
 	createPlatformGroup(name: String!): PlatformGroup!
 	createPlatformRole(input: CreatePlatformRoleInput!): PlatformRole!
 	createRecord(input: CreateRecordInput!): Record!
@@ -798,6 +815,7 @@ type Mutation {
 	renameEnvironment(input: RenameEnvironmentInput!): Environment!
 	renameEnvironmentUrlName(confirmTakeover: Boolean, environmentId: ID!, name: String!): Environment!
 	renamePlatformGroup(id: ID!, name: String!): PlatformGroup!
+	replacePlan(newPlanId: ID!, oldPlanEndsAt: DateTime!, oldPlanId: ID!): Plan!
 	"""
 	Registers a file for a record's file field and signs its upload. Write the returned fileId as the field's value once the PUT succeeds.
 	"""
@@ -825,6 +843,7 @@ type Mutation {
 	setEnvironmentRedirectUris(input: SetEnvironmentRedirectUrisInput!): Environment!
 	setFeedbackSetting(autoSend: Boolean!): FeedbackSetting!
 	setFeedbackStatus(id: ID!, note: String, status: FeedbackStatus!): OperatorFeedback!
+	setPlanEndDate(endsAt: DateTime!, id: ID!): Plan!
 	shareRecord(input: ShareRecordInput!): RecordShare!
 	signIn(input: SignInInput!): AuthOkResult!
 	signOut: AuthOkResult!
@@ -841,6 +860,7 @@ type Mutation {
 	updateApplication(input: UpdateApplicationInput!): Application!
 	updateClient(input: UpdateClientInput!): Client!
 	updateClientRole(input: UpdateClientRoleInput!): ClientRole!
+	updateDraftPlan(id: ID!, input: PlanInput!): Plan!
 	updateEntity(input: UpdateEntityInput!): Entity!
 	updateEnumType(input: UpdateEnumTypeInput!): EnumType!
 	updateField(input: UpdateFieldInput!): Field!
@@ -910,6 +930,90 @@ type PermissionInfo {
 	key: String!
 	level: String!
 }
+type Plan {
+	accountCount: Int!
+	aiUnitsPerDollar: Int!
+	editable: Boolean!
+	endsAt: DateTime
+	forClient: PlanClient
+	id: ID!
+	inUse: Boolean!
+	limits: [PlanLimit!]!
+	name: String!
+	priceCents: Int!
+	replacedByPlan: Plan
+	startsAt: DateTime
+	status: PlanStatus!
+	storageBytesPerApp: Float!
+	unlimited: Boolean!
+	worstCase: PlanWorstCase!
+}
+type PlanClient {
+	deleted: Boolean!
+	id: ID!
+	name: String!
+}
+type PlanCostAssumptions {
+	aiModels: [AiModelCost!]!
+	apiDollarsPerMillionRequests: Float!
+	dbStorageDollarsPerGbMonth: Float!
+	downloadDollarsPerGb: Float!
+	estimateAiModel: String!
+	fileStorageDollarsPerGbMonth: Float!
+	importDollarsPerGb: Float!
+}
+type PlanCostLine {
+	dollars: Float!
+	measure: PlanMeasure!
+}
+input PlanInput {
+	aiUnitsPerDollar: Int!
+	limits: [PlanLimitInput!]!
+	name: String!
+	priceCents: Int!
+	startsAt: DateTime
+	storageBytesPerApp: Float!
+	unlimited: Boolean!
+}
+type PlanLimit {
+	aiDollars: Float
+	aiEstimatedTokens: Float
+	costDollars: Float
+	limitQuantity: Float
+	measure: PlanMeasure!
+	overagePriceMicros: Float
+	overageUnitQuantity: Float
+}
+input PlanLimitInput {
+	limitQuantity: Float
+	measure: PlanMeasure!
+	overagePriceMicros: Float
+	overageUnitQuantity: Float
+}
+enum PlanMeasure {
+	ai_units_day
+	ai_units_month
+	api_requests_day
+	api_requests_minute
+	api_requests_month
+	db_storage_bytes
+	file_download_bytes
+	file_storage_bytes
+	import_bytes
+}
+type PlanPage {
+	items: [Plan!]!
+	pageInfo: PageInfo!
+}
+enum PlanStatus {
+	active
+	draft
+}
+type PlanWorstCase {
+	lines: [PlanCostLine!]!
+	marginDollars: Float
+	totalDollars: Float
+}
 type PlatformEffectiveRole {
 	direct: Boolean!
 	groups: [PlatformGroup!]!
@@ -967,6 +1071,7 @@ type Query {
 	clientGroupMembers(userId: ID): [ClientGroupMember!]!
 	clientGroupRoleAssignments: [ClientGroupRoleAssignment!]!
 	clientGroups: [ClientGroup!]!
+	clientPlan(clientId: ID!): AccountPlanAssignment!
 	clientRoleAssignments(userId: ID): [ClientRoleAssignment!]!
 	clientRoles: [ClientRole!]!
 	clients(page: PageInput! = {page:0,pageSize:20}): ClientPage!
@@ -1003,6 +1108,9 @@ type Query {
 	oauthAuthorizationRequest(application: ID, clientId: ID!, environment: ID, redirectUri: String!): OAuthAuthorizationRequest!
 	oauthClients: [OAuthClient!]!
 	permissionCatalog: [PermissionInfo!]!
+	plan(id: ID!): Plan
+	planCostAssumptions: PlanCostAssumptions!
+	plans(assignableTo: ID, page: PageInput! = {page:0,pageSize:20}, replacementFor: ID): PlanPage!
 	platformEffectiveRoles(userId: ID!): [PlatformEffectiveRole!]!
 	platformGroupMembers(userId: ID): [PlatformGroupMember!]!
 	platformGroupRoleAssignments: [PlatformGroupRoleAssignment!]!

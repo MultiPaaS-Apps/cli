@@ -316,11 +316,19 @@ input CreateDeployerInput {
 	name: String!
 }
 input CreateEntityInput {
+	"""
+	Plain-language meaning, up to 1000 characters. On an update, null or an empty string clears it.
+	"""
+	description: String
 	graphqlPluralName: String
 	graphqlTypeName: String
 	name: String!
 }
 input CreateEnumTypeInput {
+	"""
+	Plain-language meaning, up to 1000 characters. On an update, null or an empty string clears it.
+	"""
+	description: String
 	graphqlTypeName: String
 	name: String!
 	values: [EnumValueInput!]!
@@ -331,6 +339,10 @@ input CreateEnvironmentInput {
 }
 input CreateFieldInput {
 	defaultValue: JSON
+	"""
+	Plain-language meaning, up to 1000 characters. On an update, null or an empty string clears it.
+	"""
+	description: String
 	entityId: ID!
 	enumTypeId: ID
 	graphqlFieldName: String
@@ -513,6 +525,7 @@ type EffectiveRole {
 type Entity {
 	constraints: [Constraint!]!
 	createdAt: DateTime!
+	description: String
 	fields(page: PageInput! = {page:0,pageSize:20}): FieldPage!
 	graphqlPluralName: String!
 	graphqlTypeName: String!
@@ -528,6 +541,7 @@ type EntityPage {
 }
 type EnumType {
 	createdAt: DateTime!
+	description: String
 	graphqlTypeName: String!
 	id: ID!
 	name: String!
@@ -539,10 +553,15 @@ type EnumTypePage {
 	pageInfo: PageInfo!
 }
 type EnumValue {
+	description: String
 	graphqlName: String!
 	value: String!
 }
 input EnumValueInput {
+	"""
+	Plain-language meaning, up to 1000 characters. On an update, null or an empty string clears it.
+	"""
+	description: String
 	graphqlName: String
 	value: String!
 }
@@ -618,6 +637,7 @@ type FeedbackStatusChange {
 type Field {
 	createdAt: DateTime!
 	defaultValue: JSON
+	description: String
 	entity: Entity!
 	enumType: EnumType
 	enumValues: [String!]
@@ -1472,6 +1492,10 @@ input UpdateClientRoleInput {
 	permissions: [String!]
 }
 input UpdateEntityInput {
+	"""
+	Plain-language meaning, up to 1000 characters. On an update, null or an empty string clears it.
+	"""
+	description: String
 	entityId: ID!
 	graphqlPluralName: String
 	graphqlTypeName: String
@@ -1480,6 +1504,10 @@ input UpdateEntityInput {
 	shareNewRecordsWithTenant: RecordAccessLevel
 }
 input UpdateEnumTypeInput {
+	"""
+	Plain-language meaning, up to 1000 characters. On an update, null or an empty string clears it.
+	"""
+	description: String
 	enumTypeId: ID!
 	graphqlTypeName: String
 	name: String
@@ -1487,6 +1515,10 @@ input UpdateEnumTypeInput {
 }
 input UpdateFieldInput {
 	defaultValue: JSON
+	"""
+	Plain-language meaning, up to 1000 characters. On an update, null or an empty string clears it.
+	"""
+	description: String
 	enumTypeId: ID
 	fieldId: ID!
 	graphqlFieldName: String

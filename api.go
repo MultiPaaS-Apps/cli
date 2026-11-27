@@ -309,6 +309,13 @@ func fromGraphQL(err error) error {
 	failure.Rules = stringsOf(refusals[0].Extensions["rules"])
 	failure.ChangeableAt, _ = refusals[0].Extensions["changeableAt"].(string)
 	failure.PreviousOwner = previousOwnerOf(refusals[0].Extensions["previousOwner"])
+	failure.Limit, _ = refusals[0].Extensions["limit"].(string)
+	most, _ := refusals[0].Extensions["max"].(float64)
+	actual, _ := refusals[0].Extensions["actual"].(float64)
+	failure.Max, failure.Actual = int64(most), int64(actual)
+	failure.Path, _ = refusals[0].Extensions["path"].(string)
+	failure.Missing = stringsOf(refusals[0].Extensions["missing"])
+	failure.Mismatched = stringsOf(refusals[0].Extensions["mismatched"])
 	return failure
 }
 

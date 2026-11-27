@@ -45,6 +45,8 @@ type fakeMultiPaaS struct {
 	urlNames        map[string][]map[string]any // "client:<id>", "app:<id>" or "env:<id>" -> its URL names, newest first
 	retiredAppNames map[string]map[string]any   // an app URL name another app held before -> that app's {id, name}
 	clientRenamed   bool                        // the client's URL name changed once; another rename is too soon
+	sites           *fakeSites                  // the site operations' state and the stand-in for S3 and the sites edge; set by siteFake
+	refuseOperation map[string]string           // operation -> the site refusal code it answers, with the server's message
 	scopes          []string                    // X-MultiPaaS-Scope per GraphQL request ("" when absent)
 	refused         map[string]bool             // client ids myTenants lists but the scope check refuses
 	nameless        bool                        // the signed-in user has no name
@@ -398,6 +400,10 @@ func (f *fakeMultiPaaS) answerRaw(w http.ResponseWriter, query string, variables
 func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, variables map[string]any) {
 	parts := strings.Split(scope, "/")
 	f.operations = append(f.operations, operation)
+	if code, ok := f.refuseOperation[operation]; ok {
+		graphQLRefusal(w, code, siteRefusalMessages[code])
+		return
+	}
 	switch operation {
 	case "Me":
 		var name any = "Dev"
@@ -450,6 +456,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageEnvironments(w, operation, parts[0], appOf(parts), variables)
 	case "ClientUrlName", "RenameClientUrlName", "ApplicationUrlName", "RenameApplicationUrlName", "EnvironmentUrlNames", "RenameEnvironmentUrlName":
 		f.manageURLNames(w, operation, parts, variables)
+	case "Sites", "CreateSiteDeployment", "PublishSiteDeployment", "RemoveEnvironmentSite", "DeleteApplicationSite":
+		f.manageSites(w, operation, parts, variables)
 	case "ScopedAppTenant":
 		scopedApp := f.scopedApps[parts[len(parts)-1]]
 		tenant, _ := f.tenantRow(scopedApp.id, parts[len(parts)-1])

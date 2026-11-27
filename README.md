@@ -53,6 +53,10 @@ multipaas import status --app <app id> --env <env id> --import <import id> [--in
 multipaas import invitations --app <app id> --env <env id> --import <import id>              # the lapsed ones; --tenant <app-tenant id> reaches imports run before they recorded theirs
 multipaas import reissue --app <app id> --env <env id> --import <import id>                  # re-issued ones are claimed at the next sign-in within 7 days; --tenant reaches a deleted import's and re-issues every import's lapsed ones in that app-tenant
 multipaas import delete --app <app id> --env <env id> --import <import id>                   # not while checking or importing; nothing it holds is removed
+multipaas site deploy ./dist --app <app id>                 # the app's site, served by every environment without its own; waits until it is live
+multipaas site deploy ./dist --app <app id> --env <env id> --no-spa   # that environment's own site; a missing path answers 404, not index.html
+multipaas site status --app <app id> --env <env id>         # what the environment serves, its live deployment and its site URL
+multipaas site remove --app <app id> --env <env id>         # back to the app's site; --app-site --yes deletes the app's site
 multipaas oauth-client create --name "My app" --redirect-uri http://localhost:5173/callback
 multipaas deployers create --app <app id> --name "CI"      # prints the deployer's client ID and secret, once
 multipaas deployers list --app <app id>
@@ -78,6 +82,8 @@ The model commands are `model show`, `entity create|update|delete`, `enum create
 In a directory with `multipaas.json`, `--app` and `--tenant` default to its `applicationId` and `testAppTenantId`, and `--env` to its `environmentId` on the commands whose `--help` names that default. `init` writes the file and prints the endpoints your app calls. `pin` moves it to another API version, and `schema pull` writes that version's GraphQL schema. `versions diff` shows what changed between two API versions, breaking, dangerous, added and changed (a safe change, such as a new description), from the pin to the newest unless `--from` and `--to` say otherwise. `records list|get|create|update|delete` read and write an entity's records in an app-tenant, or with `--app-wide` the application's app-wide records (instead of `--tenant`), with `--data` a JSON object keyed by field id. On the `records` and `app-identity role` commands `--env` is given only with `--app-wide`: without `--app-wide` it is refused, with or without `--tenant`, because an app-tenant already belongs to one environment. `records upload` sends a file for a file field and prints its id, which `records create` or `update` then sets as that field's value in `--data`; `records get` and `list` show each file's name, size and a link that works for 15 minutes. `records list` takes `--where`, a JSON object of conditions keyed by field id, or `id`, `createdAt` or `updatedAt`, `--order-by` one field, `--count` to print only how many match, and `--aggregate FIELD_ID` (repeatable) to print the sum (number fields only), min and max of a number or timestamp field, `createdAt` or `updatedAt` over every match that stores a value of the field's type. `records update --expected-version` updates only if the record is still at that version, its `version` from `records get` or `list`, and otherwise is refused with `CONFLICT`. `oauth-client list|create|update` register and change the sign-in client your app's end users use, which needs `application.manage_oauth`. `app-identity list|create|secret add|secret revoke|secret list|delete` manage your app's own identities, which needs `application.manage_oauth`: an app identity's client ID and secret let your own code call the API for a tenant via OAuth client credentials. `deployers create|list|delete` manage the credentials CI uses, which needs `access.manage.application`. With `MULTIPAAS_CLIENT_ID` and `MULTIPAAS_CLIENT_SECRET` set, the CLI acts as that deployer instead of your sign-in, and never reads or writes your saved sign-in. `envs redirect-uris set|list` manage the callback URLs a sign-in client accepts in one environment, on top of the client's own; `set` without `--redirect-uri` clears them. A deployer can create environments and delete only those it created, set their sign-in callback URLs, and in them create and delete app-tenants, create app identities, and give those app identities roles without `model.edit`, and invite people as described above. It can't change the model or reach any other environment. `login` and `logout` are refused while the two are set. `apps create` makes an application, which needs `client.applications.create`, and makes you its App manager. `apps delete` deletes one, which needs `access.manage.application` in every environment: its app-tenants and their members are deleted with it, and its data is destroyed 30 days later, on `destroysAt`. `tenants create` makes an app-tenant to test in, which needs `access.manage.application`. `tenants delete` deletes one, which needs the same permission: its members and every token for it stop working at once, and its records, files and members are destroyed 30 days later, on `destroysAt`. `tenants list --include-deleted` lists deleted ones too, each with `deletedAt` and `destroysAt`. `tenants invite --email EMAIL --role ROLE` invites a person to an app-tenant: `--role` is a role's key or id from `roles list --tenant`, repeated for each role. MultiPaaS emails them a link that works for 7 days, and they hold the roles once they accept it. `tenants members` lists the app-tenant's members, without their roles, and its pending invitations, email and import alike. `tenants invitation update --invitation ID --role ROLE` sets the roles of a pending email invitation that `tenants members` lists: the roles given replace the ones it had, and any groups it has, set in the web app, stay. Inviting and changing an invitation need access management (`access.manage`) in the app-tenant, and every role given must carry only permissions you hold there. `tenants invite` is refused with `UNAUTHORIZED` for a lack of either, and the CLI's message names both. `tenants invitation update` can't see an invitation without access management, or one that lists a role or group carrying a permission you don't hold there, and refuses with `NOT_FOUND`: it never sends the update, so nothing changes. The server refuses with `UNAUTHORIZED` a role given that carries a permission you don't hold. Signed in as a person, the CLI checks before sending that the server lets you enter `--tenant`, which must be a live app-tenant of the application in a live environment, whatever level your access is at. When it isn't, any of the three commands refuses with `NOT_FOUND` "no app-tenant … that you can reach": it never sends the command's own request, so nothing changes. `tenants members` lists only the invitations you could resend, so without access management it lists none, and with it, only those whose roles and groups carry only permissions you hold there. `tenants retire` and `--include-retired` are the old names; they still work and print a deprecation notice. Likewise `entity retire`, `enum retire`, `field retire`, `constraint retire`, `records retire`, `deployers retire` and `app-identity retire` are the deprecated names of the matching `delete` commands, hidden from `--help`.
 
 `import create|add|check|run|status|invitations|reissue|delete` load an application's existing data from export files; see [Import](#import).
+
+`site deploy|status|remove` publish a directory of static files at an environment's site URL; see [Sites](#sites).
 
 `feedback send|list|show|settings` report a bug or feature request to MultiPaaS and follow the status of your reports; see [Feedback](#feedback).
 
@@ -170,6 +176,68 @@ With `--json`, `import create`, `check`, `run`, `status` and `delete` print `{"i
 `sourceId`, `field`, `code` and `message`), `counts` (each a `key` and a `count`), `files`, `startedAt`,
 `finishedAt`, `deletedAt` (set once the import is deleted) and `invitations` (`pending`, `accepted` and `lapsed` counts). `add --kind records` needs `--entity`, the entity's id from `model show`.
 `import invitations` prints `{"invitations": [...]}` and `import reissue` prints `{"reissued": n, "skipped": m}`.
+
+## Sites
+
+`site deploy <dir>` publishes a directory of static files, such as a build's `dist/`, at an environment's site URL,
+which `envs list` prints. With `--env`, or `multipaas.json`'s `environmentId` for the same application, it publishes
+that environment's own site, which the environment serves instead of the application's. Without either, or with
+`--app-site`, it publishes the application's site, which every environment without a site of its own serves. It
+uploads every file under the directory, following links that stay inside it, eight at a time, then publishes them as
+one deployment, so visitors see the old deployment or the new one, never a mix. It then waits, up to 3 minutes, until
+the site URL serves the new deployment, which usually takes about a minute. With `--json` it prints
+`{"deploymentId", "siteUrl", "fileCount", "totalBytes"}`; `siteUrl` is empty when every environment has a site of its
+own, and then it doesn't wait.
+
+A deployment holds at most 2000 files and 100 MiB, and a file at most 25 MiB. Its file paths may total at most 320 KiB
+of UTF-8, because one answer carries every file's upload link. A path must be valid UTF-8 and can't hold `"`, `\` or a
+control character, and `.multipaas/` is reserved. SPA fallback is on unless `--no-spa`: a path the site doesn't have then serves its root
+`index.html`, which may hold at most 4 MiB; without it, a 404 page. `/about` is not `/about/`: only the second serves
+`about/index.html`. A directory over a limit is refused before anything is sent, with `SITE_LIMIT_EXCEEDED` naming the
+`limit` (`files`, `totalBytes`, `fileBytes`, `pathBytes` or `spaIndexBytes`), `max`, `actual` and, for one file, its
+`path`. MultiPaaS picks each file's `Content-Type` from its extension.
+
+In human mode every refusal is followed by what to do next. With `--json`, the codes are:
+- `SITE_LIMIT_EXCEEDED`: over a limit, as above.
+- `SITE_DIR_INVALID`: the directory doesn't exist, isn't a directory or holds no files, or a link under it points at
+  nothing, loops or leads outside it.
+- `SITE_PATH_INVALID`: a site can't hold the file at `path`: it isn't valid UTF-8, holds `"`, `\` or a control
+  character, is under `.multipaas/`, or is too long.
+- `UPLOAD_REFUSED`: an upload failed; a 5xx or no answer is tried 3 more times first. An upload link expires 15
+  minutes after `site deploy` asks for it, and the message says when that is why. Nothing was published. Run
+  `site deploy` again.
+- `SITE_UPLOAD_INCOMPLETE`: the `missing` and `mismatched` paths. Nothing was published.
+- `SITE_DEPLOYMENT_NOT_PUBLISHABLE`: another publish replaced the deployment first, or it waited too long. Run
+  `site deploy` again.
+- `SITE_ROUTES_PENDING`: the change is saved, but the site URL doesn't reflect it yet. `site deploy` asks three more
+  times first. Run the same `site deploy` or `site remove` again, or wait for the daily reconcile to repair it. Other commands
+  answer it too:
+  - `url-name rename`: run it again with the same name, which finishes it.
+  - `envs delete` or `envs remove`: run it again. A `NOT_FOUND` then means the environment is gone; its site URL stops
+    serving at the application's next site change or the daily reconcile.
+  - `envs create`: don't retry, which is refused as a duplicate name. The site URL catches up at the application's next
+    site or URL-name change, or the daily reconcile.
+- `INTERNAL_SERVER_ERROR`: something failed on the server. Any site command can answer it. Only `site deploy`'s
+  publish step is asked again, 3 more times, before it is reported; run the command again. Publishing is safe to
+  repeat, and so is removing.
+- `SITE_NOT_LIVE_YET`: the deployment is published, but the site URL didn't serve it within 3 minutes.
+- `SITE_DISABLED`: MultiPaaS has disabled a site of the application, and none of its sites can be published or
+  removed until it is enabled.
+- `NOT_FOUND`: the application or environment isn't one of yours, the application is deleted, or there is no site to
+  remove there.
+- `UNAUTHORIZED`: for `site deploy` and `site remove`, you lack `environment.manage` where the command needs it; for
+  `site status`, the application isn't one of a client you belong to.
+- `CONFIRMATION_REQUIRED`: deleting the application's site needs `--yes`.
+
+`site status` prints what an environment serves (`--env`, else `multipaas.json`'s `environmentId`, else the default
+environment): `source` is `environment` for its own site, `application` for the application's, or `none`, with the
+live deployment and the site URL. `disabled` is `true` while MultiPaaS has disabled a site of the application.
+`site remove --env ENV_ID` removes that environment's own site, so it serves the application's again. `site remove`
+for the application's site deletes it, which every environment without its own stops serving, so it needs `--yes`.
+Running `site remove` again after it succeeded succeeds too.
+
+Publishing and removing need `environment.manage` in the environment for its own site, and `environment.manage` in
+every environment for the application's. A deployer can't publish.
 
 ## Feedback
 

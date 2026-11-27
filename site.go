@@ -205,15 +205,19 @@ func siteFiles(dir string, spa bool) ([]siteFile, error) {
 	if !info.IsDir() {
 		return nil, &cliError{exit: exitRefused, Code: "SITE_DIR_INVALID", Message: dir + " is not a directory"}
 	}
-	root, err := filepath.EvalSymlinks(dir)
+	absolute, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
 	}
-	entries, err := os.ReadDir(dir)
+	root, err := filepath.EvalSymlinks(absolute)
 	if err != nil {
 		return nil, err
 	}
-	walk := &fileWalk{dir: dir, inside: root, found: []string{}}
+	entries, err := os.ReadDir(absolute)
+	if err != nil {
+		return nil, err
+	}
+	walk := &fileWalk{dir: absolute, inside: root, found: []string{}}
 	for _, entry := range entries {
 		if err := walk.visit(entry.Name(), []string{root}); err != nil {
 			return nil, err
@@ -375,7 +379,7 @@ func publishSite(ctx context.Context, s *session, scope, deploymentID string) (S
 			return published.PublishSiteDeployment, nil
 		}
 		if attempt == sitePublishRetries || !publishRetryable(ctx, err) {
-			return SiteParts{}, err
+			return SiteParts{}, routesPending(deploymentID, err)
 		}
 		select {
 		case <-ctx.Done():
@@ -404,6 +408,19 @@ func publishRetryable(ctx context.Context, err error) bool {
 	default:
 		return errors.As(err, &unanswered)
 	}
+}
+
+// routesPending is err with the deployment id in its message when err is SITE_ROUTES_PENDING: the deployment is
+// already the site's active one, and only the site address isn't updated yet. Any other err is returned as it is.
+func routesPending(deploymentID string, err error) error {
+	var refusal *cliError
+	if !errors.As(err, &refusal) || refusal.Code != "SITE_ROUTES_PENDING" {
+		return err
+	}
+	failure := *refusal
+	failure.cause = err
+	failure.Message = fmt.Sprintf("deployment %s is published, but its routes aren't written yet: %s", deploymentID, refusal.Message)
+	return &failure
 }
 
 // unverified is err, a failure after the deployment was published, with a message that says so and keeps the
@@ -447,6 +464,9 @@ func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (s
 	}
 	if envID != "" {
 		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "environment " + envID + " is not an environment of application " + application.Id}
+	}
+	if found == "" && siteDisabled(application) {
+		return "", &cliError{exit: exitRefused, Code: "SITE_DISABLED", Message: "MultiPaaS has disabled a site of this application, so no environment serves the site that was published"}
 	}
 	return found, nil
 }
@@ -513,12 +533,18 @@ type siteState struct {
 	Disabled      bool       `json:"disabled"`
 }
 
+// siteDisabled is whether MultiPaaS has disabled a site of the application: its own or any environment's.
+func siteDisabled(application SitesMeUserApplication) bool {
+	disabled := application.Site != nil && application.Site.Disabled
+	for _, e := range application.Environments {
+		disabled = disabled || (e.Site != nil && e.Site.Disabled)
+	}
+	return disabled
+}
+
 func siteStateOf(application SitesMeUserApplication, e SitesMeUserApplicationEnvironmentsEnvironment) siteState {
 	status := siteState{EnvironmentID: e.Id, SiteURL: e.SiteUrl, Source: "none", Site: e.ServedSite}
-	status.Disabled = application.Site != nil && application.Site.Disabled
-	for _, other := range application.Environments {
-		status.Disabled = status.Disabled || (other.Site != nil && other.Site.Disabled)
-	}
+	status.Disabled = siteDisabled(application)
 	switch {
 	case e.ServedSite != nil && e.Site != nil && e.Site.Id == e.ServedSite.Id:
 		status.Source = "environment"

@@ -177,6 +177,55 @@ func TestSiteDeployAsksAgainWhileRoutesArePending(t *testing.T) {
 	}
 }
 
+func TestSiteDeployKeepsTheDeploymentIDWhenEveryPublishAnswersRoutesPending(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.routesPending = 4
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
+
+	if got.exit != exitRefused || !strings.Contains(got.stderr, "deployment dep-2 is published, but its routes aren't written yet: ") ||
+		!strings.Contains(got.stderr, "(SITE_ROUTES_PENDING)") || !strings.Contains(got.stderr, "The deployment is published, but the site URL doesn't serve it yet.") {
+		t.Fatalf("exit %d, stderr %s", got.exit, got.stderr)
+	}
+}
+
+func TestSiteDeployFollowsAnAbsoluteLinkInsideARelativeDirectory(t *testing.T) {
+	fake := siteFake(t)
+	parent := t.TempDir()
+	writeNested(t, parent, "site/index.html", []byte("<p>hi</p>"))
+	writeNested(t, parent, "site/real/app.js", []byte("1"))
+	real, err := filepath.EvalSymlinks(filepath.Join(parent, "site", "real"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(real, filepath.Join(parent, "site", "link")); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(parent)
+
+	got := fake.run(t, "site", "deploy", "site", "--app", siteApp, "--json")
+
+	if got.exit != exitOK || !strings.Contains(got.stdout, `"fileCount": 3`) {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+}
+
+func TestSiteDeployFailsWhenNoEnvironmentServesAPublishedSiteBecauseItWasDisabled(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.disableOnPublish = true
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
+
+	assertFailure(t, got, exitRefused, "SITE_DISABLED")
+	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: MultiPaaS has disabled a site of this application") {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+}
+
 func TestSiteDeployRefusesADirectoryOverALimitBeforeSendingAnything(t *testing.T) {
 	for _, c := range []struct {
 		name         string
@@ -659,10 +708,13 @@ func TestSiteDeployWaitsOnTheDefaultEnvironmentsURL(t *testing.T) {
 
 func TestSiteDeployWaitsForNoURLWhenEveryEnvironmentHasItsOwnSite(t *testing.T) {
 	fake := siteFake(t)
-	siteWaitLimit = 20 * time.Millisecond
 	dir := t.TempDir()
 	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
-	fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-default", "--json")
+	setup := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-default", "--json")
+	if setup.exit != exitOK {
+		t.Fatalf("setup deploy: exit %d: %s %s", setup.exit, setup.stdout, setup.stderr)
+	}
+	siteWaitLimit = 20 * time.Millisecond
 	polls := fake.sites.polls
 
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)

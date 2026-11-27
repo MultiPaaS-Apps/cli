@@ -184,10 +184,10 @@ which `envs list` prints. With `--env`, or `multipaas.json`'s `environmentId` fo
 that environment's own site, which the environment serves instead of the application's. Without either, or with
 `--app-site`, it publishes the application's site, which every environment without a site of its own serves. It
 uploads every file under the directory, following links that stay inside it, eight at a time, then publishes them as
-one deployment, so visitors see the old deployment or the new one, never a mix. It then waits, up to 3 minutes, until
-the site URL serves the new deployment, which usually takes about a minute. With `--json` it prints
-`{"deploymentId", "siteUrl", "fileCount", "totalBytes"}`; `siteUrl` is empty when every environment has a site of its
-own, and then it doesn't wait.
+one deployment, so each request is served entirely from the old deployment or entirely from the new one. It then
+waits, up to 3 minutes, until the site URL serves the new deployment, which usually takes about a minute. With `--json`
+it prints `{"deploymentId", "siteUrl", "fileCount", "totalBytes"}`; `siteUrl` is empty when every environment has a site
+of its own, and then it doesn't wait.
 
 A deployment holds at most 2000 files and 100 MiB, and a file at most 25 MiB. Its file paths may total at most 320 KiB
 of UTF-8, because one answer carries every file's upload link. A path must be valid UTF-8 and can't hold `"`, `\` or a
@@ -222,7 +222,8 @@ In human mode every refusal is followed by what to do next. With `--json`, the c
   repeat, and so is removing.
 - `SITE_NOT_LIVE_YET`: the deployment is published, but the site URL didn't serve it within 3 minutes.
 - `SITE_DISABLED`: MultiPaaS has disabled a site of the application, and none of its sites can be published or
-  removed until it is enabled.
+  removed until it is enabled. If `site deploy` answers it after publishing, its message names the deployment: it is
+  published, but no environment serves it.
 - `NOT_FOUND`: the application isn't one you can reach (it's deleted, you have no access to it, or, as a deployer, it
   isn't the deployer's own), the environment isn't one of the application's or is being removed, or there is no site to
   remove there.

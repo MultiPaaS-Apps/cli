@@ -37,6 +37,11 @@ type AccountPlanAssignment {
 	plan: Plan!
 	startsAt: DateTime!
 }
+type AccountUsage {
+	measures: [MeasureUsage!]!
+	series: [UsagePoint!]!
+	unlimited: Boolean!
+}
 input AddDataImportFileInput {
 	contentType: String!
 	entityId: ID
@@ -746,6 +751,17 @@ input InviteMemberInput {
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSON
+type MeasureUsage {
+	byApp: [UsageAppLine!]!
+	byTenant: [UsageTenantLine!]!
+	byTenantTruncated: Boolean!
+	limit: Float
+	measure: UsageMeasure!
+	percent: Float
+	periodStart: DateTime!
+	resetsAt: DateTime!
+	total: Float!
+}
 type Model {
 	apiVersion: ID
 	entities: EntityPage!
@@ -1139,6 +1155,7 @@ type PlatformRolePage {
 type Query {
 	accessGroupMembers(userId: ID): [AccessGroupMember!]!
 	accessGroups: [AccessGroup!]!
+	accountUsage(from: DateTime!, granularity: UsageGranularity!, to: DateTime!): AccountUsage!
 	aiTurn(id: ID!): AiTurn
 	allApplications(clientId: ID, page: PageInput! = {page:0,pageSize:20}): ClientApplicationPage!
 	apiSchema(revisionId: ID!): String!
@@ -1672,6 +1689,33 @@ type UrlNameEntry {
 	claimedAt: DateTime!
 	name: String!
 	replacedAt: DateTime
+}
+type UsageAppLine {
+	applicationId: ID!
+	deleted: Boolean!
+	name: String!
+	quantity: Float!
+}
+enum UsageGranularity {
+	day
+	hour
+}
+enum UsageMeasure {
+	api_requests_day
+	api_requests_minute
+	api_requests_month
+}
+type UsagePoint {
+	at: DateTime!
+	quantity: Float!
+}
+type UsageTenantLine {
+	appTenantId: ID
+	appTenantName: String
+	applicationId: ID!
+	applicationName: String!
+	deleted: Boolean!
+	quantity: Float!
 }
 type User {
 	appTenant: AppTenant

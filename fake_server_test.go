@@ -99,6 +99,10 @@ type fakeMultiPaaS struct {
 	assignments                  []map[string]any            // role assignments: id, roleId, userId, appTenant
 	roleSeq                      int                         // roles created so far; ids are never reused
 	assignmentSeq                int                         // assignments created so far; ids are never reused
+	workflows                    []map[string]any            // the application's live workflows, as the API shows them
+	workflowSeq                  int                         // workflows created so far; ids are never reused
+	workflowReads                []map[string]any            // the variables of each Workflows and WorkflowRuns query, with the scope it was sent in
+	workflowRuns                 []map[string]any            // runs of every workflow, each with a workflowId; newest first, as the API lists them
 
 	imports          map[string]*fakeImport // import id -> its state
 	uploads          map[string]fakeUpload  // File id -> what its PUT received
@@ -600,6 +604,8 @@ func (f *fakeMultiPaaS) answer(w http.ResponseWriter, operation, scope string, v
 		f.manageDeployers(w, operation, variables)
 	case "Roles", "PermissionCatalog", "CreateRole", "UpdateRole", "RoleAssignments", "AssignRole", "UnassignRole":
 		f.manageRoles(w, operation, parts, variables)
+	case "Workflows", "CreateWorkflow", "UpdateWorkflow", "DeleteWorkflow", "WorkflowRuns":
+		f.manageWorkflows(w, operation, parts, variables)
 	case "CreateDataImport", "AddDataImportFile", "RemoveDataImportFile", "CheckDataImport", "RunDataImport", "DeleteDataImport", "DataImport":
 		f.dataImport(w, operation, parts, variables)
 	case "ImportInvitations", "TenantInvitations", "ReissueImportInvitations":
@@ -1327,6 +1333,120 @@ func (f *fakeMultiPaaS) manageAppIdentity(w http.ResponseWriter, operation strin
 		retired := f.appIdentities[i]
 		f.appIdentities = slices.Delete(f.appIdentities, i, i+1)
 		writeData(w, map[string]any{strings.ToLower(operation[:1]) + operation[1:]: retired})
+	}
+}
+
+// workflowKey is the server's rule for a workflow's key.
+var workflowKey = regexp.MustCompile(`^[a-z][a-zA-Z0-9]{0,62}$`)
+
+// manageWorkflows serves the application's workflows. A definition with no steps is refused with WORKFLOW_INVALID
+// and the problems that name it, as the server refuses one.
+func (f *fakeMultiPaaS) manageWorkflows(w http.ResponseWriter, operation string, parts []string, variables map[string]any) {
+	write := operation != "Workflows" && operation != "WorkflowRuns"
+	if write {
+		f.mutations = append(f.mutations, variables)
+	} else {
+		read := maps.Clone(variables)
+		if read == nil {
+			read = map[string]any{}
+		}
+		read["scope"] = strings.Join(parts, "/")
+		f.workflowReads = append(f.workflowReads, read)
+	}
+	if (appOf(parts) == "" && !strings.HasPrefix(parts[0], "env:")) || (write && f.noManageApp) {
+		graphQLRefusal(w, "UNAUTHORIZED", "unauthorized")
+		return
+	}
+	indexOf := func(id any) int {
+		return slices.IndexFunc(f.workflows, func(row map[string]any) bool { return row["id"] == id })
+	}
+	described := func(id string, definition map[string]any) (map[string]any, bool) {
+		steps, _ := definition["steps"].([]any)
+		problems := []map[string]any{}
+		if key, _ := definition["key"].(string); !workflowKey.MatchString(key) {
+			problems = append(problems, map[string]any{"path": "key", "message": "Invalid string: must match pattern " + workflowKey.String()})
+		}
+		if _, ok := definition["runAs"].(map[string]any); !ok {
+			problems = append(problems, map[string]any{"path": "runAs", "message": "Invalid input: expected object, received undefined"})
+		}
+		if len(steps) == 0 {
+			problems = append(problems, map[string]any{"path": "steps", "message": "Too small: expected array to have >=1 items"})
+		}
+		for i, item := range steps {
+			if step, _ := item.(map[string]any); step["kind"] == "find" && step["entity"] == nil {
+				problems = append(problems, map[string]any{"path": fmt.Sprintf("steps[%d].entity", i), "message": "Invalid input: expected string, received undefined"})
+			}
+		}
+		if len(problems) > 0 {
+			lines := []string{}
+			for _, p := range problems {
+				lines = append(lines, fmt.Sprint(p["path"], ": ", p["message"]))
+			}
+			graphQLRefusalWith(w, "WORKFLOW_INVALID", "this workflow is not valid: "+strings.Join(lines, "; "), map[string]any{"problems": problems})
+			return nil, false
+		}
+		shownSteps := []map[string]any{}
+		for _, item := range steps {
+			step, _ := item.(map[string]any)
+			shownSteps = append(shownSteps, map[string]any{"key": step["key"], "name": step["name"], "description": step["description"], "kind": step["kind"]})
+		}
+		return map[string]any{
+			"id": id, "key": definition["key"], "name": definition["name"], "description": definition["description"],
+			"trigger": definition["trigger"], "runAs": map[string]any{"kind": "starter"}, "definition": definition, "steps": shownSteps,
+		}, true
+	}
+	definition, _ := variables["definition"].(map[string]any)
+	switch operation {
+	case "Workflows":
+		writeData(w, map[string]any{"workflows": f.workflows})
+	case "WorkflowRuns":
+		page, _ := variables["page"].(map[string]any)
+		size, _ := page["pageSize"].(float64)
+		number, _ := page["page"].(float64)
+		mine := []map[string]any{}
+		for _, run := range f.workflowRuns {
+			if run["workflowId"] == variables["workflowId"] {
+				mine = append(mine, run)
+			}
+		}
+		from := min(int(number*size), len(mine))
+		to := min(from+int(size), len(mine))
+		items := []map[string]any{}
+		for _, run := range mine[from:to] {
+			shown := maps.Clone(run)
+			delete(shown, "workflowId")
+			items = append(items, shown)
+		}
+		writeData(w, map[string]any{"workflowRuns": map[string]any{"items": items, "pageInfo": map[string]any{"hasMore": to < len(mine)}}})
+	case "CreateWorkflow":
+		f.workflowSeq++
+		row, ok := described(fmt.Sprintf("workflow-%d", f.workflowSeq), definition)
+		if !ok {
+			return
+		}
+		f.workflows = append(f.workflows, row)
+		writeData(w, map[string]any{"createWorkflow": row})
+	case "UpdateWorkflow":
+		i := indexOf(variables["id"])
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "workflow not found")
+			return
+		}
+		row, ok := described(f.workflows[i]["id"].(string), definition)
+		if !ok {
+			return
+		}
+		f.workflows[i] = row
+		writeData(w, map[string]any{"updateWorkflow": row})
+	case "DeleteWorkflow":
+		i := indexOf(variables["id"])
+		if i < 0 {
+			graphQLRefusal(w, "NOT_FOUND", "workflow not found")
+			return
+		}
+		row := f.workflows[i]
+		f.workflows = slices.Delete(f.workflows, i, i+1)
+		writeData(w, map[string]any{"deleteWorkflow": row})
 	}
 }
 

@@ -306,6 +306,7 @@ func fromGraphQL(err error) error {
 	failure := &cliError{exit: exit, Code: code, Message: refusals[0].Message}
 	failure.FieldErrors = fieldErrorsOf(refusals[0].Extensions["fieldErrors"])
 	failure.Reason, _ = refusals[0].Extensions["reason"].(string)
+	failure.Problems = problemsOf(refusals[0].Extensions["problems"])
 	failure.Rules = stringsOf(refusals[0].Extensions["rules"])
 	failure.ChangeableAt, _ = refusals[0].Extensions["changeableAt"].(string)
 	failure.PreviousOwner = previousOwnerOf(refusals[0].Extensions["previousOwner"])
@@ -338,6 +339,19 @@ func previousOwnerOf(extension any) *previousOwner {
 		return nil
 	}
 	return &owner
+}
+
+// problemsOf reads a WORKFLOW_INVALID refusal's problems extension; one that does not decode is dropped.
+func problemsOf(extension any) []problem {
+	data, err := json.Marshal(extension)
+	if err != nil {
+		return nil
+	}
+	var problems []problem
+	if err := json.Unmarshal(data, &problems); err != nil {
+		return nil
+	}
+	return problems
 }
 
 // fieldErrorsOf reads a refusal's fieldErrors extension, which arrives as untyped JSON; one that does not decode is dropped.

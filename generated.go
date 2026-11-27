@@ -2444,6 +2444,114 @@ type CreateRoleResponse struct {
 // GetCreateRole returns CreateRoleResponse.CreateRole, and is useful for accessing the field via an interface.
 func (v *CreateRoleResponse) GetCreateRole() CreateRoleCreateRole { return v.CreateRole }
 
+// CreateWorkflowCreateWorkflow includes the requested fields of the GraphQL type Workflow.
+type CreateWorkflowCreateWorkflow struct {
+	WorkflowParts `json:"-"`
+}
+
+// GetId returns CreateWorkflowCreateWorkflow.Id, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetId() string { return v.WorkflowParts.Id }
+
+// GetKey returns CreateWorkflowCreateWorkflow.Key, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetKey() string { return v.WorkflowParts.Key }
+
+// GetName returns CreateWorkflowCreateWorkflow.Name, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetName() string { return v.WorkflowParts.Name }
+
+// GetDescription returns CreateWorkflowCreateWorkflow.Description, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetDescription() string { return v.WorkflowParts.Description }
+
+// GetTrigger returns CreateWorkflowCreateWorkflow.Trigger, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetTrigger() json.RawMessage { return v.WorkflowParts.Trigger }
+
+// GetRunAs returns CreateWorkflowCreateWorkflow.RunAs, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetRunAs() json.RawMessage { return v.WorkflowParts.RunAs }
+
+// GetDefinition returns CreateWorkflowCreateWorkflow.Definition, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetDefinition() json.RawMessage {
+	return v.WorkflowParts.Definition
+}
+
+// GetSteps returns CreateWorkflowCreateWorkflow.Steps, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowCreateWorkflow) GetSteps() []WorkflowPartsStepsWorkflowStep {
+	return v.WorkflowParts.Steps
+}
+
+func (v *CreateWorkflowCreateWorkflow) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateWorkflowCreateWorkflow
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateWorkflowCreateWorkflow = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.WorkflowParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateWorkflowCreateWorkflow struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	Description string `json:"description"`
+
+	Trigger json.RawMessage `json:"trigger"`
+
+	RunAs json.RawMessage `json:"runAs"`
+
+	Definition json.RawMessage `json:"definition"`
+
+	Steps []WorkflowPartsStepsWorkflowStep `json:"steps"`
+}
+
+func (v *CreateWorkflowCreateWorkflow) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateWorkflowCreateWorkflow) __premarshalJSON() (*__premarshalCreateWorkflowCreateWorkflow, error) {
+	var retval __premarshalCreateWorkflowCreateWorkflow
+
+	retval.Id = v.WorkflowParts.Id
+	retval.Key = v.WorkflowParts.Key
+	retval.Name = v.WorkflowParts.Name
+	retval.Description = v.WorkflowParts.Description
+	retval.Trigger = v.WorkflowParts.Trigger
+	retval.RunAs = v.WorkflowParts.RunAs
+	retval.Definition = v.WorkflowParts.Definition
+	retval.Steps = v.WorkflowParts.Steps
+	return &retval, nil
+}
+
+// CreateWorkflowResponse is returned by CreateWorkflow on success.
+type CreateWorkflowResponse struct {
+	CreateWorkflow CreateWorkflowCreateWorkflow `json:"createWorkflow"`
+}
+
+// GetCreateWorkflow returns CreateWorkflowResponse.CreateWorkflow, and is useful for accessing the field via an interface.
+func (v *CreateWorkflowResponse) GetCreateWorkflow() CreateWorkflowCreateWorkflow {
+	return v.CreateWorkflow
+}
+
 // DataImportDataImport includes the requested fields of the GraphQL type DataImport.
 type DataImportDataImport struct {
 	DataImportParts `json:"-"`
@@ -3748,6 +3856,114 @@ type DeleteRecordResponse struct {
 
 // GetDeleteRecord returns DeleteRecordResponse.DeleteRecord, and is useful for accessing the field via an interface.
 func (v *DeleteRecordResponse) GetDeleteRecord() DeleteRecordDeleteRecord { return v.DeleteRecord }
+
+// DeleteWorkflowDeleteWorkflow includes the requested fields of the GraphQL type Workflow.
+type DeleteWorkflowDeleteWorkflow struct {
+	WorkflowParts `json:"-"`
+}
+
+// GetId returns DeleteWorkflowDeleteWorkflow.Id, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetId() string { return v.WorkflowParts.Id }
+
+// GetKey returns DeleteWorkflowDeleteWorkflow.Key, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetKey() string { return v.WorkflowParts.Key }
+
+// GetName returns DeleteWorkflowDeleteWorkflow.Name, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetName() string { return v.WorkflowParts.Name }
+
+// GetDescription returns DeleteWorkflowDeleteWorkflow.Description, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetDescription() string { return v.WorkflowParts.Description }
+
+// GetTrigger returns DeleteWorkflowDeleteWorkflow.Trigger, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetTrigger() json.RawMessage { return v.WorkflowParts.Trigger }
+
+// GetRunAs returns DeleteWorkflowDeleteWorkflow.RunAs, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetRunAs() json.RawMessage { return v.WorkflowParts.RunAs }
+
+// GetDefinition returns DeleteWorkflowDeleteWorkflow.Definition, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetDefinition() json.RawMessage {
+	return v.WorkflowParts.Definition
+}
+
+// GetSteps returns DeleteWorkflowDeleteWorkflow.Steps, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowDeleteWorkflow) GetSteps() []WorkflowPartsStepsWorkflowStep {
+	return v.WorkflowParts.Steps
+}
+
+func (v *DeleteWorkflowDeleteWorkflow) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*DeleteWorkflowDeleteWorkflow
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.DeleteWorkflowDeleteWorkflow = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.WorkflowParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalDeleteWorkflowDeleteWorkflow struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	Description string `json:"description"`
+
+	Trigger json.RawMessage `json:"trigger"`
+
+	RunAs json.RawMessage `json:"runAs"`
+
+	Definition json.RawMessage `json:"definition"`
+
+	Steps []WorkflowPartsStepsWorkflowStep `json:"steps"`
+}
+
+func (v *DeleteWorkflowDeleteWorkflow) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *DeleteWorkflowDeleteWorkflow) __premarshalJSON() (*__premarshalDeleteWorkflowDeleteWorkflow, error) {
+	var retval __premarshalDeleteWorkflowDeleteWorkflow
+
+	retval.Id = v.WorkflowParts.Id
+	retval.Key = v.WorkflowParts.Key
+	retval.Name = v.WorkflowParts.Name
+	retval.Description = v.WorkflowParts.Description
+	retval.Trigger = v.WorkflowParts.Trigger
+	retval.RunAs = v.WorkflowParts.RunAs
+	retval.Definition = v.WorkflowParts.Definition
+	retval.Steps = v.WorkflowParts.Steps
+	return &retval, nil
+}
+
+// DeleteWorkflowResponse is returned by DeleteWorkflow on success.
+type DeleteWorkflowResponse struct {
+	DeleteWorkflow DeleteWorkflowDeleteWorkflow `json:"deleteWorkflow"`
+}
+
+// GetDeleteWorkflow returns DeleteWorkflowResponse.DeleteWorkflow, and is useful for accessing the field via an interface.
+func (v *DeleteWorkflowResponse) GetDeleteWorkflow() DeleteWorkflowDeleteWorkflow {
+	return v.DeleteWorkflow
+}
 
 // DeployerParts includes the GraphQL fields of Deployer requested by the fragment DeployerParts.
 // The GraphQL type's documentation follows.
@@ -9780,6 +9996,114 @@ func (v *UpdateRoleUpdateRole) __premarshalJSON() (*__premarshalUpdateRoleUpdate
 	return &retval, nil
 }
 
+// UpdateWorkflowResponse is returned by UpdateWorkflow on success.
+type UpdateWorkflowResponse struct {
+	UpdateWorkflow UpdateWorkflowUpdateWorkflow `json:"updateWorkflow"`
+}
+
+// GetUpdateWorkflow returns UpdateWorkflowResponse.UpdateWorkflow, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowResponse) GetUpdateWorkflow() UpdateWorkflowUpdateWorkflow {
+	return v.UpdateWorkflow
+}
+
+// UpdateWorkflowUpdateWorkflow includes the requested fields of the GraphQL type Workflow.
+type UpdateWorkflowUpdateWorkflow struct {
+	WorkflowParts `json:"-"`
+}
+
+// GetId returns UpdateWorkflowUpdateWorkflow.Id, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetId() string { return v.WorkflowParts.Id }
+
+// GetKey returns UpdateWorkflowUpdateWorkflow.Key, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetKey() string { return v.WorkflowParts.Key }
+
+// GetName returns UpdateWorkflowUpdateWorkflow.Name, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetName() string { return v.WorkflowParts.Name }
+
+// GetDescription returns UpdateWorkflowUpdateWorkflow.Description, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetDescription() string { return v.WorkflowParts.Description }
+
+// GetTrigger returns UpdateWorkflowUpdateWorkflow.Trigger, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetTrigger() json.RawMessage { return v.WorkflowParts.Trigger }
+
+// GetRunAs returns UpdateWorkflowUpdateWorkflow.RunAs, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetRunAs() json.RawMessage { return v.WorkflowParts.RunAs }
+
+// GetDefinition returns UpdateWorkflowUpdateWorkflow.Definition, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetDefinition() json.RawMessage {
+	return v.WorkflowParts.Definition
+}
+
+// GetSteps returns UpdateWorkflowUpdateWorkflow.Steps, and is useful for accessing the field via an interface.
+func (v *UpdateWorkflowUpdateWorkflow) GetSteps() []WorkflowPartsStepsWorkflowStep {
+	return v.WorkflowParts.Steps
+}
+
+func (v *UpdateWorkflowUpdateWorkflow) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateWorkflowUpdateWorkflow
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateWorkflowUpdateWorkflow = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.WorkflowParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateWorkflowUpdateWorkflow struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	Description string `json:"description"`
+
+	Trigger json.RawMessage `json:"trigger"`
+
+	RunAs json.RawMessage `json:"runAs"`
+
+	Definition json.RawMessage `json:"definition"`
+
+	Steps []WorkflowPartsStepsWorkflowStep `json:"steps"`
+}
+
+func (v *UpdateWorkflowUpdateWorkflow) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateWorkflowUpdateWorkflow) __premarshalJSON() (*__premarshalUpdateWorkflowUpdateWorkflow, error) {
+	var retval __premarshalUpdateWorkflowUpdateWorkflow
+
+	retval.Id = v.WorkflowParts.Id
+	retval.Key = v.WorkflowParts.Key
+	retval.Name = v.WorkflowParts.Name
+	retval.Description = v.WorkflowParts.Description
+	retval.Trigger = v.WorkflowParts.Trigger
+	retval.RunAs = v.WorkflowParts.RunAs
+	retval.Definition = v.WorkflowParts.Definition
+	retval.Steps = v.WorkflowParts.Steps
+	return &retval, nil
+}
+
 // UrlNameEntryParts includes the GraphQL fields of UrlNameEntry requested by the fragment UrlNameEntryParts.
 type UrlNameEntryParts struct {
 	Name       string  `json:"name"`
@@ -9795,6 +10119,336 @@ func (v *UrlNameEntryParts) GetClaimedAt() string { return v.ClaimedAt }
 
 // GetReplacedAt returns UrlNameEntryParts.ReplacedAt, and is useful for accessing the field via an interface.
 func (v *UrlNameEntryParts) GetReplacedAt() *string { return v.ReplacedAt }
+
+// WorkflowParts includes the GraphQL fields of Workflow requested by the fragment WorkflowParts.
+type WorkflowParts struct {
+	Id          string                           `json:"id"`
+	Key         string                           `json:"key"`
+	Name        string                           `json:"name"`
+	Description string                           `json:"description"`
+	Trigger     json.RawMessage                  `json:"trigger"`
+	RunAs       json.RawMessage                  `json:"runAs"`
+	Definition  json.RawMessage                  `json:"definition"`
+	Steps       []WorkflowPartsStepsWorkflowStep `json:"steps"`
+}
+
+// GetId returns WorkflowParts.Id, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetId() string { return v.Id }
+
+// GetKey returns WorkflowParts.Key, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetKey() string { return v.Key }
+
+// GetName returns WorkflowParts.Name, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetName() string { return v.Name }
+
+// GetDescription returns WorkflowParts.Description, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetDescription() string { return v.Description }
+
+// GetTrigger returns WorkflowParts.Trigger, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetTrigger() json.RawMessage { return v.Trigger }
+
+// GetRunAs returns WorkflowParts.RunAs, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetRunAs() json.RawMessage { return v.RunAs }
+
+// GetDefinition returns WorkflowParts.Definition, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetDefinition() json.RawMessage { return v.Definition }
+
+// GetSteps returns WorkflowParts.Steps, and is useful for accessing the field via an interface.
+func (v *WorkflowParts) GetSteps() []WorkflowPartsStepsWorkflowStep { return v.Steps }
+
+// WorkflowPartsStepsWorkflowStep includes the requested fields of the GraphQL type WorkflowStep.
+type WorkflowPartsStepsWorkflowStep struct {
+	Key         string `json:"key"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Kind        string `json:"kind"`
+}
+
+// GetKey returns WorkflowPartsStepsWorkflowStep.Key, and is useful for accessing the field via an interface.
+func (v *WorkflowPartsStepsWorkflowStep) GetKey() string { return v.Key }
+
+// GetName returns WorkflowPartsStepsWorkflowStep.Name, and is useful for accessing the field via an interface.
+func (v *WorkflowPartsStepsWorkflowStep) GetName() string { return v.Name }
+
+// GetDescription returns WorkflowPartsStepsWorkflowStep.Description, and is useful for accessing the field via an interface.
+func (v *WorkflowPartsStepsWorkflowStep) GetDescription() string { return v.Description }
+
+// GetKind returns WorkflowPartsStepsWorkflowStep.Kind, and is useful for accessing the field via an interface.
+func (v *WorkflowPartsStepsWorkflowStep) GetKind() string { return v.Kind }
+
+type WorkflowRunStatus string
+
+const (
+	WorkflowRunStatusFailed    WorkflowRunStatus = "FAILED"
+	WorkflowRunStatusQueued    WorkflowRunStatus = "QUEUED"
+	WorkflowRunStatusRunning   WorkflowRunStatus = "RUNNING"
+	WorkflowRunStatusSucceeded WorkflowRunStatus = "SUCCEEDED"
+)
+
+var AllWorkflowRunStatus = []WorkflowRunStatus{
+	WorkflowRunStatusFailed,
+	WorkflowRunStatusQueued,
+	WorkflowRunStatusRunning,
+	WorkflowRunStatusSucceeded,
+}
+
+// WorkflowRunsResponse is returned by WorkflowRuns on success.
+type WorkflowRunsResponse struct {
+	WorkflowRuns WorkflowRunsWorkflowRunsWorkflowRunPage `json:"workflowRuns"`
+}
+
+// GetWorkflowRuns returns WorkflowRunsResponse.WorkflowRuns, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsResponse) GetWorkflowRuns() WorkflowRunsWorkflowRunsWorkflowRunPage {
+	return v.WorkflowRuns
+}
+
+// WorkflowRunsWorkflowRunsWorkflowRunPage includes the requested fields of the GraphQL type WorkflowRunPage.
+type WorkflowRunsWorkflowRunsWorkflowRunPage struct {
+	Items    []WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun `json:"items"`
+	PageInfo WorkflowRunsWorkflowRunsWorkflowRunPagePageInfo           `json:"pageInfo"`
+}
+
+// GetItems returns WorkflowRunsWorkflowRunsWorkflowRunPage.Items, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPage) GetItems() []WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun {
+	return v.Items
+}
+
+// GetPageInfo returns WorkflowRunsWorkflowRunsWorkflowRunPage.PageInfo, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPage) GetPageInfo() WorkflowRunsWorkflowRunsWorkflowRunPagePageInfo {
+	return v.PageInfo
+}
+
+// WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun includes the requested fields of the GraphQL type WorkflowRun.
+type WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun struct {
+	Id             string                                                                              `json:"id"`
+	Status         WorkflowRunStatus                                                                   `json:"status"`
+	TriggerKind    string                                                                              `json:"triggerKind"`
+	Trigger        json.RawMessage                                                                     `json:"trigger"`
+	RunAs          *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser                   `json:"runAs"`
+	Attempts       []WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt `json:"attempts"`
+	RecordsChanged int                                                                                 `json:"recordsChanged"`
+	CreatedAt      string                                                                              `json:"createdAt"`
+	FinishedAt     *string                                                                             `json:"finishedAt"`
+}
+
+// GetId returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.Id, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetId() string { return v.Id }
+
+// GetStatus returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.Status, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetStatus() WorkflowRunStatus {
+	return v.Status
+}
+
+// GetTriggerKind returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.TriggerKind, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetTriggerKind() string {
+	return v.TriggerKind
+}
+
+// GetTrigger returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.Trigger, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetTrigger() json.RawMessage {
+	return v.Trigger
+}
+
+// GetRunAs returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.RunAs, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetRunAs() *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser {
+	return v.RunAs
+}
+
+// GetAttempts returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.Attempts, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetAttempts() []WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt {
+	return v.Attempts
+}
+
+// GetRecordsChanged returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.RecordsChanged, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetRecordsChanged() int {
+	return v.RecordsChanged
+}
+
+// GetCreatedAt returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.CreatedAt, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetCreatedAt() string {
+	return v.CreatedAt
+}
+
+// GetFinishedAt returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun.FinishedAt, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRun) GetFinishedAt() *string {
+	return v.FinishedAt
+}
+
+// WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt includes the requested fields of the GraphQL type WorkflowRunAttempt.
+type WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt struct {
+	Attempt       int             `json:"attempt"`
+	Outcome       string          `json:"outcome"`
+	FailedStepKey string          `json:"failedStepKey"`
+	Error         json.RawMessage `json:"error"`
+	StartedAt     string          `json:"startedAt"`
+	FinishedAt    string          `json:"finishedAt"`
+}
+
+// GetAttempt returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt.Attempt, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt) GetAttempt() int {
+	return v.Attempt
+}
+
+// GetOutcome returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt.Outcome, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt) GetOutcome() string {
+	return v.Outcome
+}
+
+// GetFailedStepKey returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt.FailedStepKey, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt) GetFailedStepKey() string {
+	return v.FailedStepKey
+}
+
+// GetError returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt.Error, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt) GetError() json.RawMessage {
+	return v.Error
+}
+
+// GetStartedAt returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt.StartedAt, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt) GetStartedAt() string {
+	return v.StartedAt
+}
+
+// GetFinishedAt returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt.FinishedAt, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunAttemptsWorkflowRunAttempt) GetFinishedAt() string {
+	return v.FinishedAt
+}
+
+// WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser includes the requested fields of the GraphQL type User.
+type WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser struct {
+	Id    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+// GetId returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser.Id, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser) GetId() string {
+	return v.Id
+}
+
+// GetEmail returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser.Email, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser) GetEmail() string {
+	return v.Email
+}
+
+// GetName returns WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser.Name, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPageItemsWorkflowRunRunAsUser) GetName() string {
+	return v.Name
+}
+
+// WorkflowRunsWorkflowRunsWorkflowRunPagePageInfo includes the requested fields of the GraphQL type PageInfo.
+type WorkflowRunsWorkflowRunsWorkflowRunPagePageInfo struct {
+	HasMore bool `json:"hasMore"`
+}
+
+// GetHasMore returns WorkflowRunsWorkflowRunsWorkflowRunPagePageInfo.HasMore, and is useful for accessing the field via an interface.
+func (v *WorkflowRunsWorkflowRunsWorkflowRunPagePageInfo) GetHasMore() bool { return v.HasMore }
+
+// WorkflowsResponse is returned by Workflows on success.
+type WorkflowsResponse struct {
+	Workflows []WorkflowsWorkflowsWorkflow `json:"workflows"`
+}
+
+// GetWorkflows returns WorkflowsResponse.Workflows, and is useful for accessing the field via an interface.
+func (v *WorkflowsResponse) GetWorkflows() []WorkflowsWorkflowsWorkflow { return v.Workflows }
+
+// WorkflowsWorkflowsWorkflow includes the requested fields of the GraphQL type Workflow.
+type WorkflowsWorkflowsWorkflow struct {
+	WorkflowParts `json:"-"`
+}
+
+// GetId returns WorkflowsWorkflowsWorkflow.Id, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetId() string { return v.WorkflowParts.Id }
+
+// GetKey returns WorkflowsWorkflowsWorkflow.Key, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetKey() string { return v.WorkflowParts.Key }
+
+// GetName returns WorkflowsWorkflowsWorkflow.Name, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetName() string { return v.WorkflowParts.Name }
+
+// GetDescription returns WorkflowsWorkflowsWorkflow.Description, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetDescription() string { return v.WorkflowParts.Description }
+
+// GetTrigger returns WorkflowsWorkflowsWorkflow.Trigger, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetTrigger() json.RawMessage { return v.WorkflowParts.Trigger }
+
+// GetRunAs returns WorkflowsWorkflowsWorkflow.RunAs, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetRunAs() json.RawMessage { return v.WorkflowParts.RunAs }
+
+// GetDefinition returns WorkflowsWorkflowsWorkflow.Definition, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetDefinition() json.RawMessage {
+	return v.WorkflowParts.Definition
+}
+
+// GetSteps returns WorkflowsWorkflowsWorkflow.Steps, and is useful for accessing the field via an interface.
+func (v *WorkflowsWorkflowsWorkflow) GetSteps() []WorkflowPartsStepsWorkflowStep {
+	return v.WorkflowParts.Steps
+}
+
+func (v *WorkflowsWorkflowsWorkflow) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*WorkflowsWorkflowsWorkflow
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.WorkflowsWorkflowsWorkflow = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.WorkflowParts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalWorkflowsWorkflowsWorkflow struct {
+	Id string `json:"id"`
+
+	Key string `json:"key"`
+
+	Name string `json:"name"`
+
+	Description string `json:"description"`
+
+	Trigger json.RawMessage `json:"trigger"`
+
+	RunAs json.RawMessage `json:"runAs"`
+
+	Definition json.RawMessage `json:"definition"`
+
+	Steps []WorkflowPartsStepsWorkflowStep `json:"steps"`
+}
+
+func (v *WorkflowsWorkflowsWorkflow) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *WorkflowsWorkflowsWorkflow) __premarshalJSON() (*__premarshalWorkflowsWorkflowsWorkflow, error) {
+	var retval __premarshalWorkflowsWorkflowsWorkflow
+
+	retval.Id = v.WorkflowParts.Id
+	retval.Key = v.WorkflowParts.Key
+	retval.Name = v.WorkflowParts.Name
+	retval.Description = v.WorkflowParts.Description
+	retval.Trigger = v.WorkflowParts.Trigger
+	retval.RunAs = v.WorkflowParts.RunAs
+	retval.Definition = v.WorkflowParts.Definition
+	retval.Steps = v.WorkflowParts.Steps
+	return &retval, nil
+}
 
 // __AddDataImportFileInput is used internally by genqlient
 type __AddDataImportFileInput struct {
@@ -9992,6 +10646,14 @@ type __CreateRoleInput struct {
 // GetInput returns __CreateRoleInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateRoleInput) GetInput() CreateRoleInput { return v.Input }
 
+// __CreateWorkflowInput is used internally by genqlient
+type __CreateWorkflowInput struct {
+	Definition json.RawMessage `json:"definition"`
+}
+
+// GetDefinition returns __CreateWorkflowInput.Definition, and is useful for accessing the field via an interface.
+func (v *__CreateWorkflowInput) GetDefinition() json.RawMessage { return v.Definition }
+
 // __DataImportInput is used internally by genqlient
 type __DataImportInput struct {
 	Id             string `json:"id"`
@@ -10099,6 +10761,14 @@ type __DeleteRecordInput struct {
 
 // GetInput returns __DeleteRecordInput.Input, and is useful for accessing the field via an interface.
 func (v *__DeleteRecordInput) GetInput() DeleteRecordInput { return v.Input }
+
+// __DeleteWorkflowInput is used internally by genqlient
+type __DeleteWorkflowInput struct {
+	Id string `json:"id"`
+}
+
+// GetId returns __DeleteWorkflowInput.Id, and is useful for accessing the field via an interface.
+func (v *__DeleteWorkflowInput) GetId() string { return v.Id }
 
 // __DeployersInput is used internally by genqlient
 type __DeployersInput struct {
@@ -10579,6 +11249,30 @@ type __UpdateRoleInput struct {
 
 // GetInput returns __UpdateRoleInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateRoleInput) GetInput() UpdateRoleInput { return v.Input }
+
+// __UpdateWorkflowInput is used internally by genqlient
+type __UpdateWorkflowInput struct {
+	Id         string          `json:"id"`
+	Definition json.RawMessage `json:"definition"`
+}
+
+// GetId returns __UpdateWorkflowInput.Id, and is useful for accessing the field via an interface.
+func (v *__UpdateWorkflowInput) GetId() string { return v.Id }
+
+// GetDefinition returns __UpdateWorkflowInput.Definition, and is useful for accessing the field via an interface.
+func (v *__UpdateWorkflowInput) GetDefinition() json.RawMessage { return v.Definition }
+
+// __WorkflowRunsInput is used internally by genqlient
+type __WorkflowRunsInput struct {
+	WorkflowId string    `json:"workflowId"`
+	Page       PageInput `json:"page"`
+}
+
+// GetWorkflowId returns __WorkflowRunsInput.WorkflowId, and is useful for accessing the field via an interface.
+func (v *__WorkflowRunsInput) GetWorkflowId() string { return v.WorkflowId }
+
+// GetPage returns __WorkflowRunsInput.Page, and is useful for accessing the field via an interface.
+func (v *__WorkflowRunsInput) GetPage() PageInput { return v.Page }
 
 // recordFile includes the requested fields of the GraphQL type RecordFile.
 type recordFile struct {
@@ -11905,6 +12599,55 @@ func CreateRole(
 	return data_, err_
 }
 
+// The mutation executed by CreateWorkflow.
+const CreateWorkflow_Operation = `
+mutation CreateWorkflow ($definition: JSON!) {
+	createWorkflow(definition: $definition) {
+		... WorkflowParts
+	}
+}
+fragment WorkflowParts on Workflow {
+	id
+	key
+	name
+	description
+	trigger
+	runAs
+	definition
+	steps {
+		key
+		name
+		description
+		kind
+	}
+}
+`
+
+func CreateWorkflow(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	definition json.RawMessage,
+) (data_ *CreateWorkflowResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateWorkflow",
+		Query:  CreateWorkflow_Operation,
+		Variables: &__CreateWorkflowInput{
+			Definition: definition,
+		},
+	}
+
+	data_ = &CreateWorkflowResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by DataImport.
 const DataImport_Operation = `
 query DataImport ($id: ID!, $includeDeleted: Boolean!) {
@@ -12521,6 +13264,55 @@ func DeleteRecord(
 	}
 
 	data_ = &DeleteRecordResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteWorkflow.
+const DeleteWorkflow_Operation = `
+mutation DeleteWorkflow ($id: ID!) {
+	deleteWorkflow(id: $id) {
+		... WorkflowParts
+	}
+}
+fragment WorkflowParts on Workflow {
+	id
+	key
+	name
+	description
+	trigger
+	runAs
+	definition
+	steps {
+		key
+		name
+		description
+		kind
+	}
+}
+`
+
+func DeleteWorkflow(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+) (data_ *DeleteWorkflowResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteWorkflow",
+		Query:  DeleteWorkflow_Operation,
+		Variables: &__DeleteWorkflowInput{
+			Id: id,
+		},
+	}
+
+	data_ = &DeleteWorkflowResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -15212,6 +16004,162 @@ func UpdateRole(
 	}
 
 	data_ = &UpdateRoleResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by UpdateWorkflow.
+const UpdateWorkflow_Operation = `
+mutation UpdateWorkflow ($id: ID!, $definition: JSON!) {
+	updateWorkflow(id: $id, definition: $definition) {
+		... WorkflowParts
+	}
+}
+fragment WorkflowParts on Workflow {
+	id
+	key
+	name
+	description
+	trigger
+	runAs
+	definition
+	steps {
+		key
+		name
+		description
+		kind
+	}
+}
+`
+
+func UpdateWorkflow(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	id string,
+	definition json.RawMessage,
+) (data_ *UpdateWorkflowResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateWorkflow",
+		Query:  UpdateWorkflow_Operation,
+		Variables: &__UpdateWorkflowInput{
+			Id:         id,
+			Definition: definition,
+		},
+	}
+
+	data_ = &UpdateWorkflowResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by WorkflowRuns.
+const WorkflowRuns_Operation = `
+query WorkflowRuns ($workflowId: ID!, $page: PageInput!) {
+	workflowRuns(workflowId: $workflowId, page: $page) {
+		items {
+			id
+			status
+			triggerKind
+			trigger
+			runAs {
+				id
+				email
+				name
+			}
+			attempts {
+				attempt
+				outcome
+				failedStepKey
+				error
+				startedAt
+				finishedAt
+			}
+			recordsChanged
+			createdAt
+			finishedAt
+		}
+		pageInfo {
+			hasMore
+		}
+	}
+}
+`
+
+func WorkflowRuns(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	workflowId string,
+	page PageInput,
+) (data_ *WorkflowRunsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "WorkflowRuns",
+		Query:  WorkflowRuns_Operation,
+		Variables: &__WorkflowRunsInput{
+			WorkflowId: workflowId,
+			Page:       page,
+		},
+	}
+
+	data_ = &WorkflowRunsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Workflows.
+const Workflows_Operation = `
+query Workflows {
+	workflows {
+		... WorkflowParts
+	}
+}
+fragment WorkflowParts on Workflow {
+	id
+	key
+	name
+	description
+	trigger
+	runAs
+	definition
+	steps {
+		key
+		name
+		description
+		kind
+	}
+}
+`
+
+func Workflows(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *WorkflowsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Workflows",
+		Query:  Workflows_Operation,
+	}
+
+	data_ = &WorkflowsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

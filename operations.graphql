@@ -857,6 +857,78 @@ query MyFeedbackReport($id: ID!) {
   }
 }
 
+fragment WorkflowParts on Workflow {
+  id
+  key
+  name
+  description
+  trigger
+  runAs
+  definition
+  steps {
+    key
+    name
+    description
+    kind
+  }
+}
+
+query Workflows {
+  workflows {
+    ...WorkflowParts
+  }
+}
+
+mutation CreateWorkflow($definition: JSON!) {
+  createWorkflow(definition: $definition) {
+    ...WorkflowParts
+  }
+}
+
+mutation UpdateWorkflow($id: ID!, $definition: JSON!) {
+  updateWorkflow(id: $id, definition: $definition) {
+    ...WorkflowParts
+  }
+}
+
+mutation DeleteWorkflow($id: ID!) {
+  deleteWorkflow(id: $id) {
+    ...WorkflowParts
+  }
+}
+
+query WorkflowRuns($workflowId: ID!, $page: PageInput!) {
+  workflowRuns(workflowId: $workflowId, page: $page) {
+    items {
+      id
+      status
+      triggerKind
+      trigger
+      # @genqlient(pointer: true)
+      runAs {
+        id
+        email
+        name
+      }
+      attempts {
+        attempt
+        outcome
+        failedStepKey
+        error
+        startedAt
+        finishedAt
+      }
+      recordsChanged
+      createdAt
+      # @genqlient(pointer: true)
+      finishedAt
+    }
+    pageInfo {
+      hasMore
+    }
+  }
+}
+
 fragment RoleParts on Role {
   id
   key

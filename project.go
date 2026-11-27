@@ -37,6 +37,7 @@ type endpoints struct {
 	Authorize string `json:"authorize"`
 	Token     string `json:"token"`
 	Revoke    string `json:"revoke"`
+	UserInfo  string `json:"userinfo"`
 }
 
 // revision is one of an application's API versions.
@@ -382,6 +383,7 @@ func (s *session) endpoints(appID string) endpoints {
 		Authorize: s.origins.api + "/oauth/authorize",
 		Token:     s.origins.api + "/oauth/token",
 		Revoke:    s.origins.api + "/oauth/revoke",
+		UserInfo:  s.origins.api + "/oauth/userinfo",
 	}
 }
 

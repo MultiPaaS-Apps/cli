@@ -152,6 +152,7 @@ type Application implements Deletable {
 	environments: [Environment!]!
 	id: ID!
 	name: String!
+	site: Site
 	updatedAt: DateTime!
 	urlName: String!
 	urlNameHistory: [UrlNameEntry!]!
@@ -588,6 +589,8 @@ type Environment implements Deletable {
 	name: String!
 	redirectUriSets: [EnvironmentRedirectUris!]!
 	redirectUris(oauthClientId: ID!): [String!]!
+	servedSite: Site
+	site: Site
 	siteUrl: String!
 	updatedAt: DateTime!
 	urlName: String!
@@ -782,6 +785,9 @@ type Mutation {
 	createDeployer(input: CreateDeployerInput!): DeployerWithSecret!
 	createEntity(input: CreateEntityInput!): Entity!
 	createEnumType(input: CreateEnumTypeInput!): EnumType!
+	"""
+	Creates an environment. If it commits but its site route doesn't follow, answers SITE_ROUTES_PENDING: the environment stands, and its route catches up at the application's next site change or the daily reconcile.
+	"""
 	createEnvironment(input: CreateEnvironmentInput!): Environment!
 	createField(input: CreateFieldInput!): Field!
 	"""
@@ -795,6 +801,7 @@ type Mutation {
 	createPlatformRole(input: CreatePlatformRoleInput!): PlatformRole!
 	createRecord(input: CreateRecordInput!): Record!
 	createRole(input: CreateRoleInput!): Role!
+	createSiteDeployment(applicationId: ID!, environmentId: ID, files: [SiteFileInput!]!, spaFallback: Boolean = true): SiteDeploymentUpload!
 	createUser(input: CreateUserInput!): User!
 	deactivateAppTenant(input: DeactivateAppTenantInput!): AppTenant! @deprecated(reason: "Use deleteAppTenant.")
 	deactivateApplication(input: DeactivateApplicationInput!): Application! @deprecated(reason: "Use deleteApplication.")
@@ -804,6 +811,7 @@ type Mutation {
 	deleteAppIdentity(id: ID!): AppIdentity!
 	deleteAppTenant(input: DeleteAppTenantInput!): AppTenant!
 	deleteApplication(input: DeleteApplicationInput!): Application!
+	deleteApplicationSite(applicationId: ID!): Application!
 	deleteClient(input: DeleteClientInput!): Client!
 	deleteClientGroup(id: ID!): ClientGroup!
 	deleteClientRole(id: ID!): ClientRole!
@@ -815,6 +823,9 @@ type Mutation {
 	deleteDeployer(id: ID!): Deployer!
 	deleteEntity(entityId: ID!): Entity!
 	deleteEnumType(enumTypeId: ID!): EnumType!
+	"""
+	Deletes an environment. If it commits but its site route doesn't follow, answers SITE_ROUTES_PENDING: the deletion stands. Deleting it again answers NOT_FOUND, meaning the environment is gone, and its site address stops serving at the application's next site change or the daily reconcile.
+	"""
 	deleteEnvironment(input: DeleteEnvironmentInput!): Environment!
 	deleteField(fieldId: ID!): Field!
 	"""
@@ -831,6 +842,7 @@ type Mutation {
 	inviteMember(input: InviteMemberInput!): ApplicationInvitation!
 	issueApiToken(appTenantId: ID!, oauthClientId: ID!): ApiToken!
 	issueRealtimeTicket: RealtimeTicket!
+	publishSiteDeployment(deploymentId: ID!): Site!
 	"""
 	Re-issues an import's or a tenant's lapsed membership invitations. No email is sent.
 	"""
@@ -838,14 +850,27 @@ type Mutation {
 	removeAccessGroupMember(id: ID!): AccessGroupMember!
 	removeClientGroupMember(id: ID!): ClientGroupMember!
 	removeDataImportFile(fileId: ID!, importId: ID!): DataImport!
+	"""
+	Deletes an environment. If it commits but its site route doesn't follow, answers SITE_ROUTES_PENDING: the deletion stands. Deleting it again answers NOT_FOUND, meaning the environment is gone, and its site address stops serving at the application's next site change or the daily reconcile.
+	"""
 	removeEnvironment(input: RemoveEnvironmentInput!): Environment! @deprecated(reason: "Use deleteEnvironment.")
+	removeEnvironmentSite(environmentId: ID!): Environment!
 	removeMember(input: RemoveMemberInput!): TenantMember!
 	removePlatformGroupMember(id: ID!): PlatformGroupMember!
 	renameAccessGroup(id: ID!, name: String!): AccessGroup!
+	"""
+	Renames the URL name. If the rename commits but its site routes don't follow, answers SITE_ROUTES_PENDING: the new name stands, and asking for it again finishes the routes.
+	"""
 	renameApplicationUrlName(applicationId: ID!, confirmTakeover: Boolean, name: String!): Application!
 	renameClientGroup(id: ID!, name: String!): ClientGroup!
+	"""
+	Renames the URL name. If the rename commits but its site routes don't follow, answers SITE_ROUTES_PENDING: the new name stands, and asking for it again finishes the routes.
+	"""
 	renameClientUrlName(clientId: ID!, name: String!): Client!
 	renameEnvironment(input: RenameEnvironmentInput!): Environment!
+	"""
+	Renames the URL name. If the rename commits but its site routes don't follow, answers SITE_ROUTES_PENDING: the new name stands, and asking for it again finishes the routes.
+	"""
 	renameEnvironmentUrlName(confirmTakeover: Boolean, environmentId: ID!, name: String!): Environment!
 	renamePlatformGroup(id: ID!, name: String!): PlatformGroup!
 	replacePlan(newPlanId: ID!, oldPlanEndsAt: DateTime!, oldPlanId: ID!): Plan!
@@ -877,6 +902,10 @@ type Mutation {
 	setFeedbackSetting(autoSend: Boolean!): FeedbackSetting!
 	setFeedbackStatus(id: ID!, note: String, status: FeedbackStatus!): OperatorFeedback!
 	setPlanEndDate(endsAt: DateTime!, id: ID!): Plan!
+	"""
+	Takes a site down or brings it back. On SITE_ROUTES_PENDING the change is recorded but the edge may not reflect it yet. Calling this again with the same arguments, or the daily reconcile, finishes the route write.
+	"""
+	setSiteDisabled(disabled: Boolean!, reason: String, siteId: ID!): Site!
 	shareRecord(input: ShareRecordInput!): RecordShare!
 	signIn(input: SignInInput!): AuthOkResult!
 	signOut: AuthOkResult!
@@ -1436,6 +1465,34 @@ type ShareTarget {
 }
 input SignInInput {
 	token: String!
+}
+type Site {
+	activeDeployment: SiteDeployment
+	disabled: Boolean!
+	id: ID!
+}
+type SiteDeployment {
+	fileCount: Int!
+	id: ID!
+	publishedAt: DateTime
+	status: String!
+	totalBytes: Float!
+}
+type SiteDeploymentUpload implements Receipt {
+	_receipt: Boolean!
+	deploymentId: ID!
+	expiresAt: DateTime!
+	uploads: [SiteUpload!]!
+}
+input SiteFileInput {
+	path: String!
+	sha256: String!
+	sizeBytes: Int!
+}
+type SiteUpload {
+	headers: [Header!]!
+	path: String!
+	url: String!
 }
 enum SortDirection {
 	ASC

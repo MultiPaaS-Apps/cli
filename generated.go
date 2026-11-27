@@ -1945,6 +1945,7 @@ func (v *CreateEnvironmentCreateEnvironment) __premarshalJSON() (*__premarshalCr
 
 // CreateEnvironmentResponse is returned by CreateEnvironment on success.
 type CreateEnvironmentResponse struct {
+	// Creates an environment. If it commits but its site route doesn't follow, answers SITE_ROUTES_PENDING: the environment stands, and its route catches up at the application's next site change or the daily reconcile.
 	CreateEnvironment CreateEnvironmentCreateEnvironment `json:"createEnvironment"`
 }
 
@@ -3472,6 +3473,7 @@ func (v *DeleteEnvironmentInput) GetId() string { return v.Id }
 
 // DeleteEnvironmentResponse is returned by DeleteEnvironment on success.
 type DeleteEnvironmentResponse struct {
+	// Deletes an environment. If it commits but its site route doesn't follow, answers SITE_ROUTES_PENDING: the deletion stands. Deleting it again answers NOT_FOUND, meaning the environment is gone, and its site address stops serving at the application's next site change or the daily reconcile.
 	DeleteEnvironment DeleteEnvironmentDeleteEnvironment `json:"deleteEnvironment"`
 }
 
@@ -6529,6 +6531,7 @@ func (v *RemoveEnvironmentRemoveEnvironment) GetId() string { return v.Id }
 
 // RemoveEnvironmentResponse is returned by RemoveEnvironment on success.
 type RemoveEnvironmentResponse struct {
+	// Deletes an environment. If it commits but its site route doesn't follow, answers SITE_ROUTES_PENDING: the deletion stands. Deleting it again answers NOT_FOUND, meaning the environment is gone, and its site address stops serving at the application's next site change or the daily reconcile.
 	RemoveEnvironment RemoveEnvironmentRemoveEnvironment `json:"removeEnvironment"`
 }
 
@@ -6629,6 +6632,7 @@ func (v *RenameApplicationUrlNameRenameApplicationUrlNameApplicationUrlNameHisto
 
 // RenameApplicationUrlNameResponse is returned by RenameApplicationUrlName on success.
 type RenameApplicationUrlNameResponse struct {
+	// Renames the URL name. If the rename commits but its site routes don't follow, answers SITE_ROUTES_PENDING: the new name stands, and asking for it again finishes the routes.
 	RenameApplicationUrlName RenameApplicationUrlNameRenameApplicationUrlNameApplication `json:"renameApplicationUrlName"`
 }
 
@@ -6733,6 +6737,7 @@ func (v *RenameClientUrlNameRenameClientUrlNameClientUrlNameHistoryUrlNameEntry)
 
 // RenameClientUrlNameResponse is returned by RenameClientUrlName on success.
 type RenameClientUrlNameResponse struct {
+	// Renames the URL name. If the rename commits but its site routes don't follow, answers SITE_ROUTES_PENDING: the new name stands, and asking for it again finishes the routes.
 	RenameClientUrlName RenameClientUrlNameRenameClientUrlNameClient `json:"renameClientUrlName"`
 }
 
@@ -6932,6 +6937,7 @@ func (v *RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironmentUrlNameHisto
 
 // RenameEnvironmentUrlNameResponse is returned by RenameEnvironmentUrlName on success.
 type RenameEnvironmentUrlNameResponse struct {
+	// Renames the URL name. If the rename commits but its site routes don't follow, answers SITE_ROUTES_PENDING: the new name stands, and asking for it again finishes the routes.
 	RenameEnvironmentUrlName RenameEnvironmentUrlNameRenameEnvironmentUrlNameEnvironment `json:"renameEnvironmentUrlName"`
 }
 

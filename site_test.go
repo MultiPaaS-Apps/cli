@@ -376,9 +376,9 @@ func TestSiteRefusalsGiveAHintThatFitsTheCommand(t *testing.T) {
 		{"a path", refuse("CreateSiteDeployment", map[string]any{"code": "SITE_PATH_INVALID", "path": "index.html"}), deploy,
 			"SITE_PATH_INVALID", `A site can't hold "index.html": .multipaas/ is reserved`},
 		{"a deleted application on deploy", deleteApp, deploy,
-			"NOT_FOUND", "The application is deleted, or isn't one you can reach. Check --app against apps list."},
-		{"a deleted application on remove", deleteApp, func(string) []string { return []string{"site", "remove", "--app", siteApp, "--app-site", "--yes"} },
-			"NOT_FOUND", "The application is deleted, or isn't one you can reach."},
+			"UNAUTHORIZED", "your access to the application was removed, or it was deleted, while the command ran"},
+		{"a deleted application on status", deleteApp, func(string) []string { return []string{"site", "status", "--app", siteApp} },
+			"UNAUTHORIZED", "Your access to the application was removed, or it was deleted, while the command ran. Check --app against apps list."},
 		{"a missing upload", func(_ *testing.T, fake *fakeMultiPaaS, _ string) { fake.sites.dropPut = "index.html" }, deploy,
 			"SITE_UPLOAD_INCOMPLETE", "Not uploaded: index.html.\nNothing was published. Run site deploy again once the directory stops changing."},
 		{"routes pending on deploy", func(_ *testing.T, fake *fakeMultiPaaS, _ string) { fake.sites.routesPending = 4 }, deploy,
@@ -407,11 +407,11 @@ func TestSiteRefusalsGiveAHintThatFitsTheCommand(t *testing.T) {
 		{"an unknown environment on status", nil, func(string) []string { return []string{"site", "status", "--app", siteApp, "--env", "env-gone"} },
 			"NOT_FOUND", "Check --app against apps list, and --env against envs list --app APP_ID."},
 		{"no site to remove", nil, removeOwn,
-			"NOT_FOUND", "There is no site to remove there."},
+			"NOT_FOUND", "There is no site to remove there, the environment isn't one of the application's or is being removed, or the application isn't one you can reach."},
 		{"no permission to publish", refuse("CreateSiteDeployment", map[string]any{"code": "UNAUTHORIZED"}), deploy,
 			"UNAUTHORIZED", "Publishing or removing a site needs environment.manage"},
-		{"no access to the application", refuse("Sites", map[string]any{"code": "UNAUTHORIZED"}), func(string) []string { return []string{"site", "status", "--app", siteApp} },
-			"UNAUTHORIZED", "it must be an application of a client you belong to"},
+		{"access removed after the scope resolved", refuse("Sites", map[string]any{"code": "UNAUTHORIZED"}), func(string) []string { return []string{"site", "status", "--app", siteApp} },
+			"UNAUTHORIZED", "Your access to the application was removed, or it was deleted, while the command ran."},
 		{"a server failure on deploy", refuse("CreateSiteDeployment", map[string]any{"code": "INTERNAL_SERVER_ERROR", "unexpected": true}), deploy,
 			"INTERNAL_SERVER_ERROR", "Something failed on the server. Run site deploy again; publishing is safe to repeat."},
 		{"a server failure on status", refuse("Sites", map[string]any{"code": "INTERNAL_SERVER_ERROR", "unexpected": true}), func(string) []string { return []string{"site", "status", "--app", siteApp} },
@@ -479,6 +479,98 @@ func TestSiteDeployUploadsAnEmptyFileWithAContentLengthOfZero(t *testing.T) {
 	}
 	if received, ok := fake.sites.objects["dep-2/empty.txt"]; !ok || received.contentLength != 0 {
 		t.Fatalf("upload %+v", received)
+	}
+}
+
+func TestSiteDeployUploadsAFileWhoseNameHoldsAHashAQuestionMarkAndAPercent(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	writeNested(t, dir, "docs/a#b?c%d e.html", []byte("<p>odd</p>"))
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
+
+	if got.exit != exitOK {
+		t.Fatalf("exit %d: %s", got.exit, got.stdout)
+	}
+	if received, ok := fake.sites.objects["dep-2/docs/a#b?c%d e.html"]; !ok || string(received.body) != "<p>odd</p>" {
+		t.Fatalf("uploads %v", slices.Sorted(maps.Keys(fake.sites.objects)))
+	}
+}
+
+func TestSiteDeploySaysItPublishedWhenTheSiteLookupAfterwardsFails(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.refuse["Sites"] = map[string]any{"code": "INTERNAL_SERVER_ERROR", "unexpected": true}
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
+
+	assertFailure(t, got, exitRefused, "INTERNAL_SERVER_ERROR")
+	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: Unexpected error.") || fake.sites.publishCount() != 1 {
+		t.Fatalf("publishes %d: %s", fake.sites.publishCount(), got.stdout)
+	}
+}
+
+func TestSiteDeployReportsAFileItCannotReadNotNoResponse(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	index := writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.afterCreate = func() { _ = os.Remove(index) }
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
+
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "upload of index.html failed: the file can't be read (open ") || strings.Contains(got.stdout, "no response") ||
+		strings.Contains(got.stdout, fake.sites.server.URL) || fake.sites.attempts["index.html"] != 0 || fake.sites.publishCount() != 0 {
+		t.Fatalf("PUT %d times, publishes %d: %s", fake.sites.attempts["index.html"], fake.sites.publishCount(), got.stdout)
+	}
+}
+
+func TestSiteDeployWithEnvFailsWhenThatEnvironmentDoesNotServeThePublishedSite(t *testing.T) {
+	fake := siteFake(t)
+	fake.run(t, "envs", "create", "--app", siteApp, "--name", "staging", "--json")
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.disableOnPublish = true
+	siteWaitLimit = 20 * time.Millisecond
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-new-2", "--json")
+
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: environment env-new-2 doesn't serve the site that was published") {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+}
+
+func TestSiteDeployTellsItPublishedWhenTheApplicationIsDeletedBeforeTheLookup(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.afterPublish = func() { fake.sites.deletedApps[siteApp] = true }
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
+
+	if got.exit != exitRefused || !strings.Contains(got.stderr, "deployment dep-2 is published, but it could not be verified live: unauthorized (UNAUTHORIZED)") ||
+		!strings.Contains(got.stderr, "Publishing or removing a site needs environment.manage") {
+		t.Fatalf("exit %d: %s", got.exit, got.stderr)
+	}
+}
+
+func TestSiteDeployWithEnvFailsWhenThatEnvironmentIsGoneAfterPublish(t *testing.T) {
+	fake := siteFake(t)
+	fake.run(t, "envs", "create", "--app", siteApp, "--name", "staging", "--json")
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.afterPublish = func() {
+		fake.environments[siteApp] = slices.DeleteFunc(fake.environments[siteApp], func(e fakeEnv) bool { return e.id == "env-new-2" })
+	}
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-new-2", "--json")
+
+	assertFailure(t, got, exitRefused, "NOT_FOUND")
+	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: environment env-new-2 is not an environment of application app-a-000") || fake.sites.polls != 0 {
+		t.Fatalf("polls %d: %s", fake.sites.polls, got.stdout)
 	}
 }
 

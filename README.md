@@ -53,7 +53,7 @@ multipaas import status --app <app id> --env <env id> --import <import id> [--in
 multipaas import invitations --app <app id> --env <env id> --import <import id>              # the lapsed ones; --tenant <app-tenant id> reaches imports run before they recorded theirs
 multipaas import reissue --app <app id> --env <env id> --import <import id>                  # re-issued ones are claimed at the next sign-in within 7 days; --tenant reaches a deleted import's and re-issues every import's lapsed ones in that app-tenant
 multipaas import delete --app <app id> --env <env id> --import <import id>                   # not while checking or importing; nothing it holds is removed
-multipaas site deploy ./dist --app <app id>                 # the app's site, served by every environment without its own; waits until it is live
+multipaas site deploy ./dist --app <app id> --app-site      # the app's site, served by every environment without its own; waits until it is live
 multipaas site deploy ./dist --app <app id> --env <env id> --no-spa   # that environment's own site; a missing path answers 404, not index.html
 multipaas site status --app <app id> --env <env id>         # what the environment serves, its live deployment and its site URL
 multipaas site remove --app <app id> --env <env id>         # back to the app's site; --app-site --yes deletes the app's site
@@ -223,10 +223,13 @@ In human mode every refusal is followed by what to do next. With `--json`, the c
 - `SITE_NOT_LIVE_YET`: the deployment is published, but the site URL didn't serve it within 3 minutes.
 - `SITE_DISABLED`: MultiPaaS has disabled a site of the application, and none of its sites can be published or
   removed until it is enabled.
-- `NOT_FOUND`: the application or environment isn't one of yours, the application is deleted, or there is no site to
+- `NOT_FOUND`: the application isn't one you can reach (it's deleted, you have no access to it, or, as a deployer, it
+  isn't the deployer's own), the environment isn't one of the application's or is being removed, or there is no site to
   remove there.
-- `UNAUTHORIZED`: for `site deploy` and `site remove`, you lack `environment.manage` where the command needs it; for
-  `site status`, the application isn't one of a client you belong to.
+- `UNAUTHORIZED`: for `site deploy` and `site remove`, you lack `environment.manage` where the command needs it, or you act
+  as a deployer, which can do neither. Signed in as yourself, any site command also gets it when your access to the
+  application is removed, or the application is deleted, while the command runs; a deployer whose application is
+  deleted gets `NOT_FOUND` instead.
 - `CONFIRMATION_REQUIRED`: deleting the application's site needs `--yes`.
 
 `site status` prints what an environment serves (`--env`, else `multipaas.json`'s `environmentId`, else the default
@@ -237,7 +240,7 @@ for the application's site deletes it, which every environment without its own s
 Running `site remove` again after it succeeded succeeds too.
 
 Publishing and removing need `environment.manage` in the environment for its own site, and `environment.manage` in
-every environment for the application's. A deployer can't publish.
+every environment for the application's. A deployer can't publish or remove a site.
 
 ## Feedback
 

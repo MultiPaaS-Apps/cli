@@ -348,6 +348,7 @@ type retirement struct {
 type cliError struct {
 	exit          int
 	command       string         // the command refused, such as "site deploy", for the hints that depend on it
+	cause         error          // the failure this one reports, when it wraps one
 	Code          string         `json:"code"`
 	Message       string         `json:"message"`
 	FieldErrors   []fieldError   `json:"fieldErrors,omitempty"`
@@ -377,6 +378,8 @@ type fieldError struct {
 }
 
 func (e *cliError) Error() string { return e.Message }
+
+func (e *cliError) Unwrap() error { return e.cause }
 
 // report prints a failure (stdout as JSON, else stderr) and returns the exit code for it. A response the api
 // command already printed only sets the exit code.

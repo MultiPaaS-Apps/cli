@@ -10,6 +10,7 @@ import (
 	"maps"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -57,35 +58,38 @@ var fakeContentTypes = map[string]string{
 type fakeSites struct {
 	server *httptest.Server
 
-	mu             sync.Mutex
-	objects        map[string]fakeUpload         // "<deployment id>/<path>" -> what its PUT received
-	signed         map[string]map[string]string  // "<deployment id>/<path>" -> the headers its upload was signed with
-	sizes          map[string]int64              // "<deployment id>/<path>" -> the content-length its upload was signed with
-	attempts       map[string]int                // path -> PUTs received for it
-	failPuts       map[string]int                // path -> how many more of its PUTs answer failStatus
-	failStatus     int                           // what a failing PUT answers: 503 unless set
-	failBody       string                        // the body a failing PUT answers: SlowDown unless set
-	dropPut        string                        // a PUT of this path answers 200 but stores nothing
-	putDelay       time.Duration                 // how long each PUT takes to answer
-	inFlight, peak int                           // PUTs being answered now, and the most at once
-	siteIDs        map[string]string             // "app:<id>" or "env:<id>" -> that site's id
-	removed        map[string]bool               // "app:<id>" or "env:<id>" whose latest site was removed
-	live           map[string]string             // site id -> its live deployment's id
-	deployments    map[string]fakeSiteDeployment // deployment id -> what it was created with
-	routes         map[string]string             // label -> the deployment its route serves
-	previous       map[string]string             // label -> the deployment its route served before it last changed
-	stale          map[string]int                // label -> GETs that still answer the previous route
-	propagation    int                           // GETs a changed route answers with its previous deployment first
-	polls          int                           // GETs of /.multipaas/deployment answered
-	pollStatus     int                           // the HTTP status a served /.multipaas/deployment answers with, or 0 for 200
-	askFor         string                        // a path CreateSiteDeployment also asks to be uploaded, though it wasn't sent
-	routesPending  int                           // site changes that commit but answer SITE_ROUTES_PENDING before one writes its routes
-	publishes      int                           // PublishSiteDeployment requests received
-	failPublishes  []int                         // what the next PublishSiteDeployment requests answer, before they publish: a status, 0 for no answer, or maskedPublish
-	disabled       map[string]bool               // site id -> MultiPaaS has disabled it
-	deletedApps    map[string]bool               // application id -> deleted after the CLI resolved its scope, so the server answers NOT_FOUND
-	refuse         map[string]map[string]any     // operation -> the refusal it answers: "code", and any extensions
-	minted         int                           // sites and deployments created so far; ids are never reused
+	mu               sync.Mutex
+	objects          map[string]fakeUpload         // "<deployment id>/<path>" -> what its PUT received
+	signed           map[string]map[string]string  // "<deployment id>/<path>" -> the headers its upload was signed with
+	sizes            map[string]int64              // "<deployment id>/<path>" -> the content-length its upload was signed with
+	attempts         map[string]int                // path -> PUTs received for it
+	failPuts         map[string]int                // path -> how many more of its PUTs answer failStatus
+	failStatus       int                           // what a failing PUT answers: 503 unless set
+	failBody         string                        // the body a failing PUT answers: SlowDown unless set
+	dropPut          string                        // a PUT of this path answers 200 but stores nothing
+	putDelay         time.Duration                 // how long each PUT takes to answer
+	inFlight, peak   int                           // PUTs being answered now, and the most at once
+	siteIDs          map[string]string             // "app:<id>" or "env:<id>" -> that site's id
+	removed          map[string]bool               // "app:<id>" or "env:<id>" whose latest site was removed
+	live             map[string]string             // site id -> its live deployment's id
+	deployments      map[string]fakeSiteDeployment // deployment id -> what it was created with
+	routes           map[string]string             // label -> the deployment its route serves
+	previous         map[string]string             // label -> the deployment its route served before it last changed
+	stale            map[string]int                // label -> GETs that still answer the previous route
+	propagation      int                           // GETs a changed route answers with its previous deployment first
+	polls            int                           // GETs of /.multipaas/deployment answered
+	pollStatus       int                           // the HTTP status a served /.multipaas/deployment answers with, or 0 for 200
+	askFor           string                        // a path CreateSiteDeployment also asks to be uploaded, though it wasn't sent
+	routesPending    int                           // site changes that commit but answer SITE_ROUTES_PENDING before one writes its routes
+	publishes        int                           // PublishSiteDeployment requests received
+	failPublishes    []int                         // what the next PublishSiteDeployment requests answer, before they publish: a status, 0 for no answer, or maskedPublish
+	disabled         map[string]bool               // site id -> MultiPaaS has disabled it
+	deletedApps      map[string]bool               // application id -> deleted after the CLI resolved its scope, so the server refuses its scope with UNAUTHORIZED
+	refuse           map[string]map[string]any     // operation -> the refusal it answers: "code", and any extensions
+	afterCreate      func()                        // runs when CreateSiteDeployment has made a deployment, before it answers
+	afterPublish     func()                        // runs when a publish has made its deployment live, before it syncs routes
+	disableOnPublish bool                          // a publish that lands leaves the site disabled, so no environment serves it
+	minted           int                           // sites and deployments created so far; ids are never reused
 }
 
 // maskedPublish in failPublishes is the answer the API gives a resolver that failed: HTTP 200, data null, and graphql-yoga's
@@ -137,6 +141,10 @@ func (f *fakeMultiPaaS) manageSites(w http.ResponseWriter, operation string, par
 	s := f.sites
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.deletedApps[app] {
+		refuseSite(w, "UNAUTHORIZED", nil) // the scope check refuses a deleted application before any resolver runs
+		return
+	}
 	if operation == "PublishSiteDeployment" {
 		s.publishes++
 		if len(s.failPublishes) > 0 {
@@ -172,10 +180,6 @@ func (f *fakeMultiPaaS) manageSites(w http.ResponseWriter, operation string, par
 		application := map[string]any{"id": app, "site": s.view(s.siteIDs["app:"+app]), "environments": environments}
 		writeData(w, map[string]any{"me": map[string]any{"application": application}})
 	case "CreateSiteDeployment":
-		if s.deletedApps[app] {
-			graphQLRefusal(w, "NOT_FOUND", "application not found")
-			return
-		}
 		key := "app:" + app
 		if env, ok := variables["environmentId"].(string); ok {
 			if !f.hasEnvironment(app, env) {
@@ -206,12 +210,15 @@ func (f *fakeMultiPaaS) manageSites(w http.ResponseWriter, operation string, par
 			for _, name := range slices.Sorted(maps.Keys(s.signed[id+"/"+path])) {
 				headers = append(headers, map[string]any{"name": name, "value": s.signed[id+"/"+path][name]})
 			}
-			uploads = append(uploads, map[string]any{"path": path, "url": s.server.URL + "/s3/" + id + "/" + path, "headers": headers})
+			uploads = append(uploads, map[string]any{"path": path, "url": s.uploadURL(id, path), "headers": headers})
 		}
 		if s.askFor != "" {
-			uploads = append(uploads, map[string]any{"path": s.askFor, "url": s.server.URL + "/s3/" + id + "/" + s.askFor, "headers": []map[string]any{}})
+			uploads = append(uploads, map[string]any{"path": s.askFor, "url": s.uploadURL(id, s.askFor), "headers": []map[string]any{}})
 		}
 		s.deployments[id] = deployment
+		if s.afterCreate != nil {
+			s.afterCreate()
+		}
 		writeData(w, map[string]any{"createSiteDeployment": map[string]any{"deploymentId": id, "uploads": uploads}})
 	case "PublishSiteDeployment":
 		id, _ := variables["deploymentId"].(string)
@@ -236,6 +243,12 @@ func (f *fakeMultiPaaS) manageSites(w http.ResponseWriter, operation string, par
 			return
 		}
 		s.live[deployment.site] = id
+		if s.disableOnPublish {
+			s.disabled[deployment.site] = true
+		}
+		if s.afterPublish != nil {
+			s.afterPublish()
+		}
 		if s.routed(w, f, client, app) {
 			writeData(w, map[string]any{"publishSiteDeployment": s.view(deployment.site)})
 		}
@@ -253,7 +266,7 @@ func (f *fakeMultiPaaS) manageSites(w http.ResponseWriter, operation string, par
 			writeData(w, map[string]any{"removeEnvironmentSite": map[string]any{"id": env}})
 		}
 	case "DeleteApplicationSite":
-		if variables["applicationId"] != app || s.deletedApps[app] {
+		if variables["applicationId"] != app {
 			graphQLRefusal(w, "NOT_FOUND", "application not found")
 			return
 		}
@@ -291,6 +304,16 @@ func signedSiteHeaders(file, digest string) map[string]string {
 		"x-amz-sdk-checksum-algorithm": "SHA256",
 		"x-amz-server-side-encryption": "AES256",
 	}
+}
+
+// uploadURL is a deployment's presigned PUT address for path: each path segment escaped, as S3 escapes a key in a
+// presigned URL, so a "#", "?" or "%" in a file name stays part of the name.
+func (s *fakeSites) uploadURL(deployment, path string) string {
+	segments := strings.Split(path, "/")
+	for i, segment := range segments {
+		segments[i] = url.PathEscape(segment)
+	}
+	return s.server.URL + "/s3/" + deployment + "/" + strings.Join(segments, "/")
 }
 
 // hasEnvironment reports whether env is one of app's environments.

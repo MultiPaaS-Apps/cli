@@ -85,7 +85,7 @@ func siteDeploy(command commandFunc) *cobra.Command {
 			return nil, nil, err
 		}
 		if deployed.SiteURL, err = servingURL(ctx, s, scope, site.Id, envID); err != nil {
-			return nil, nil, err
+			return nil, nil, unverified(deployed.DeploymentID, err)
 		}
 		if deployed.SiteURL != "" {
 			fmt.Fprintf(s.env.stderr, "published deployment %s; waiting for %s to serve it, which takes about a minute\n", deployed.DeploymentID, deployed.SiteURL)
@@ -138,7 +138,7 @@ func siteStatus(command commandFunc) *cobra.Command {
 func siteRemove(command commandFunc) *cobra.Command {
 	var appID, envID string
 	var yes, appSite bool
-	cmd := command("remove", "Remove an environment's own site, or with no --env delete the application's site", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
+	cmd := command("remove", "Remove the site of --env, else of multipaas.json's environmentId, else delete the application's site, which needs --yes", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		if envID == "" && !yes {
 			return nil, nil, &cliError{exit: exitRefused, Code: "CONFIRMATION_REQUIRED", Message: "deleting the application's site takes it offline in every environment without a site of its own"}
 		}
@@ -168,7 +168,7 @@ func siteRemove(command commandFunc) *cobra.Command {
 	cmd.Long = "With --env, or multipaas.json's environmentId, removes that environment's own site, and the environment " +
 		"serves the application's site again. Without either, or with --app-site, deletes the application's site, which every environment without a site of its own stops serving, " +
 		"so it needs --yes. Both need environment.manage, as site deploy does. Running it again after it succeeded, or " +
-		"after SITE_ROUTES_PENDING, succeeds too; it is refused with NOT_FOUND where there never was a site, and for an application or environment that isn't yours or is deleted."
+		"after SITE_ROUTES_PENDING, succeeds too; it is refused with NOT_FOUND where there never was a site, for an environment that isn't the application's or is being removed, and for an application you can't reach (deleted, not one you have access to, or, as a deployer, not the deployer's own)."
 	appFlag(cmd, &appID)
 	siteEnvFlag(cmd, &appID, &envID, &appSite)
 	cmd.Flags().BoolVar(&yes, "yes", false, "delete the application's site")
@@ -340,6 +340,11 @@ func putSiteFile(ctx context.Context, file siteFile, upload SiteUploadParts) err
 		if err == nil && status >= 200 && status < 300 {
 			return nil
 		}
+		var unreadable localFileError
+		if errors.As(err, &unreadable) {
+			return &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: fmt.Sprintf(
+				"upload of %s failed: the file can't be read (%v); nothing was published. Run site deploy again.", file.path, unreadable.error)}
+		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -401,8 +406,18 @@ func publishRetryable(ctx context.Context, err error) bool {
 	}
 }
 
-// servingURL is the site URL that serves siteID: envID's when given, else the default environment's, else the first
-// environment's that serves it. It is "" when none does, because every environment has a site of its own.
+// unverified is err, a failure after the deployment was published, with a message that says so and keeps the
+// deployment id. It keeps err's code and details, and err as its cause.
+func unverified(deploymentID string, err error) error {
+	failure := *asCLIError(err)
+	failure.cause = err
+	failure.Message = fmt.Sprintf("deployment %s is published, but it could not be verified live: %s", deploymentID, failure.Message)
+	return &failure
+}
+
+// servingURL is the site URL that serves siteID. With envID it is that environment's, or an error when the
+// environment isn't there or doesn't serve the site. Without, it is the default environment's, else the first
+// environment's that serves it, and "" when none does, because every environment has a site of its own.
 func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (string, error) {
 	var application SitesMeUserApplication
 	err := s.call(ctx, scope, func(client graphql.Client) (err error) {
@@ -414,15 +429,24 @@ func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (s
 	}
 	found := ""
 	for _, e := range application.Environments {
-		if e.ServedSite == nil || e.ServedSite.Id != siteID {
-			continue
-		}
-		if e.Id == envID || (envID == "" && e.IsDefault) {
+		serves := e.ServedSite != nil && e.ServedSite.Id == siteID
+		switch {
+		case envID != "":
+			if e.Id != envID {
+				continue
+			}
+			if !serves {
+				return "", &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "environment " + envID + " doesn't serve the site that was published"}
+			}
 			return e.SiteUrl, nil
-		}
-		if found == "" {
+		case serves && e.IsDefault:
+			return e.SiteUrl, nil
+		case serves && found == "":
 			found = e.SiteUrl
 		}
+	}
+	if envID != "" {
+		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "environment " + envID + " is not an environment of application " + application.Id}
 	}
 	return found, nil
 }
@@ -576,18 +600,15 @@ func (e *cliError) siteHints() []string {
 	case "SITE_NOT_LIVE_YET":
 		return []string{"The deployment is published. Run site status in a few minutes; if the site URL still doesn't serve it, run site deploy again."}
 	case "NOT_FOUND":
-		if e.Message == "application not found" {
-			return []string{"The application is deleted, or isn't one you can reach. Check --app against apps list."}
-		}
 		if e.command == "site remove" {
-			return []string{"There is no site to remove there. Check --app against apps list and --env against envs list; site status shows what an environment serves."}
+			return []string{"There is no site to remove there, the environment isn't one of the application's or is being removed, or the application isn't one you can reach. Check --app against apps list and --env against envs list; site status shows what an environment serves."}
 		}
 		return []string{"Check --app against apps list, and --env against envs list --app APP_ID."}
 	case "UNAUTHORIZED":
 		if e.command == "site status" {
-			return []string{"Check --app against apps list: it must be an application of a client you belong to."}
+			return []string{"Your access to the application was removed, or it was deleted, while the command ran. Check --app against apps list."}
 		}
-		return []string{"Publishing or removing a site needs environment.manage in the environment for its own site, and environment.manage in every environment for the application's. A deployer can't."}
+		return []string{"Publishing or removing a site needs environment.manage in the environment for its own site, and environment.manage in every environment for the application's; a deployer can do neither. If you had it, your access to the application was removed, or it was deleted, while the command ran: check --app against apps list."}
 	case "CONFIRMATION_REQUIRED":
 		return []string{"Run the command again with --yes to delete it, or with --env to remove one environment's own site."}
 	}

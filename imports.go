@@ -421,7 +421,7 @@ func upload(ctx context.Context, s *session, scope, importID string, file planne
 func put(ctx context.Context, path string, size int64, target string, headers []signedHeader) (int, string, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return 0, "", err
+		return 0, "", localFileError{err}
 	}
 	defer file.Close()
 	var body io.Reader = file
@@ -445,6 +445,11 @@ func put(ctx context.Context, path string, size int64, target string, headers []
 	_, _ = io.Copy(io.Discard, response.Body)
 	return response.StatusCode, string(answer), nil
 }
+
+// localFileError is put's failure to open the file it was asked to send, as opposed to the transfer failing.
+type localFileError struct{ error }
+
+func (e localFileError) Unwrap() error { return e.error }
 
 // transferClient carries bodies too large for the session's timeout. It holds no bearer or scope, which a
 // presigned URL does not take.

@@ -165,7 +165,7 @@ func run(args []string, env environment) int {
 	root.AddCommand(apps, tenants, envsCommands(command), urlNameCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
-	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), deployerCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
+	root.AddCommand(recordCommands(command), roleCommands(command), workflowCommands(command), oauthClientCommands(command), appIdentityCommands(command), deployerCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
 
 	root.SetArgs(args)
 	root.SetOut(env.stdout)
@@ -350,6 +350,13 @@ type cliError struct {
 	Rules         []string       `json:"rules,omitempty"`
 	ChangeableAt  string         `json:"changeableAt,omitempty"`
 	PreviousOwner *previousOwner `json:"previousOwner,omitempty"`
+	Problems      []problem      `json:"problems,omitempty"`
+}
+
+// problem is one thing a WORKFLOW_INVALID refusal found wrong in a definition, at the path it names.
+type problem struct {
+	Path    string `json:"path"`
+	Message string `json:"message"`
 }
 
 // previousOwner is the app or environment a URL_NAME_TAKEOVER_UNCONFIRMED refusal names as the name's last holder.
@@ -402,6 +409,12 @@ func (e *cliError) hints() []string {
 		}
 	case "URL_NAME_TAKEOVER_UNCONFIRMED":
 		return []string{"Run the command again with --confirm-takeover to take the name."}
+	case "WORKFLOW_INVALID":
+		lines := make([]string, 0, len(e.Problems))
+		for _, p := range e.Problems {
+			lines = append(lines, p.Path+": "+p.Message)
+		}
+		return lines
 	}
 	return nil
 }

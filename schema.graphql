@@ -796,6 +796,7 @@ type Mutation {
 	createRecord(input: CreateRecordInput!): Record!
 	createRole(input: CreateRoleInput!): Role!
 	createUser(input: CreateUserInput!): User!
+	createWorkflow(definition: JSON!): Workflow!
 	deactivateAppTenant(input: DeactivateAppTenantInput!): AppTenant! @deprecated(reason: "Use deleteAppTenant.")
 	deactivateApplication(input: DeactivateApplicationInput!): Application! @deprecated(reason: "Use deleteApplication.")
 	deactivateClient(input: DeactivateClientInput!): Client! @deprecated(reason: "Use deleteClient.")
@@ -827,6 +828,7 @@ type Mutation {
 	deleteRecord(input: DeleteRecordInput!): Record!
 	deleteRole(id: ID!): Role!
 	deleteUser(input: DeleteUserInput!): User!
+	deleteWorkflow(id: ID!): Workflow!
 	denyOAuthAuthorization(input: DenyOAuthAuthorizationInput!): OAuthRedirect!
 	inviteMember(input: InviteMemberInput!): ApplicationInvitation!
 	issueApiToken(appTenantId: ID!, oauthClientId: ID!): ApiToken!
@@ -903,6 +905,7 @@ type Mutation {
 	updateRecord(input: UpdateRecordInput!): Record!
 	updateRole(input: UpdateRoleInput!): Role!
 	updateUser(input: UpdateUserInput!): User!
+	updateWorkflow(definition: JSON!, id: ID!): Workflow!
 }
 type OAuthAppTenantOption {
 	id: ID!
@@ -1183,6 +1186,9 @@ type Query {
 	roles: [Role!]!
 	user(id: ID!): User
 	users(page: PageInput! = {page:0,pageSize:20}): UserPage!
+	workflow(id: ID!): Workflow
+	workflowRuns(page: PageInput! = {page:0,pageSize:20}, workflowId: ID!): WorkflowRunPage!
+	workflows: [Workflow!]!
 }
 type RealtimeTicket implements Receipt {
 	_receipt: Boolean!
@@ -1603,4 +1609,50 @@ enum UserKind {
 type UserPage {
 	items: [User!]!
 	pageInfo: PageInfo!
+}
+type Workflow {
+	definition: JSON!
+	description: String!
+	id: ID!
+	key: String!
+	name: String!
+	runAs: JSON!
+	steps: [WorkflowStep!]!
+	trigger: JSON!
+}
+type WorkflowRun {
+	appTenant: AppTenant
+	attempts: [WorkflowRunAttempt!]!
+	createdAt: DateTime!
+	finishedAt: DateTime
+	id: ID!
+	recordsChanged: Int!
+	runAs: User
+	status: WorkflowRunStatus!
+	trigger: JSON!
+	triggerKind: String!
+}
+type WorkflowRunAttempt {
+	attempt: Int!
+	error: JSON
+	failedStepKey: String
+	finishedAt: DateTime
+	outcome: String!
+	startedAt: DateTime!
+}
+type WorkflowRunPage {
+	items: [WorkflowRun!]!
+	pageInfo: PageInfo!
+}
+enum WorkflowRunStatus {
+	FAILED
+	QUEUED
+	RUNNING
+	SUCCEEDED
+}
+type WorkflowStep {
+	description: String!
+	key: String!
+	kind: String!
+	name: String!
 }

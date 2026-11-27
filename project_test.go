@@ -30,6 +30,7 @@ func TestInitWritesTheProjectAndPinsTheNewestAPIVersion(t *testing.T) {
 		Authorize: fake.server.URL + "/oauth/authorize",
 		Token:     fake.server.URL + "/oauth/token",
 		Revoke:    fake.server.URL + "/oauth/revoke",
+		UserInfo:  fake.server.URL + "/oauth/userinfo",
 	}
 	if printed.Config != want || printed.Endpoints != wantEndpoints {
 		t.Fatalf("printed %s", got.stdout)

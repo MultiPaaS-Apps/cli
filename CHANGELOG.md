@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.19.1](https://github.com/MultiPaaS-Apps/cli/compare/v1.19.0...v1.19.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* update the webapp-api schema ([#147](https://github.com/MultiPaaS-Apps/cli/issues/147)) ([270d4fc](https://github.com/MultiPaaS-Apps/cli/commit/270d4fc1cfa6c74a2a41640ee073663bca27ff0f))
+* update the webapp-api schema ([#150](https://github.com/MultiPaaS-Apps/cli/issues/150)) ([720fdfa](https://github.com/MultiPaaS-Apps/cli/commit/720fdfacf98b2db6fc24a7ed34a6a7d49e06a8a0))
+* update the webapp-api schema ([#152](https://github.com/MultiPaaS-Apps/cli/issues/152)) ([a0c7c6a](https://github.com/MultiPaaS-Apps/cli/commit/a0c7c6aa0832cec8edd49dabdf84d9a287e3855a))
+* update the webapp-api schema ([#153](https://github.com/MultiPaaS-Apps/cli/issues/153)) ([0923da4](https://github.com/MultiPaaS-Apps/cli/commit/0923da42b18e237ffe6bb854e70a40c63b90cc44))
+
 ## [1.19.0](https://github.com/MultiPaaS-Apps/cli/compare/v1.18.0...v1.19.0) (2026-11-26)
 
 

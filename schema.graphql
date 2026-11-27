@@ -83,6 +83,11 @@ type ApiSchemaDiff {
 	changed: [SchemaChange!]!
 	dangerous: [SchemaChange!]!
 }
+type ApiSchemaFile {
+	sdl: String
+	url: String
+	urlExpiresAt: DateTime
+}
 type ApiToken implements Receipt {
 	_receipt: Boolean!
 	accessToken: String!
@@ -143,12 +148,19 @@ type Application implements Deletable {
 	deletedAt: DateTime
 	deployers: [Deployer!]!
 	destroysAt: DateTime
+	endpoints: ApplicationEndpoints!
 	environments: [Environment!]!
 	id: ID!
 	name: String!
 	updatedAt: DateTime!
 	urlName: String!
 	urlNameHistory: [UrlNameEntry!]!
+}
+type ApplicationEndpoints {
+	authorize: String!
+	graphql: String!
+	revoke: String!
+	token: String!
 }
 type ApplicationInvitation {
 	appTenant: AppTenant
@@ -572,6 +584,7 @@ type Environment implements Deletable {
 	destroysAt: DateTime
 	id: ID!
 	isDefault: Boolean!
+	mcpUrl: String!
 	name: String!
 	redirectUriSets: [EnvironmentRedirectUris!]!
 	redirectUris(oauthClientId: ID!): [String!]!
@@ -1079,6 +1092,7 @@ type Query {
 	allApplications(clientId: ID, page: PageInput! = {page:0,pageSize:20}): ClientApplicationPage!
 	apiSchema(revisionId: ID!): String!
 	apiSchemaDiff(fromRevisionId: ID!, toRevisionId: ID!): ApiSchemaDiff!
+	apiSchemaFile(revisionId: ID!): ApiSchemaFile!
 	appIdentities: [AppIdentity!]!
 	appTenant(id: ID!): AppTenant
 	appTenants(includeDeleted: Boolean = false, includeRetired: Boolean = false @deprecated(reason: "Use includeDeleted."), page: PageInput! = {page:0,pageSize:20}): AppTenantPage!

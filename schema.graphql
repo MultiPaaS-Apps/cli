@@ -525,6 +525,16 @@ type DeployerWithSecret {
 	deployer: Deployer!
 	secret: String!
 }
+type DeviceAccount {
+	email: String!
+	id: ID!
+	lastUsedAt: DateTime!
+	status: DeviceAccountStatus!
+}
+enum DeviceAccountStatus {
+	NEEDS_SIGN_IN
+	SIGNED_IN
+}
 type EffectiveRole {
 	applicationWide: Boolean!
 	direct: Boolean!
@@ -848,6 +858,10 @@ type Mutation {
 	"""
 	reissueImportInvitations(input: ReissueImportInvitationsInput!): ReissueImportInvitationsResult!
 	removeAccessGroupMember(id: ID!): AccessGroupMember!
+	"""
+	Signs an account out of this browser and removes it from the list.
+	"""
+	removeAccount(accountId: ID!): AuthOkResult!
 	removeClientGroupMember(id: ID!): ClientGroupMember!
 	removeDataImportFile(fileId: ID!, importId: ID!): DataImport!
 	"""
@@ -907,10 +921,18 @@ type Mutation {
 	"""
 	setSiteDisabled(disabled: Boolean!, reason: String, siteId: ID!): Site!
 	shareRecord(input: ShareRecordInput!): RecordShare!
-	signIn(input: SignInInput!): AuthOkResult!
+	signIn(input: SignInInput!): SignInResult!
 	signOut: AuthOkResult!
+	"""
+	Signs every account out of this browser.
+	"""
+	signOutEverywhere: AuthOkResult!
 	startConversation(input: StartConversationInput!): Conversation!
 	submitFeedback(input: SubmitFeedbackInput!): Feedback!
+	"""
+	Makes a signed-in account on this browser the one a new tab opens as.
+	"""
+	switchAccount(accountId: ID!): DeviceAccount!
 	unassignClientGroupRole(id: ID!): ClientGroupRoleAssignment!
 	unassignClientRole(id: ID!): ClientRoleAssignment!
 	unassignGroupRole(id: ID!): GroupRoleAssignment!
@@ -1143,6 +1165,10 @@ type Query {
 	conversations(page: PageInput! = {page:0,pageSize:20}): ConversationPage!
 	dataImport(id: ID!, includeDeleted: Boolean = false): DataImport
 	dataImports(applicationId: ID!, includeDeleted: Boolean = false, page: PageInput! = {page:0,pageSize:20}): DataImportPage!
+	"""
+	The accounts signed in on this browser, most recently used first.
+	"""
+	deviceAccounts: [DeviceAccount!]!
 	effectiveRoles(userId: ID!): [EffectiveRole!]!
 	entities(page: PageInput! = {page:0,pageSize:20}): EntityPage!
 	entity(id: ID!): Entity
@@ -1465,6 +1491,11 @@ type ShareTarget {
 }
 input SignInInput {
 	token: String!
+}
+type SignInResult implements Receipt {
+	_receipt: Boolean!
+	accountId: ID!
+	ok: Boolean!
 }
 type Site {
 	activeDeployment: SiteDeployment

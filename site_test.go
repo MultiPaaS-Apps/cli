@@ -202,7 +202,7 @@ func TestSiteDeployNamesThePublishedDeploymentWhenRetriesAfterRoutesPendingFailD
 
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
 
-	if got.exit != exitRefused || !strings.Contains(got.stderr, "deployment dep-2 is published, but writing its routes didn't finish: ") ||
+	if got.exit != exitRefused || !strings.Contains(got.stderr, "deployment dep-2 is published, but whether its routes were written is unknown: ") ||
 		strings.Contains(got.stderr, "aren't written yet") || fake.sites.publishCount() != 4 {
 		t.Fatalf("exit %d, publishes %d: %s", got.exit, fake.sites.publishCount(), got.stderr)
 	}
@@ -217,7 +217,7 @@ func TestUploadSiteReportsACancelledContextInsteadOfSuccess(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	err := uploadSite(ctx, files, uploads)
+	err := uploadSite(ctx, files, uploads, time.Now().Add(time.Hour))
 
 	if !errors.Is(err, context.Canceled) || fake.sites.attempts["index.html"] != 0 {
 		t.Fatalf("err %v, PUTs %d", err, fake.sites.attempts["index.html"])
@@ -246,6 +246,43 @@ func TestSiteDeployPublishesTheDirectoryTheKernelResolvesForADotDotAfterALink(t 
 
 	if fromInside.exit != exitOK || !strings.Contains(fromInside.stdout, `"fileCount": 2`) || !strings.Contains(fromInside.stdout, `"totalBytes": 10`) {
 		t.Fatalf("from inside the link: exit %d: %s %s", fromInside.exit, fromInside.stdout, fromInside.stderr)
+	}
+}
+
+func TestSiteDeployQuotesALinkNameWithAControlCharacterInItsRefusal(t *testing.T) {
+	fake := siteFake(t)
+	dir, outside := t.TempDir(), t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	writeNested(t, outside, "secret.txt", []byte("s"))
+	if err := os.Symlink(filepath.Join(outside, "secret.txt"), filepath.Join(dir, "bad\x1b[31mlink")); err != nil {
+		t.Fatal(err)
+	}
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
+
+	assertFailure(t, got, exitRefused, "SITE_DIR_INVALID")
+	var failure struct{ Error cliError }
+	decode(t, got.stdout, &failure)
+	if !strings.Contains(failure.Error.Message, `Cannot follow "bad\x1b[31mlink": a link that leads outside the directory`) || strings.ContainsRune(failure.Error.Message, 0x1b) {
+		t.Fatalf("message %q", failure.Error.Message)
+	}
+}
+
+func TestSiteDeployStopsAnUploadThatRunsPastItsLinksLifeAndStartsNoMore(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	siteUploadLinkLife = 100 * time.Millisecond
+	fake.sites.putDelay = time.Second
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
+
+	assertFailure(t, got, exitRefused, "UPLOAD_REFUSED")
+	fake.sites.mu.Lock()
+	attempts := fake.sites.attempts["index.html"]
+	fake.sites.mu.Unlock()
+	if !strings.Contains(got.stdout, "upload of index.html stopped: its upload link expired, 15 minutes after site deploy asked for it; nothing was published. Run site deploy again, which asks for new links.") || attempts != 1 || fake.sites.publishCount() != 0 {
+		t.Fatalf("PUTs %d, publishes %d: %s", attempts, fake.sites.publishCount(), got.stdout)
 	}
 }
 
@@ -419,9 +456,9 @@ func TestSiteDeployRefusesALinkItCannotFollowOrThatLeavesTheDirectory(t *testing
 	var failure struct{ Error cliError }
 	decode(t, got.stdout, &failure)
 	for _, part := range []string{
-		"Cannot follow gone.png: a link that points at nothing",
-		"Cannot follow loop: a link to a folder it sits inside",
-		"Cannot follow secret.txt, shared: a link that leads outside the directory",
+		`Cannot follow "gone.png": a link that points at nothing`,
+		`Cannot follow "loop": a link to a folder it sits inside`,
+		`Cannot follow "secret.txt", "shared": a link that leads outside the directory`,
 		"Nothing was uploaded.",
 	} {
 		if !strings.Contains(failure.Error.Message, part) {
@@ -543,7 +580,7 @@ func TestSiteRefusalsGiveAHintThatFitsTheCommand(t *testing.T) {
 		{"a missing upload", func(_ *testing.T, fake *fakeMultiPaaS, _ string) { fake.sites.dropPut = "index.html" }, deploy,
 			"SITE_UPLOAD_INCOMPLETE", "Not uploaded: index.html.\nNothing was published. Run site deploy again once the directory stops changing."},
 		{"routes pending on deploy", func(_ *testing.T, fake *fakeMultiPaaS, _ string) { fake.sites.routesPending = 4 }, deploy,
-			"SITE_ROUTES_PENDING", "The deployment is published, but the site URL doesn't serve it yet. Run site deploy again"},
+			"SITE_ROUTES_PENDING", "The deployment is published, but the site URL doesn't serve it yet. The daily reconcile writes its routes; site status shows what an environment serves. Running site deploy again publishes the directory as a new deployment, which replaces whatever is live by then."},
 		{"routes pending on remove", func(t *testing.T, fake *fakeMultiPaaS, dir string) {
 			fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-default", "--json")
 			fake.sites.routesPending = 1
@@ -560,7 +597,7 @@ func TestSiteRefusalsGiveAHintThatFitsTheCommand(t *testing.T) {
 			fake.sites.propagation = 1 << 20
 			siteWaitLimit = 20 * time.Millisecond
 		}, deploy,
-			"SITE_NOT_LIVE_YET", "Run site status in a few minutes"},
+			"SITE_NOT_LIVE_YET", "Run site status in a few minutes to see what an environment serves. Running site deploy again publishes the directory as a new deployment, which replaces whatever is live by then."},
 		{"an unknown environment on deploy", nil, func(dir string) []string {
 			return []string{"site", "deploy", dir, "--app", siteApp, "--env", "env-gone"}
 		},
@@ -574,7 +611,7 @@ func TestSiteRefusalsGiveAHintThatFitsTheCommand(t *testing.T) {
 		{"access removed after the scope resolved", refuse("Sites", map[string]any{"code": "UNAUTHORIZED"}), func(string) []string { return []string{"site", "status", "--app", siteApp} },
 			"UNAUTHORIZED", "Your access to the application was removed, or it was deleted, while the command ran."},
 		{"a server failure on deploy", refuse("CreateSiteDeployment", map[string]any{"code": "INTERNAL_SERVER_ERROR", "unexpected": true}), deploy,
-			"INTERNAL_SERVER_ERROR", "Something failed on the server. Run site deploy again; publishing is safe to repeat."},
+			"INTERNAL_SERVER_ERROR", "Something failed on the server. If the message says the deployment is published, site status shows what an environment serves. Otherwise run site deploy again; it publishes the directory as a new deployment, which replaces whatever is live by then."},
 		{"a server failure on status", refuse("Sites", map[string]any{"code": "INTERNAL_SERVER_ERROR", "unexpected": true}), func(string) []string { return []string{"site", "status", "--app", siteApp} },
 			"INTERNAL_SERVER_ERROR", "Something failed on the server. Run site status again."},
 		{"a server failure on remove", refuse("RemoveEnvironmentSite", map[string]any{"code": "INTERNAL_SERVER_ERROR", "unexpected": true}), removeOwn,
@@ -693,13 +730,27 @@ func TestSiteDeployWithEnvFailsWhenThatEnvironmentDoesNotServeThePublishedSite(t
 	fake.run(t, "envs", "create", "--app", siteApp, "--name", "staging", "--json")
 	dir := t.TempDir()
 	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
-	fake.sites.disableOnPublish = true
+	fake.sites.afterPublish = func() { fake.sites.removeSite("env:env-new-2") }
 	siteWaitLimit = 20 * time.Millisecond
 
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-new-2", "--json")
 
 	assertFailure(t, got, exitRefused, "CLI_ERROR")
 	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: environment env-new-2 doesn't serve the site that was published; site status --env env-new-2 shows what it serves") {
+		t.Fatalf("stdout %s", got.stdout)
+	}
+}
+
+func TestSiteDeployWithEnvAnswersSiteDisabledWhenThatEnvironmentsOwnSiteWasDisabled(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.disableOnPublish = true
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-default", "--json")
+
+	assertFailure(t, got, exitRefused, "SITE_DISABLED")
+	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: MultiPaaS has disabled the site that was published, so environment env-default doesn't serve it") {
 		t.Fatalf("stdout %s", got.stdout)
 	}
 }
@@ -928,7 +979,7 @@ func TestSiteDeploySaysWhenAnUploadLinkHasExpired(t *testing.T) {
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
 
 	assertFailure(t, got, exitRefused, "UPLOAD_REFUSED")
-	if !strings.Contains(got.stdout, "its upload link expired, 15 minutes after site deploy asked for it") || fake.sites.attempts["index.html"] != 1 {
+	if !strings.Contains(got.stdout, "upload of index.html refused (HTTP 403): its upload link expired, 15 minutes after site deploy asked for it") || fake.sites.attempts["index.html"] != 1 {
 		t.Fatalf("PUT %d times: %s", fake.sites.attempts["index.html"], got.stdout)
 	}
 }

@@ -23,9 +23,11 @@ import (
 func siteFake(t *testing.T) *fakeMultiPaaS {
 	fake := signedInFake(t, fresh)
 	fake.sites = newFakeSites(t)
-	interval, limit, delay := sitePollInterval, siteWaitLimit, siteRetryDelay
+	interval, limit, delay, life := sitePollInterval, siteWaitLimit, siteRetryDelay, siteUploadLinkLife
 	sitePollInterval, siteRetryDelay = time.Millisecond, 0
-	t.Cleanup(func() { sitePollInterval, siteWaitLimit, siteRetryDelay = interval, limit, delay })
+	t.Cleanup(func() {
+		sitePollInterval, siteWaitLimit, siteRetryDelay, siteUploadLinkLife = interval, limit, delay, life
+	})
 	return fake
 }
 

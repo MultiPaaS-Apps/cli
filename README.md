@@ -210,16 +210,19 @@ In human mode every refusal is followed by what to do next. With `--json`, the c
 - `SITE_DEPLOYMENT_NOT_PUBLISHABLE`: another publish replaced the deployment first, or it waited too long. Run
   `site deploy` again.
 - `SITE_ROUTES_PENDING`: the change is saved, but the site URL doesn't reflect it yet. `site deploy` asks three more
-  times first. Run the same `site deploy` or `site remove` again, or wait for the daily reconcile to repair it. Other commands
-  answer it too:
+  times first. For `site deploy`, the deployment is published and the daily reconcile writes its routes; `site status`
+  shows what an environment serves, and running `site deploy` again publishes the directory as a new deployment, which
+  replaces whatever is live by then. For `site remove`, run the same command again, or wait for the daily reconcile to
+  repair it. Other commands answer it too:
   - `url-name rename`: run it again with the same name, which finishes it.
   - `envs delete` or `envs remove`: run it again. A `NOT_FOUND` then means the environment is gone; its site URL stops
     serving at the application's next site change or the daily reconcile.
   - `envs create`: don't retry, which is refused as a duplicate name. The site URL catches up at the application's next
     site or URL-name change, or the daily reconcile.
 - `INTERNAL_SERVER_ERROR`: something failed on the server. Any site command can answer it. Only `site deploy`'s
-  publish step is asked again, 3 more times, before it is reported; run the command again. Publishing is safe to
-  repeat, and so is removing.
+  publish step is asked again, 3 more times, before it is reported. Run the command again; removing is safe to repeat.
+  When `site deploy`'s message says the deployment is published, `site status` shows what an environment serves, and
+  running `site deploy` again publishes the directory as a new deployment, which replaces whatever is live by then.
 - `SITE_NOT_LIVE_YET`: the deployment is published, but the site URL didn't serve it within 3 minutes.
 - `SITE_DISABLED`: MultiPaaS has disabled a site of the application, and none of its sites can be published or
   removed until it is enabled. If `site deploy` answers it after publishing, its message names the deployment: it is

@@ -119,8 +119,8 @@ func TestImportCreateRefusesSymlinksThatCannotBeFollowed(t *testing.T) {
 	var failure struct{ Error cliError }
 	decode(t, got.stdout, &failure)
 	for _, part := range []string{
-		"Cannot follow files/gone.png, files/ping, files/pong: a link that points at nothing",
-		"Cannot follow files/self, files/sub/up: a link to a folder it sits inside",
+		`Cannot follow "files/gone.png", "files/ping", "files/pong": a link that points at nothing`,
+		`Cannot follow "files/self", "files/sub/up": a link to a folder it sits inside`,
 	} {
 		if !strings.Contains(failure.Error.Message, part) {
 			t.Fatalf("message %q does not contain %q", failure.Error.Message, part)

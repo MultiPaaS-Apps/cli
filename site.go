@@ -46,6 +46,8 @@ var (
 	sitePollInterval = 3 * time.Second
 	siteWaitLimit    = 3 * time.Minute
 	siteRetryDelay   = time.Second
+	// siteUploadLinkLife is how long the upload links CreateSiteDeployment returns last.
+	siteUploadLinkLife = 15 * time.Minute
 )
 
 func siteCommands(command commandFunc) *cobra.Command {
@@ -71,6 +73,7 @@ func siteDeploy(command commandFunc) *cobra.Command {
 			deployed.TotalBytes += file.size
 		}
 		var created *CreateSiteDeploymentResponse
+		linksExpire := time.Now().Add(siteUploadLinkLife)
 		err = s.call(ctx, scope, func(client graphql.Client) (err error) {
 			created, err = CreateSiteDeployment(ctx, client, appID, envID, inputs, !noSPA)
 			return err
@@ -79,7 +82,7 @@ func siteDeploy(command commandFunc) *cobra.Command {
 			return nil, nil, err
 		}
 		deployed.DeploymentID = created.CreateSiteDeployment.DeploymentId
-		if err := uploadSite(ctx, files, created.CreateSiteDeployment.Uploads); err != nil {
+		if err := uploadSite(ctx, files, created.CreateSiteDeployment.Uploads, linksExpire); err != nil {
 			return nil, nil, err
 		}
 		site, err := publishSite(ctx, s, scope, deployed.DeploymentID)
@@ -303,7 +306,8 @@ func siteLimit(limit string, most, actual int64, path string) error {
 }
 
 // uploadSite PUTs every file to its presigned URL, siteUploadParallel at a time, and stops at the first that fails.
-func uploadSite(ctx context.Context, files []siteFile, uploads []SiteUploadParts) error {
+// The links stop working at linksExpire, and no PUT starts or runs past it.
+func uploadSite(ctx context.Context, files []siteFile, uploads []SiteUploadParts, linksExpire time.Time) error {
 	byPath := map[string]siteFile{}
 	for _, file := range files {
 		byPath[file.path] = file
@@ -326,7 +330,7 @@ func uploadSite(ctx context.Context, files []siteFile, uploads []SiteUploadParts
 		}
 		wg.Go(func() {
 			defer func() { <-slots }()
-			if err := putSiteFile(ctx, byPath[upload.Path], upload); err != nil {
+			if err := putSiteFile(ctx, byPath[upload.Path], upload, linksExpire); err != nil {
 				once.Do(func() { failed = err; cancel() })
 			}
 		})
@@ -339,8 +343,9 @@ func uploadSite(ctx context.Context, files []siteFile, uploads []SiteUploadParts
 }
 
 // putSiteFile PUTs one file with exactly the headers the server signed, again up to siteUploadRetries times after a
-// 5xx or no response. Any other answer, such as an expired signature, is final.
-func putSiteFile(ctx context.Context, file siteFile, upload SiteUploadParts) error {
+// 5xx or no response. Any other answer, such as an expired signature, is final. An attempt stops at linksExpire, and
+// none starts after it.
+func putSiteFile(ctx context.Context, file siteFile, upload SiteUploadParts, linksExpire time.Time) error {
 	status, answer := 0, ""
 	for attempt := 0; attempt <= siteUploadRetries; attempt++ {
 		if attempt > 0 {
@@ -350,8 +355,13 @@ func putSiteFile(ctx context.Context, file siteFile, upload SiteUploadParts) err
 			case <-time.After(siteRetryDelay):
 			}
 		}
+		if !time.Now().Before(linksExpire) {
+			return expiredLink(file.path, "stopped")
+		}
+		attemptCtx, stop := context.WithDeadline(ctx, linksExpire)
 		var err error
-		status, answer, err = put(ctx, file.local, file.size, upload.Url, upload.Headers)
+		status, answer, err = put(attemptCtx, file.local, file.size, upload.Url, upload.Headers)
+		stop()
 		if err == nil && status >= 200 && status < 300 {
 			return nil
 		}
@@ -363,19 +373,28 @@ func putSiteFile(ctx context.Context, file siteFile, upload SiteUploadParts) err
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		if !time.Now().Before(linksExpire) {
+			return expiredLink(file.path, "stopped")
+		}
 		if status != 0 && status < 500 {
 			break
 		}
 	}
 	if status == http.StatusForbidden && strings.Contains(answer, "Request has expired") {
-		return &cliError{exit: exitRefused, Code: "UPLOAD_REFUSED", Message: fmt.Sprintf(
-			"upload of %s refused (HTTP 403): its upload link expired, 15 minutes after site deploy asked for it; nothing was published. Run site deploy again, which asks for new links.", file.path)}
+		return expiredLink(file.path, "refused (HTTP 403)")
 	}
 	reason := "no response"
 	if status != 0 {
 		reason = fmt.Sprintf("HTTP %d", status)
 	}
 	return &cliError{exit: exitRefused, Code: "UPLOAD_REFUSED", Message: fmt.Sprintf("upload of %s refused (%s); nothing was published. Run site deploy again.", file.path, reason)}
+}
+
+// expiredLink is the refusal for an upload whose link expired. how says what happened to it: the server's refusal, or
+// the CLI stopping because the links' life was up.
+func expiredLink(path, how string) error {
+	return &cliError{exit: exitRefused, Code: "UPLOAD_REFUSED", Message: fmt.Sprintf(
+		"upload of %s %s: its upload link expired, 15 minutes after site deploy asked for it; nothing was published. Run site deploy again, which asks for new links.", path, how)}
 }
 
 // publishSite publishes the deployment, asking again up to sitePublishRetries times while publishRetryable says to.
@@ -429,8 +448,9 @@ func isRoutesPending(err error) bool {
 }
 
 // publishFailure is err, which ended publishSite, with the deployment id in its message once an attempt answered
-// SITE_ROUTES_PENDING: that answer means the deployment is already the site's active one, so whatever ended the
-// retries afterwards left only the site address unwritten. It keeps err's code and exit, and err as its cause.
+// SITE_ROUTES_PENDING: that answer means the deployment is already the site's active one. A final SITE_ROUTES_PENDING
+// says its routes aren't written yet; any other end leaves unknown whether they were. It keeps err's code and exit,
+// and err as its cause.
 func publishFailure(deploymentID string, err error, committed bool) error {
 	if !committed {
 		return err
@@ -440,7 +460,7 @@ func publishFailure(deploymentID string, err error, committed bool) error {
 	if isRoutesPending(err) {
 		failure.Message = fmt.Sprintf("deployment %s is published, but its routes aren't written yet: %s", deploymentID, failure.Message)
 	} else {
-		failure.Message = fmt.Sprintf("deployment %s is published, but writing its routes didn't finish: %s", deploymentID, failure.Message)
+		failure.Message = fmt.Sprintf("deployment %s is published, but whether its routes were written is unknown: %s", deploymentID, failure.Message)
 	}
 	return &failure
 }
@@ -455,7 +475,8 @@ func unverified(deploymentID string, err error) error {
 }
 
 // servingURL is the site URL that serves siteID. With envID it is that environment's, or an error when the
-// environment isn't there or doesn't serve the site. Without, it is the default environment's, else the first
+// environment isn't there or doesn't serve the site: SITE_DISABLED when the site that was published is its own and
+// disabled. Without, it is the default environment's, else the first
 // environment's that serves it. When none does, it is "" only if every environment has a site of its own that serves
 // or is disabled, so none could serve the published one; else it is SITE_DISABLED when the application's site is
 // disabled, and otherwise an error, since an environment that inherits the application's site serves nothing.
@@ -475,6 +496,9 @@ func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (s
 		case envID != "":
 			if e.Id != envID {
 				continue
+			}
+			if !serves && e.Site != nil && e.Site.Id == siteID && e.Site.Disabled {
+				return "", &cliError{exit: exitRefused, Code: "SITE_DISABLED", Message: "MultiPaaS has disabled the site that was published, so environment " + envID + " doesn't serve it"}
 			}
 			if !serves {
 				return "", &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "environment " + envID + " doesn't serve the site that was published; site status --env " + envID + " shows what it serves"}
@@ -643,7 +667,7 @@ func (e *cliError) siteHints() []string {
 		if e.command == "site remove" {
 			return []string{"The site is removed, but the site URL doesn't show it yet. Run the same site remove again, or wait for the daily reconcile to repair it."}
 		}
-		return []string{"The deployment is published, but the site URL doesn't serve it yet. Run site deploy again, or wait for the daily reconcile to repair it."}
+		return []string{"The deployment is published, but the site URL doesn't serve it yet. The daily reconcile writes its routes; site status shows what an environment serves. Running site deploy again publishes the directory as a new deployment, which replaces whatever is live by then."}
 	case "INTERNAL_SERVER_ERROR":
 		switch e.command {
 		case "site status":
@@ -651,13 +675,13 @@ func (e *cliError) siteHints() []string {
 		case "site remove":
 			return []string{"Something failed on the server. Run site remove again; removing a site that is already gone succeeds."}
 		}
-		return []string{"Something failed on the server. Run site deploy again; publishing is safe to repeat."}
+		return []string{"Something failed on the server. If the message says the deployment is published, site status shows what an environment serves. Otherwise run site deploy again; it publishes the directory as a new deployment, which replaces whatever is live by then."}
 	case "SITE_DISABLED":
 		return []string{"MultiPaaS has disabled a site of this application, so none of its sites can be published or removed. Ask MultiPaaS why with multipaas feedback send."}
 	case "SITE_DEPLOYMENT_NOT_PUBLISHABLE":
 		return []string{"Another publish replaced this deployment, or it waited too long to be published. Run site deploy again, which makes a new one."}
 	case "SITE_NOT_LIVE_YET":
-		return []string{"The deployment is published. Run site status in a few minutes; if the site URL still doesn't serve it, run site deploy again."}
+		return []string{"The deployment is published. Run site status in a few minutes to see what an environment serves. Running site deploy again publishes the directory as a new deployment, which replaces whatever is live by then."}
 	case "NOT_FOUND":
 		if e.command == "site remove" {
 			return []string{"There is no site to remove there, the environment isn't one of the application's or is being removed, or the application isn't one you can reach. Check --app against apps list and --env against envs list; site status shows what an environment serves."}

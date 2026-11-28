@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -622,17 +623,26 @@ type fileWalk struct {
 	found, dangling, circular, escaping []string
 }
 
+// quotedNames is names in Go quoting, comma separated, so a link name can't write control characters to the terminal.
+func quotedNames(names []string) string {
+	quoted := make([]string, len(names))
+	for i, name := range names {
+		quoted[i] = strconv.Quote(name)
+	}
+	return strings.Join(quoted, ", ")
+}
+
 // problems are the sentences naming each link the walk could not follow, empty when it followed them all.
 func (w *fileWalk) problems() []string {
 	problems := []string{}
 	if len(w.dangling) > 0 {
-		problems = append(problems, "Cannot follow "+strings.Join(w.dangling, ", ")+": a link that points at nothing, or into a chain of links that loops. Point each one straight at the file or folder it stands for, or remove it if that no longer exists.")
+		problems = append(problems, "Cannot follow "+quotedNames(w.dangling)+": a link that points at nothing, or into a chain of links that loops. Point each one straight at the file or folder it stands for, or remove it if that no longer exists.")
 	}
 	if len(w.circular) > 0 {
-		problems = append(problems, "Cannot follow "+strings.Join(w.circular, ", ")+": a link to a folder it sits inside would repeat that folder's files without end. Remove each one.")
+		problems = append(problems, "Cannot follow "+quotedNames(w.circular)+": a link to a folder it sits inside would repeat that folder's files without end. Remove each one.")
 	}
 	if len(w.escaping) > 0 {
-		problems = append(problems, "Cannot follow "+strings.Join(w.escaping, ", ")+": a link that leads outside the directory. Copy what it stands for into the directory, or remove it.")
+		problems = append(problems, "Cannot follow "+quotedNames(w.escaping)+": a link that leads outside the directory. Copy what it stands for into the directory, or remove it.")
 	}
 	return problems
 }

@@ -53,7 +53,7 @@ multipaas import status --app <app id> --env <env id> --import <import id> [--in
 multipaas import invitations --app <app id> --env <env id> --import <import id>              # the lapsed ones; --tenant <app-tenant id> reaches imports run before they recorded theirs
 multipaas import reissue --app <app id> --env <env id> --import <import id>                  # re-issued ones are claimed at the next sign-in within 7 days; --tenant reaches a deleted import's and re-issues every import's lapsed ones in that app-tenant
 multipaas import delete --app <app id> --env <env id> --import <import id>                   # not while checking or importing; nothing it holds is removed
-multipaas site deploy ./dist --app <app id> --app-site      # the app's site, served by every environment without its own; waits until it is live
+multipaas site deploy ./dist --app <app id> --app-site      # the app's site, served by every environment without a live or disabled site of its own; waits until it is live
 multipaas site deploy ./dist --app <app id> --env <env id> --no-spa   # that environment's own site; a missing path answers 404, not index.html
 multipaas site status --app <app id> --env <env id>         # what the environment serves, its live deployment and its site URL
 multipaas site remove --app <app id> --env <env id>         # back to the app's site; --app-site --yes deletes the app's site
@@ -182,12 +182,12 @@ With `--json`, `import create`, `check`, `run`, `status` and `delete` print `{"i
 `site deploy <dir>` publishes a directory of static files, such as a build's `dist/`, at an environment's site URL,
 which `envs list` prints. With `--env`, or `multipaas.json`'s `environmentId` for the same application, it publishes
 that environment's own site, which the environment serves instead of the application's. Without either, or with
-`--app-site`, it publishes the application's site, which every environment without a site of its own serves. It
-uploads every file under the directory, following links that stay inside it, eight at a time, then publishes them as
-one deployment, so each request is served entirely from the old deployment or entirely from the new one. It then
-waits, up to 3 minutes, until the site URL serves the new deployment, which usually takes about a minute. With `--json`
-it prints `{"deploymentId", "siteUrl", "fileCount", "totalBytes"}`; `siteUrl` is empty when every environment has a site
-of its own, and then it doesn't wait.
+`--app-site`, it publishes the application's site, which every environment without a live or disabled site of its own
+serves. It uploads every file under the directory, following links that stay inside it, eight at a time, then publishes
+them as one deployment, so each request is served entirely from the old deployment or entirely from the new one. It
+then waits, up to 3 minutes, until the site URL serves the new deployment, which usually takes about a minute. With
+`--json` it prints `{"deploymentId", "siteUrl", "fileCount", "totalBytes"}`; `siteUrl` is empty when every environment
+has a live or disabled site of its own, and then it doesn't wait.
 
 A deployment holds at most 2000 files and 100 MiB, and a file at most 25 MiB. Its file paths may total at most 320 KiB
 of UTF-8, because one answer carries every file's upload link. A path must be valid UTF-8 and can't hold `"`, `\` or a
@@ -224,6 +224,10 @@ In human mode every refusal is followed by what to do next. With `--json`, the c
 - `SITE_DISABLED`: MultiPaaS has disabled a site of the application, and none of its sites can be published or
   removed until it is enabled. If `site deploy` answers it after publishing, its message names the deployment: it is
   published, but no environment serves it.
+- `CLI_ERROR`: besides a failure on your side, such as no network, `site deploy` answers it after publishing when no
+  environment serves the published site, for example because the application's site was deleted meanwhile, or the
+  environment whose site it published no longer serves it. Its message names the deployment. `site status --env ENV_ID`
+  shows what an environment serves.
 - `NOT_FOUND`: the application isn't one you can reach (it's deleted, you have no access to it, or, as a deployer, it
   isn't the deployer's own), the environment isn't one of the application's or is being removed, or there is no site to
   remove there.
@@ -237,8 +241,8 @@ In human mode every refusal is followed by what to do next. With `--json`, the c
 environment): `source` is `environment` for its own site, `application` for the application's, or `none`, with the
 live deployment and the site URL. `disabled` is `true` while MultiPaaS has disabled a site of the application.
 `site remove --env ENV_ID` removes that environment's own site, so it serves the application's again. `site remove`
-for the application's site deletes it, which every environment without its own stops serving, so it needs `--yes`.
-Running `site remove` again after it succeeded succeeds too.
+for the application's site deletes it, which every environment without a live or disabled site of its own stops
+serving, so it needs `--yes`. Running `site remove` again after it succeeded succeeds too.
 
 Publishing and removing need `environment.manage` in the environment for its own site, and `environment.manage` in
 every environment for the application's. A deployer can't publish or remove a site.

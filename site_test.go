@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"maps"
 	"net/http"
@@ -191,6 +193,62 @@ func TestSiteDeployKeepsTheDeploymentIDWhenEveryPublishAnswersRoutesPending(t *t
 	}
 }
 
+func TestSiteDeployNamesThePublishedDeploymentWhenRetriesAfterRoutesPendingFailDifferently(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.routesPending = 1
+	fake.sites.afterPublish = func() { fake.sites.failPublishes = []int{503, 503, 503} }
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
+
+	if got.exit != exitRefused || !strings.Contains(got.stderr, "deployment dep-2 is published, but writing its routes didn't finish: ") ||
+		strings.Contains(got.stderr, "aren't written yet") || fake.sites.publishCount() != 4 {
+		t.Fatalf("exit %d, publishes %d: %s", got.exit, fake.sites.publishCount(), got.stderr)
+	}
+}
+
+func TestUploadSiteReportsACancelledContextInsteadOfSuccess(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	local := writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	files := []siteFile{{path: "index.html", local: local, size: 9}}
+	uploads := []SiteUploadParts{{Path: "index.html", Url: fake.sites.uploadURL("dep-2", "index.html")}}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := uploadSite(ctx, files, uploads)
+
+	if !errors.Is(err, context.Canceled) || fake.sites.attempts["index.html"] != 0 {
+		t.Fatalf("err %v, PUTs %d", err, fake.sites.attempts["index.html"])
+	}
+}
+
+func TestSiteDeployPublishesTheDirectoryTheKernelResolvesForADotDotAfterALink(t *testing.T) {
+	fake := siteFake(t)
+	parent, elsewhere := t.TempDir(), t.TempDir()
+	writeNested(t, parent, "dist/index.html", []byte("<p>no</p>x"))
+	writeNested(t, elsewhere, "dist/index.html", []byte("<p>hi</p>"))
+	writeNested(t, elsewhere, "dist/app.js", []byte("1"))
+	writeNested(t, elsewhere, "sub/keep", []byte("k"))
+	if err := os.Symlink(filepath.Join(elsewhere, "sub"), filepath.Join(parent, "link")); err != nil {
+		t.Fatal(err)
+	}
+
+	got := fake.run(t, "site", "deploy", parent+"/link/../dist", "--app", siteApp, "--json")
+
+	if got.exit != exitOK || !strings.Contains(got.stdout, `"fileCount": 2`) || !strings.Contains(got.stdout, `"totalBytes": 10`) {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+
+	t.Chdir(filepath.Join(parent, "link"))
+	fromInside := fake.run(t, "site", "deploy", "../dist", "--app", siteApp, "--json")
+
+	if fromInside.exit != exitOK || !strings.Contains(fromInside.stdout, `"fileCount": 2`) || !strings.Contains(fromInside.stdout, `"totalBytes": 10`) {
+		t.Fatalf("from inside the link: exit %d: %s %s", fromInside.exit, fromInside.stdout, fromInside.stderr)
+	}
+}
+
 func TestSiteDeployFollowsAnAbsoluteLinkInsideARelativeDirectory(t *testing.T) {
 	fake := siteFake(t)
 	parent := t.TempDir()
@@ -238,7 +296,7 @@ func TestSiteDeploySucceedsWithNoURLWhenTheApplicationSiteIsDisabledButEveryEnvi
 
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
 
-	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a site of its own, so none serves it\n" {
+	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a live or disabled site of its own, so none serves it\n" {
 		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
 	}
 }
@@ -255,8 +313,22 @@ func TestSiteDeploySucceedsWithNoURLWhenAnEnvironmentsOwnSiteIsDisabledAfterAnAp
 
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
 
-	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a site of its own, so none serves it\n" {
+	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a live or disabled site of its own, so none serves it\n" {
 		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+}
+
+func TestSiteDeployNamesTheDeploymentWhenTheApplicationSiteIsRemovedAfterItPublished(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	fake.sites.afterPublish = func() { fake.sites.removeSite("app:" + siteApp) }
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
+
+	assertFailure(t, got, exitRefused, "CLI_ERROR")
+	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: no environment serves the site that was published; site status --env ENV_ID shows what an environment serves") {
+		t.Fatalf("stdout %s", got.stdout)
 	}
 }
 
@@ -385,6 +457,12 @@ func TestSiteDeployWaitsForTheDeploymentAnsweredWithAnOK(t *testing.T) {
 
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--json")
 
+	fake.sites.mu.Lock()
+	probes := slices.Clone(fake.sites.probes)
+	fake.sites.mu.Unlock()
+	if !slices.Contains(probes, probeAnswer{status: http.StatusServiceUnavailable, body: "dep-2"}) {
+		t.Fatalf("probes %v", probes)
+	}
 	assertFailure(t, got, exitRefused, "SITE_NOT_LIVE_YET")
 }
 
@@ -621,7 +699,7 @@ func TestSiteDeployWithEnvFailsWhenThatEnvironmentDoesNotServeThePublishedSite(t
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-new-2", "--json")
 
 	assertFailure(t, got, exitRefused, "CLI_ERROR")
-	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: environment env-new-2 doesn't serve the site that was published") {
+	if !strings.Contains(got.stdout, "deployment dep-2 is published, but it could not be verified live: environment env-new-2 doesn't serve the site that was published; site status --env env-new-2 shows what it serves") {
 		t.Fatalf("stdout %s", got.stdout)
 	}
 }
@@ -728,8 +806,13 @@ func TestSiteDeployRefusesWhatIsNotADirectoryOfFiles(t *testing.T) {
 
 func TestSiteDeployWaitsOnTheDefaultEnvironmentsURL(t *testing.T) {
 	fake := siteFake(t)
-	fake.run(t, "envs", "create", "--app", siteApp, "--name", "staging", "--json")
+	if created := fake.run(t, "envs", "create", "--app", siteApp, "--name", "staging", "--json"); created.exit != exitOK {
+		t.Fatalf("envs create: exit %d: %s %s", created.exit, created.stdout, created.stderr)
+	}
 	slices.Reverse(fake.environments[siteApp])
+	if listed := fake.environments[siteApp]; len(listed) != 2 || listed[0].isDefault || !listed[1].isDefault {
+		t.Fatalf("the lookup must list the staging environment before the default one: %v", listed)
+	}
 	dir := t.TempDir()
 	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
 
@@ -753,7 +836,7 @@ func TestSiteDeployWaitsForNoURLWhenEveryEnvironmentHasItsOwnSite(t *testing.T) 
 
 	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
 
-	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a site of its own, so none serves it\n" {
+	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a live or disabled site of its own, so none serves it\n" {
 		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
 	}
 	if fake.sites.polls != polls {

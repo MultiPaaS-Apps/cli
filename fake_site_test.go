@@ -51,6 +51,12 @@ var fakeContentTypes = map[string]string{
 	".txt":  "text/plain; charset=utf-8",
 }
 
+// probeAnswer is one /.multipaas/deployment answer serve gave: its status and body.
+type probeAnswer struct {
+	status int
+	body   string
+}
+
 // fakeSites holds the site operations' state, and an httptest server standing in for S3 and the sites edge. A
 // presigned PUT lands in objects, refused as S3 refuses one without the headers it was signed with, or with a body
 // whose length or SHA-256 is not the one signed. A GET of /<label>/.multipaas/deployment answers the deployment the label's route
@@ -79,6 +85,7 @@ type fakeSites struct {
 	propagation      int                           // GETs a changed route answers with its previous deployment first
 	polls            int                           // GETs of /.multipaas/deployment answered
 	pollStatus       int                           // the HTTP status a served /.multipaas/deployment answers with, or 0 for 200
+	probes           []probeAnswer                 // every served /.multipaas/deployment answer, in order
 	askFor           string                        // a path CreateSiteDeployment also asks to be uploaded, though it wasn't sent
 	routesPending    int                           // site changes that commit but answer SITE_ROUTES_PENDING before one writes its routes
 	publishes        int                           // PublishSiteDeployment requests received
@@ -437,9 +444,12 @@ func (s *fakeSites) serve(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No site here", http.StatusNotFound)
 		return
 	}
+	status := http.StatusOK
 	if s.pollStatus != 0 {
-		w.WriteHeader(s.pollStatus)
+		status = s.pollStatus
+		w.WriteHeader(status)
 	}
+	s.probes = append(s.probes, probeAnswer{status: status, body: served})
 	_, _ = io.WriteString(w, served)
 }
 

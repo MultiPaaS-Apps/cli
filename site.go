@@ -1,7 +1,8 @@
 package main
 
 // The site commands publish a directory of static files as an application's site, served at an environment's site
-// URL: the app's default site, which every environment without its own serves, or one environment's own site.
+// URL: the app's default site, which every environment without a live or disabled site of its own serves, or one
+// environment's own site.
 
 import (
 	"context"
@@ -99,12 +100,12 @@ func siteDeploy(command commandFunc) *cobra.Command {
 	cmd.Long = "Uploads every file under the directory, following links that stay inside it, then publishes them as one " +
 		"deployment and waits until the site URL serves it. It publishes the site of --env, else of multipaas.json's " +
 		"environmentId for the same application, else the application's; that environment's own site is served by that " +
-		"environment alone, and the application's by every environment that has no site of its own. --app-site picks " +
+		"environment alone, and the application's by every environment that has no live or disabled site of its own. --app-site picks " +
 		"the application's whatever multipaas.json says. A deployment holds " +
 		"at most 2000 files and 100 MiB, and a file at most 25 MiB. With SPA fallback, on unless --no-spa, a path the site " +
 		"doesn't have serves the site's root index.html, which may then hold at most 4 MiB; without it, a 404 page.\n\n" +
 		"An environment's own site needs environment.manage in that environment, and the application's site needs it in every environment. " +
-		"siteUrl is empty in --json output when every environment has a site of its own, so none serves the application's."
+		"siteUrl is empty in --json output when every environment has a live or disabled site of its own, so none serves the application's."
 	cmd.Args = oneID(&dir)
 	appFlag(cmd, &appID)
 	siteEnvFlag(cmd, &appID, &envID, &appSite)
@@ -141,7 +142,7 @@ func siteRemove(command commandFunc) *cobra.Command {
 	var yes, appSite bool
 	cmd := command("remove", "Remove the site of --env, else of multipaas.json's environmentId, else delete the application's site, which needs --yes", func(ctx context.Context, s *session) (any, func(io.Writer), error) {
 		if envID == "" && !yes {
-			return nil, nil, &cliError{exit: exitRefused, Code: "CONFIRMATION_REQUIRED", Message: "deleting the application's site takes it offline in every environment without a site of its own"}
+			return nil, nil, &cliError{exit: exitRefused, Code: "CONFIRMATION_REQUIRED", Message: "deleting the application's site takes it offline in every environment without a live or disabled site of its own"}
 		}
 		var removed removal
 		err := s.inApp(ctx, appID, func(client graphql.Client) error {
@@ -167,7 +168,7 @@ func siteRemove(command commandFunc) *cobra.Command {
 		}, err
 	})
 	cmd.Long = "With --env, or multipaas.json's environmentId, removes that environment's own site, and the environment " +
-		"serves the application's site again. Without either, or with --app-site, deletes the application's site, which every environment without a site of its own stops serving, " +
+		"serves the application's site again. Without either, or with --app-site, deletes the application's site, which every environment without a live or disabled site of its own stops serving, " +
 		"so it needs --yes. Both need environment.manage, as site deploy does. Running it again after it succeeded, or " +
 		"after SITE_ROUTES_PENDING, succeeds too; it is refused with NOT_FOUND where there never was a site, for an environment that isn't the application's or is being removed, and for an application you can't reach (deleted, not one you have access to, or, as a deployer, not the deployer's own)."
 	appFlag(cmd, &appID)
@@ -181,7 +182,7 @@ func siteRemove(command commandFunc) *cobra.Command {
 // --app-site picks whatever multipaas.json says.
 func siteEnvFlag(cmd *cobra.Command, appID, envID *string, appSite *bool) {
 	envFlagFromProject(cmd, appID, envID, func() bool { return *appSite })
-	cmd.Flags().Lookup("env").Usage = "the environment whose own site to act on (from envs list; default: multipaas.json's environmentId for the same application, else the application's site, which every environment without its own serves)"
+	cmd.Flags().Lookup("env").Usage = "the environment whose own site to act on (from envs list; default: multipaas.json's environmentId for the same application, else the application's site, which every environment without a live or disabled site of its own serves)"
 	cmd.Flags().BoolVar(appSite, "app-site", false, "act on the application's site even when multipaas.json names an environment")
 	cmd.MarkFlagsMutuallyExclusive("env", "app-site")
 }
@@ -196,29 +197,35 @@ type siteFile struct {
 // the directory, before anything is sent, when a link can't be followed or leaves it, or a limit would be passed.
 // spa adds the SPA index limit.
 func siteFiles(dir string, spa bool) ([]siteFile, error) {
-	info, err := os.Stat(dir)
+	root, err := filepath.EvalSymlinks(dir)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, &cliError{exit: exitRefused, Code: "SITE_DIR_INVALID", Message: dir + " doesn't exist"}
 	}
 	if err != nil {
 		return nil, err
 	}
+	if !filepath.IsAbs(root) {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		if wd, err = filepath.EvalSymlinks(wd); err != nil {
+			return nil, err
+		}
+		root = filepath.Join(wd, root)
+	}
+	info, err := os.Stat(root)
+	if err != nil {
+		return nil, err
+	}
 	if !info.IsDir() {
 		return nil, &cliError{exit: exitRefused, Code: "SITE_DIR_INVALID", Message: dir + " is not a directory"}
 	}
-	absolute, err := filepath.Abs(dir)
+	entries, err := os.ReadDir(root)
 	if err != nil {
 		return nil, err
 	}
-	root, err := filepath.EvalSymlinks(absolute)
-	if err != nil {
-		return nil, err
-	}
-	entries, err := os.ReadDir(absolute)
-	if err != nil {
-		return nil, err
-	}
-	walk := &fileWalk{dir: absolute, inside: root, found: []string{}}
+	walk := &fileWalk{dir: root, inside: root, found: []string{}}
 	for _, entry := range entries {
 		if err := walk.visit(entry.Name(), []string{root}); err != nil {
 			return nil, err
@@ -253,7 +260,7 @@ func siteFiles(dir string, spa bool) ([]siteFile, error) {
 	files := []siteFile{}
 	var total int64
 	for _, rel := range walk.found {
-		local := filepath.Join(dir, filepath.FromSlash(rel))
+		local := filepath.Join(root, filepath.FromSlash(rel))
 		info, err := os.Stat(local)
 		if err != nil {
 			return nil, err
@@ -325,6 +332,9 @@ func uploadSite(ctx context.Context, files []siteFile, uploads []SiteUploadParts
 		})
 	}
 	wg.Wait()
+	if failed == nil {
+		return ctx.Err()
+	}
 	return failed
 }
 
@@ -370,6 +380,7 @@ func putSiteFile(ctx context.Context, file siteFile, upload SiteUploadParts) err
 
 // publishSite publishes the deployment, asking again up to sitePublishRetries times while publishRetryable says to.
 func publishSite(ctx context.Context, s *session, scope, deploymentID string) (SiteParts, error) {
+	committed := false
 	for attempt := 0; ; attempt++ {
 		var published *PublishSiteDeploymentResponse
 		err := s.call(ctx, scope, func(client graphql.Client) (err error) {
@@ -379,12 +390,13 @@ func publishSite(ctx context.Context, s *session, scope, deploymentID string) (S
 		if err == nil {
 			return published.PublishSiteDeployment, nil
 		}
+		committed = committed || isRoutesPending(err)
 		if attempt == sitePublishRetries || !publishRetryable(ctx, err) {
-			return SiteParts{}, routesPending(deploymentID, err)
+			return SiteParts{}, publishFailure(deploymentID, err, committed)
 		}
 		select {
 		case <-ctx.Done():
-			return SiteParts{}, ctx.Err()
+			return SiteParts{}, publishFailure(deploymentID, ctx.Err(), committed)
 		case <-time.After(siteRetryDelay):
 		}
 	}
@@ -411,16 +423,25 @@ func publishRetryable(ctx context.Context, err error) bool {
 	}
 }
 
-// routesPending is err with the deployment id in its message when err is SITE_ROUTES_PENDING: the deployment is
-// already the site's active one, and only the site address isn't updated yet. Any other err is returned as it is.
-func routesPending(deploymentID string, err error) error {
+func isRoutesPending(err error) bool {
 	var refusal *cliError
-	if !errors.As(err, &refusal) || refusal.Code != "SITE_ROUTES_PENDING" {
+	return errors.As(err, &refusal) && refusal.Code == "SITE_ROUTES_PENDING"
+}
+
+// publishFailure is err, which ended publishSite, with the deployment id in its message once an attempt answered
+// SITE_ROUTES_PENDING: that answer means the deployment is already the site's active one, so whatever ended the
+// retries afterwards left only the site address unwritten. It keeps err's code and exit, and err as its cause.
+func publishFailure(deploymentID string, err error, committed bool) error {
+	if !committed {
 		return err
 	}
-	failure := *refusal
+	failure := *asCLIError(err)
 	failure.cause = err
-	failure.Message = fmt.Sprintf("deployment %s is published, but its routes aren't written yet: %s", deploymentID, refusal.Message)
+	if isRoutesPending(err) {
+		failure.Message = fmt.Sprintf("deployment %s is published, but its routes aren't written yet: %s", deploymentID, failure.Message)
+	} else {
+		failure.Message = fmt.Sprintf("deployment %s is published, but writing its routes didn't finish: %s", deploymentID, failure.Message)
+	}
 	return &failure
 }
 
@@ -435,7 +456,9 @@ func unverified(deploymentID string, err error) error {
 
 // servingURL is the site URL that serves siteID. With envID it is that environment's, or an error when the
 // environment isn't there or doesn't serve the site. Without, it is the default environment's, else the first
-// environment's that serves it, and "" when none does, because every environment has a site of its own.
+// environment's that serves it. When none does, it is "" only if every environment has a site of its own that serves
+// or is disabled, so none could serve the published one; else it is SITE_DISABLED when the application's site is
+// disabled, and otherwise an error, since an environment that inherits the application's site serves nothing.
 func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (string, error) {
 	var application SitesMeUserApplication
 	err := s.call(ctx, scope, func(client graphql.Client) (err error) {
@@ -454,7 +477,7 @@ func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (s
 				continue
 			}
 			if !serves {
-				return "", &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "environment " + envID + " doesn't serve the site that was published"}
+				return "", &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "environment " + envID + " doesn't serve the site that was published; site status --env " + envID + " shows what it serves"}
 			}
 			return e.SiteUrl, nil
 		case serves && e.IsDefault:
@@ -466,13 +489,19 @@ func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (s
 	if envID != "" {
 		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "environment " + envID + " is not an environment of application " + application.Id}
 	}
-	unserved := slices.ContainsFunc(application.Environments, func(e SitesMeUserApplicationEnvironmentsEnvironment) bool {
-		return e.ServedSite == nil && (e.Site == nil || !e.Site.Disabled)
-	})
-	if found == "" && unserved && siteDisabled(application) {
+	if found != "" || !slices.ContainsFunc(application.Environments, inheritsSite) {
+		return found, nil
+	}
+	if application.Site != nil && application.Site.Disabled {
 		return "", &cliError{exit: exitRefused, Code: "SITE_DISABLED", Message: "MultiPaaS has disabled a site of this application, so no environment serves the site that was published"}
 	}
-	return found, nil
+	return "", &cliError{exit: exitRefused, Code: "CLI_ERROR", Message: "no environment serves the site that was published; site status --env ENV_ID shows what an environment serves"}
+}
+
+// inheritsSite is whether e falls back to the application's site: it has no site of its own, or its own is neither
+// disabled nor the one it serves.
+func inheritsSite(e SitesMeUserApplicationEnvironmentsEnvironment) bool {
+	return e.Site == nil || !(e.Site.Disabled || (e.ServedSite != nil && e.ServedSite.Id == e.Site.Id))
 }
 
 // waitUntilServed polls siteURL's /.multipaas/deployment until it answers deploymentID: a published route takes about
@@ -520,7 +549,7 @@ type siteDeployment struct {
 
 func (d siteDeployment) print(out io.Writer) {
 	if d.SiteURL == "" {
-		fmt.Fprintf(out, "deployment %s is published (%d files, %d bytes), but every environment has a site of its own, so none serves it\n", d.DeploymentID, d.FileCount, d.TotalBytes)
+		fmt.Fprintf(out, "deployment %s is published (%d files, %d bytes), but every environment has a live or disabled site of its own, so none serves it\n", d.DeploymentID, d.FileCount, d.TotalBytes)
 		return
 	}
 	fmt.Fprintf(out, "deployment %s is live at %s (%d files, %d bytes)\n", d.DeploymentID, d.SiteURL, d.FileCount, d.TotalBytes)

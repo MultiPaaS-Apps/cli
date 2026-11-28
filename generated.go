@@ -2444,6 +2444,32 @@ type CreateRoleResponse struct {
 // GetCreateRole returns CreateRoleResponse.CreateRole, and is useful for accessing the field via an interface.
 func (v *CreateRoleResponse) GetCreateRole() CreateRoleCreateRole { return v.CreateRole }
 
+// CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload includes the requested fields of the GraphQL type SiteDeploymentUpload.
+type CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload struct {
+	DeploymentId string            `json:"deploymentId"`
+	Uploads      []SiteUploadParts `json:"uploads"`
+}
+
+// GetDeploymentId returns CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload.DeploymentId, and is useful for accessing the field via an interface.
+func (v *CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload) GetDeploymentId() string {
+	return v.DeploymentId
+}
+
+// GetUploads returns CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload.Uploads, and is useful for accessing the field via an interface.
+func (v *CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload) GetUploads() []SiteUploadParts {
+	return v.Uploads
+}
+
+// CreateSiteDeploymentResponse is returned by CreateSiteDeployment on success.
+type CreateSiteDeploymentResponse struct {
+	CreateSiteDeployment CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload `json:"createSiteDeployment"`
+}
+
+// GetCreateSiteDeployment returns CreateSiteDeploymentResponse.CreateSiteDeployment, and is useful for accessing the field via an interface.
+func (v *CreateSiteDeploymentResponse) GetCreateSiteDeployment() CreateSiteDeploymentCreateSiteDeploymentSiteDeploymentUpload {
+	return v.CreateSiteDeployment
+}
+
 // DataImportDataImport includes the requested fields of the GraphQL type DataImport.
 type DataImportDataImport struct {
 	DataImportParts `json:"-"`
@@ -3018,6 +3044,24 @@ type DeleteApplicationResponse struct {
 // GetDeleteApplication returns DeleteApplicationResponse.DeleteApplication, and is useful for accessing the field via an interface.
 func (v *DeleteApplicationResponse) GetDeleteApplication() DeleteApplicationDeleteApplication {
 	return v.DeleteApplication
+}
+
+// DeleteApplicationSiteDeleteApplicationSiteApplication includes the requested fields of the GraphQL type Application.
+type DeleteApplicationSiteDeleteApplicationSiteApplication struct {
+	Id string `json:"id"`
+}
+
+// GetId returns DeleteApplicationSiteDeleteApplicationSiteApplication.Id, and is useful for accessing the field via an interface.
+func (v *DeleteApplicationSiteDeleteApplicationSiteApplication) GetId() string { return v.Id }
+
+// DeleteApplicationSiteResponse is returned by DeleteApplicationSite on success.
+type DeleteApplicationSiteResponse struct {
+	DeleteApplicationSite DeleteApplicationSiteDeleteApplicationSiteApplication `json:"deleteApplicationSite"`
+}
+
+// GetDeleteApplicationSite returns DeleteApplicationSiteResponse.DeleteApplicationSite, and is useful for accessing the field via an interface.
+func (v *DeleteApplicationSiteResponse) GetDeleteApplicationSite() DeleteApplicationSiteDeleteApplicationSiteApplication {
+	return v.DeleteApplicationSite
 }
 
 // DeleteConstraintDeleteConstraint includes the requested fields of the GraphQL type Constraint.
@@ -6125,6 +6169,16 @@ func (v *PermissionCatalogResponse) GetPermissionCatalog() []PermissionCatalogPe
 	return v.PermissionCatalog
 }
 
+// PublishSiteDeploymentResponse is returned by PublishSiteDeployment on success.
+type PublishSiteDeploymentResponse struct {
+	PublishSiteDeployment SiteParts `json:"publishSiteDeployment"`
+}
+
+// GetPublishSiteDeployment returns PublishSiteDeploymentResponse.PublishSiteDeployment, and is useful for accessing the field via an interface.
+func (v *PublishSiteDeploymentResponse) GetPublishSiteDeployment() SiteParts {
+	return v.PublishSiteDeployment
+}
+
 type RecordAccessLevel string
 
 const (
@@ -6538,6 +6592,24 @@ type RemoveEnvironmentResponse struct {
 // GetRemoveEnvironment returns RemoveEnvironmentResponse.RemoveEnvironment, and is useful for accessing the field via an interface.
 func (v *RemoveEnvironmentResponse) GetRemoveEnvironment() RemoveEnvironmentRemoveEnvironment {
 	return v.RemoveEnvironment
+}
+
+// RemoveEnvironmentSiteRemoveEnvironmentSiteEnvironment includes the requested fields of the GraphQL type Environment.
+type RemoveEnvironmentSiteRemoveEnvironmentSiteEnvironment struct {
+	Id string `json:"id"`
+}
+
+// GetId returns RemoveEnvironmentSiteRemoveEnvironmentSiteEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *RemoveEnvironmentSiteRemoveEnvironmentSiteEnvironment) GetId() string { return v.Id }
+
+// RemoveEnvironmentSiteResponse is returned by RemoveEnvironmentSite on success.
+type RemoveEnvironmentSiteResponse struct {
+	RemoveEnvironmentSite RemoveEnvironmentSiteRemoveEnvironmentSiteEnvironment `json:"removeEnvironmentSite"`
+}
+
+// GetRemoveEnvironmentSite returns RemoveEnvironmentSiteResponse.RemoveEnvironmentSite, and is useful for accessing the field via an interface.
+func (v *RemoveEnvironmentSiteResponse) GetRemoveEnvironmentSite() RemoveEnvironmentSiteRemoveEnvironmentSiteEnvironment {
+	return v.RemoveEnvironmentSite
 }
 
 // RenameApplicationUrlNameRenameApplicationUrlNameApplication includes the requested fields of the GraphQL type Application.
@@ -8537,6 +8609,139 @@ type SetFeedbackSettingSetFeedbackSetting struct {
 // GetAutoSend returns SetFeedbackSettingSetFeedbackSetting.AutoSend, and is useful for accessing the field via an interface.
 func (v *SetFeedbackSettingSetFeedbackSetting) GetAutoSend() bool { return v.AutoSend }
 
+type SiteFileInput struct {
+	Path      string `json:"path"`
+	Sha256    string `json:"sha256"`
+	SizeBytes int    `json:"sizeBytes"`
+}
+
+// GetPath returns SiteFileInput.Path, and is useful for accessing the field via an interface.
+func (v *SiteFileInput) GetPath() string { return v.Path }
+
+// GetSha256 returns SiteFileInput.Sha256, and is useful for accessing the field via an interface.
+func (v *SiteFileInput) GetSha256() string { return v.Sha256 }
+
+// GetSizeBytes returns SiteFileInput.SizeBytes, and is useful for accessing the field via an interface.
+func (v *SiteFileInput) GetSizeBytes() int { return v.SizeBytes }
+
+// SiteParts includes the GraphQL fields of Site requested by the fragment SiteParts.
+type SiteParts struct {
+	Id               string                                   `json:"id"`
+	Disabled         bool                                     `json:"disabled"`
+	ActiveDeployment *SitePartsActiveDeploymentSiteDeployment `json:"activeDeployment"`
+}
+
+// GetId returns SiteParts.Id, and is useful for accessing the field via an interface.
+func (v *SiteParts) GetId() string { return v.Id }
+
+// GetDisabled returns SiteParts.Disabled, and is useful for accessing the field via an interface.
+func (v *SiteParts) GetDisabled() bool { return v.Disabled }
+
+// GetActiveDeployment returns SiteParts.ActiveDeployment, and is useful for accessing the field via an interface.
+func (v *SiteParts) GetActiveDeployment() *SitePartsActiveDeploymentSiteDeployment {
+	return v.ActiveDeployment
+}
+
+// SitePartsActiveDeploymentSiteDeployment includes the requested fields of the GraphQL type SiteDeployment.
+type SitePartsActiveDeploymentSiteDeployment struct {
+	Id          string  `json:"id"`
+	Status      string  `json:"status"`
+	FileCount   int     `json:"fileCount"`
+	TotalBytes  float64 `json:"totalBytes"`
+	PublishedAt *string `json:"publishedAt"`
+}
+
+// GetId returns SitePartsActiveDeploymentSiteDeployment.Id, and is useful for accessing the field via an interface.
+func (v *SitePartsActiveDeploymentSiteDeployment) GetId() string { return v.Id }
+
+// GetStatus returns SitePartsActiveDeploymentSiteDeployment.Status, and is useful for accessing the field via an interface.
+func (v *SitePartsActiveDeploymentSiteDeployment) GetStatus() string { return v.Status }
+
+// GetFileCount returns SitePartsActiveDeploymentSiteDeployment.FileCount, and is useful for accessing the field via an interface.
+func (v *SitePartsActiveDeploymentSiteDeployment) GetFileCount() int { return v.FileCount }
+
+// GetTotalBytes returns SitePartsActiveDeploymentSiteDeployment.TotalBytes, and is useful for accessing the field via an interface.
+func (v *SitePartsActiveDeploymentSiteDeployment) GetTotalBytes() float64 { return v.TotalBytes }
+
+// GetPublishedAt returns SitePartsActiveDeploymentSiteDeployment.PublishedAt, and is useful for accessing the field via an interface.
+func (v *SitePartsActiveDeploymentSiteDeployment) GetPublishedAt() *string { return v.PublishedAt }
+
+// SiteUploadParts includes the GraphQL fields of SiteUpload requested by the fragment SiteUploadParts.
+type SiteUploadParts struct {
+	Path    string         `json:"path"`
+	Url     string         `json:"url"`
+	Headers []signedHeader `json:"headers"`
+}
+
+// GetPath returns SiteUploadParts.Path, and is useful for accessing the field via an interface.
+func (v *SiteUploadParts) GetPath() string { return v.Path }
+
+// GetUrl returns SiteUploadParts.Url, and is useful for accessing the field via an interface.
+func (v *SiteUploadParts) GetUrl() string { return v.Url }
+
+// GetHeaders returns SiteUploadParts.Headers, and is useful for accessing the field via an interface.
+func (v *SiteUploadParts) GetHeaders() []signedHeader { return v.Headers }
+
+// SitesMeUser includes the requested fields of the GraphQL type User.
+type SitesMeUser struct {
+	Application SitesMeUserApplication `json:"application"`
+}
+
+// GetApplication returns SitesMeUser.Application, and is useful for accessing the field via an interface.
+func (v *SitesMeUser) GetApplication() SitesMeUserApplication { return v.Application }
+
+// SitesMeUserApplication includes the requested fields of the GraphQL type Application.
+type SitesMeUserApplication struct {
+	Id           string                                          `json:"id"`
+	Site         *SiteParts                                      `json:"site"`
+	Environments []SitesMeUserApplicationEnvironmentsEnvironment `json:"environments"`
+}
+
+// GetId returns SitesMeUserApplication.Id, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplication) GetId() string { return v.Id }
+
+// GetSite returns SitesMeUserApplication.Site, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplication) GetSite() *SiteParts { return v.Site }
+
+// GetEnvironments returns SitesMeUserApplication.Environments, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplication) GetEnvironments() []SitesMeUserApplicationEnvironmentsEnvironment {
+	return v.Environments
+}
+
+// SitesMeUserApplicationEnvironmentsEnvironment includes the requested fields of the GraphQL type Environment.
+type SitesMeUserApplicationEnvironmentsEnvironment struct {
+	Id         string     `json:"id"`
+	IsDefault  bool       `json:"isDefault"`
+	SiteUrl    string     `json:"siteUrl"`
+	Site       *SiteParts `json:"site"`
+	ServedSite *SiteParts `json:"servedSite"`
+}
+
+// GetId returns SitesMeUserApplicationEnvironmentsEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplicationEnvironmentsEnvironment) GetId() string { return v.Id }
+
+// GetIsDefault returns SitesMeUserApplicationEnvironmentsEnvironment.IsDefault, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplicationEnvironmentsEnvironment) GetIsDefault() bool { return v.IsDefault }
+
+// GetSiteUrl returns SitesMeUserApplicationEnvironmentsEnvironment.SiteUrl, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplicationEnvironmentsEnvironment) GetSiteUrl() string { return v.SiteUrl }
+
+// GetSite returns SitesMeUserApplicationEnvironmentsEnvironment.Site, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplicationEnvironmentsEnvironment) GetSite() *SiteParts { return v.Site }
+
+// GetServedSite returns SitesMeUserApplicationEnvironmentsEnvironment.ServedSite, and is useful for accessing the field via an interface.
+func (v *SitesMeUserApplicationEnvironmentsEnvironment) GetServedSite() *SiteParts {
+	return v.ServedSite
+}
+
+// SitesResponse is returned by Sites on success.
+type SitesResponse struct {
+	Me SitesMeUser `json:"me"`
+}
+
+// GetMe returns SitesResponse.Me, and is useful for accessing the field via an interface.
+func (v *SitesResponse) GetMe() SitesMeUser { return v.Me }
+
 type SortDirection string
 
 const (
@@ -9992,6 +10197,26 @@ type __CreateRoleInput struct {
 // GetInput returns __CreateRoleInput.Input, and is useful for accessing the field via an interface.
 func (v *__CreateRoleInput) GetInput() CreateRoleInput { return v.Input }
 
+// __CreateSiteDeploymentInput is used internally by genqlient
+type __CreateSiteDeploymentInput struct {
+	ApplicationId string          `json:"applicationId"`
+	EnvironmentId string          `json:"environmentId,omitempty"`
+	Files         []SiteFileInput `json:"files"`
+	SpaFallback   bool            `json:"spaFallback"`
+}
+
+// GetApplicationId returns __CreateSiteDeploymentInput.ApplicationId, and is useful for accessing the field via an interface.
+func (v *__CreateSiteDeploymentInput) GetApplicationId() string { return v.ApplicationId }
+
+// GetEnvironmentId returns __CreateSiteDeploymentInput.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *__CreateSiteDeploymentInput) GetEnvironmentId() string { return v.EnvironmentId }
+
+// GetFiles returns __CreateSiteDeploymentInput.Files, and is useful for accessing the field via an interface.
+func (v *__CreateSiteDeploymentInput) GetFiles() []SiteFileInput { return v.Files }
+
+// GetSpaFallback returns __CreateSiteDeploymentInput.SpaFallback, and is useful for accessing the field via an interface.
+func (v *__CreateSiteDeploymentInput) GetSpaFallback() bool { return v.SpaFallback }
+
 // __DataImportInput is used internally by genqlient
 type __DataImportInput struct {
 	Id             string `json:"id"`
@@ -10035,6 +10260,14 @@ type __DeleteApplicationInput struct {
 
 // GetInput returns __DeleteApplicationInput.Input, and is useful for accessing the field via an interface.
 func (v *__DeleteApplicationInput) GetInput() DeleteApplicationInput { return v.Input }
+
+// __DeleteApplicationSiteInput is used internally by genqlient
+type __DeleteApplicationSiteInput struct {
+	ApplicationId string `json:"applicationId"`
+}
+
+// GetApplicationId returns __DeleteApplicationSiteInput.ApplicationId, and is useful for accessing the field via an interface.
+func (v *__DeleteApplicationSiteInput) GetApplicationId() string { return v.ApplicationId }
 
 // __DeleteConstraintInput is used internally by genqlient
 type __DeleteConstraintInput struct {
@@ -10188,6 +10421,14 @@ type __MyFeedbackReportInput struct {
 // GetId returns __MyFeedbackReportInput.Id, and is useful for accessing the field via an interface.
 func (v *__MyFeedbackReportInput) GetId() string { return v.Id }
 
+// __PublishSiteDeploymentInput is used internally by genqlient
+type __PublishSiteDeploymentInput struct {
+	DeploymentId string `json:"deploymentId"`
+}
+
+// GetDeploymentId returns __PublishSiteDeploymentInput.DeploymentId, and is useful for accessing the field via an interface.
+func (v *__PublishSiteDeploymentInput) GetDeploymentId() string { return v.DeploymentId }
+
 // __RecordInput is used internally by genqlient
 type __RecordInput struct {
 	EntityId string `json:"entityId"`
@@ -10315,6 +10556,14 @@ type __RemoveEnvironmentInput struct {
 
 // GetInput returns __RemoveEnvironmentInput.Input, and is useful for accessing the field via an interface.
 func (v *__RemoveEnvironmentInput) GetInput() RemoveEnvironmentInput { return v.Input }
+
+// __RemoveEnvironmentSiteInput is used internally by genqlient
+type __RemoveEnvironmentSiteInput struct {
+	EnvironmentId string `json:"environmentId"`
+}
+
+// GetEnvironmentId returns __RemoveEnvironmentSiteInput.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *__RemoveEnvironmentSiteInput) GetEnvironmentId() string { return v.EnvironmentId }
 
 // __RenameApplicationUrlNameInput is used internally by genqlient
 type __RenameApplicationUrlNameInput struct {
@@ -11905,6 +12154,57 @@ func CreateRole(
 	return data_, err_
 }
 
+// The mutation executed by CreateSiteDeployment.
+const CreateSiteDeployment_Operation = `
+mutation CreateSiteDeployment ($applicationId: ID!, $environmentId: ID, $files: [SiteFileInput!]!, $spaFallback: Boolean) {
+	createSiteDeployment(applicationId: $applicationId, environmentId: $environmentId, files: $files, spaFallback: $spaFallback) {
+		deploymentId
+		uploads {
+			... SiteUploadParts
+		}
+	}
+}
+fragment SiteUploadParts on SiteUpload {
+	path
+	url
+	headers {
+		name
+		value
+	}
+}
+`
+
+func CreateSiteDeployment(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	applicationId string,
+	environmentId string,
+	files []SiteFileInput,
+	spaFallback bool,
+) (data_ *CreateSiteDeploymentResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateSiteDeployment",
+		Query:  CreateSiteDeployment_Operation,
+		Variables: &__CreateSiteDeploymentInput{
+			ApplicationId: applicationId,
+			EnvironmentId: environmentId,
+			Files:         files,
+			SpaFallback:   spaFallback,
+		},
+	}
+
+	data_ = &CreateSiteDeploymentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by DataImport.
 const DataImport_Operation = `
 query DataImport ($id: ID!, $includeDeleted: Boolean!) {
@@ -12128,6 +12428,40 @@ func DeleteApplication(
 	}
 
 	data_ = &DeleteApplicationResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteApplicationSite.
+const DeleteApplicationSite_Operation = `
+mutation DeleteApplicationSite ($applicationId: ID!) {
+	deleteApplicationSite(applicationId: $applicationId) {
+		id
+	}
+}
+`
+
+func DeleteApplicationSite(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	applicationId string,
+) (data_ *DeleteApplicationSiteResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteApplicationSite",
+		Query:  DeleteApplicationSite_Operation,
+		Variables: &__DeleteApplicationSiteInput{
+			ApplicationId: applicationId,
+		},
+	}
+
+	data_ = &DeleteApplicationSiteResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -13419,6 +13753,51 @@ func PermissionCatalog(
 	return data_, err_
 }
 
+// The mutation executed by PublishSiteDeployment.
+const PublishSiteDeployment_Operation = `
+mutation PublishSiteDeployment ($deploymentId: ID!) {
+	publishSiteDeployment(deploymentId: $deploymentId) {
+		... SiteParts
+	}
+}
+fragment SiteParts on Site {
+	id
+	disabled
+	activeDeployment {
+		id
+		status
+		fileCount
+		totalBytes
+		publishedAt
+	}
+}
+`
+
+func PublishSiteDeployment(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	deploymentId string,
+) (data_ *PublishSiteDeploymentResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "PublishSiteDeployment",
+		Query:  PublishSiteDeployment_Operation,
+		Variables: &__PublishSiteDeploymentInput{
+			DeploymentId: deploymentId,
+		},
+	}
+
+	data_ = &PublishSiteDeploymentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by Record.
 const Record_Operation = `
 query Record ($entityId: ID!, $id: ID!) {
@@ -13724,6 +14103,40 @@ func RemoveEnvironment(
 	}
 
 	data_ = &RemoveEnvironmentResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by RemoveEnvironmentSite.
+const RemoveEnvironmentSite_Operation = `
+mutation RemoveEnvironmentSite ($environmentId: ID!) {
+	removeEnvironmentSite(environmentId: $environmentId) {
+		id
+	}
+}
+`
+
+func RemoveEnvironmentSite(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	environmentId string,
+) (data_ *RemoveEnvironmentSiteResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "RemoveEnvironmentSite",
+		Query:  RemoveEnvironmentSite_Operation,
+		Variables: &__RemoveEnvironmentSiteInput{
+			EnvironmentId: environmentId,
+		},
+	}
+
+	data_ = &RemoveEnvironmentSiteResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -14660,6 +15073,63 @@ func SetFeedbackSetting(
 	}
 
 	data_ = &SetFeedbackSettingResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by Sites.
+const Sites_Operation = `
+query Sites {
+	me {
+		application {
+			id
+			site {
+				... SiteParts
+			}
+			environments {
+				id
+				isDefault
+				siteUrl
+				site {
+					... SiteParts
+				}
+				servedSite {
+					... SiteParts
+				}
+			}
+		}
+	}
+}
+fragment SiteParts on Site {
+	id
+	disabled
+	activeDeployment {
+		id
+		status
+		fileCount
+		totalBytes
+		publishedAt
+	}
+}
+`
+
+func Sites(
+	ctx_ context.Context,
+	client_ graphql.Client,
+) (data_ *SitesResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "Sites",
+		Query:  Sites_Operation,
+	}
+
+	data_ = &SitesResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

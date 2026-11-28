@@ -314,7 +314,7 @@ func recordUpload(command commandFunc) *cobra.Command {
 			return nil, nil, err
 		}
 		upload := requested.RequestRecordFileUpload
-		status, err := put(ctx, path, size, upload.Url, upload.Headers)
+		status, _, err := put(ctx, path, size, upload.Url, upload.Headers)
 		if err != nil || status < 200 || status >= 300 {
 			reason := "no response"
 			if status != 0 {

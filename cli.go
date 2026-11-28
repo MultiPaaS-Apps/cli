@@ -74,6 +74,10 @@ func run(args []string, env environment) int {
 				}
 				ran = &session{origins: hosts, profile: profile, env: env, http: &http.Client{Timeout: requestTimeout, CheckRedirect: refuseRedirects}}
 				result, human, err := do(cmd.Context(), ran)
+				var failure *cliError
+				if errors.As(err, &failure) {
+					failure.command = strings.TrimPrefix(cmd.CommandPath(), root.Name()+" ")
+				}
 				if err != nil {
 					return err
 				}
@@ -162,7 +166,7 @@ func run(args []string, env environment) int {
 	}
 	tenants.AddCommand(tenantsList, tenantsCreate(command), tenantsDelete(command), tenantsRetire(command), tenantsInvite(command), tenantsMembers(command),
 		group("invitation", "Change an app-tenant invitation that hasn't been accepted", tenantsInvitationUpdate(command)))
-	root.AddCommand(apps, tenants, envsCommands(command), urlNameCommands(command))
+	root.AddCommand(apps, tenants, envsCommands(command), urlNameCommands(command), siteCommands(command))
 	root.AddCommand(modelCommands(command)...)
 	root.AddCommand(projectCommands(command)...)
 	root.AddCommand(recordCommands(command), roleCommands(command), oauthClientCommands(command), appIdentityCommands(command), deployerCommands(command), importCommands(command), feedbackCommands(command), apiCommand(command))
@@ -343,6 +347,8 @@ type retirement struct {
 // cliError is a failure carrying its exit code and the code, message and field errors --json reports.
 type cliError struct {
 	exit          int
+	command       string         // the command refused, such as "site deploy", for the hints that depend on it
+	cause         error          // the failure this one reports, when it wraps one
 	Code          string         `json:"code"`
 	Message       string         `json:"message"`
 	FieldErrors   []fieldError   `json:"fieldErrors,omitempty"`
@@ -350,6 +356,12 @@ type cliError struct {
 	Rules         []string       `json:"rules,omitempty"`
 	ChangeableAt  string         `json:"changeableAt,omitempty"`
 	PreviousOwner *previousOwner `json:"previousOwner,omitempty"`
+	Limit         string         `json:"limit,omitempty"`
+	Max           int64          `json:"max,omitempty"`
+	Actual        int64          `json:"actual,omitempty"`
+	Path          string         `json:"path,omitempty"`
+	Missing       []string       `json:"missing,omitempty"`
+	Mismatched    []string       `json:"mismatched,omitempty"`
 }
 
 // previousOwner is the app or environment a URL_NAME_TAKEOVER_UNCONFIRMED refusal names as the name's last holder.
@@ -366,6 +378,8 @@ type fieldError struct {
 }
 
 func (e *cliError) Error() string { return e.Message }
+
+func (e *cliError) Unwrap() error { return e.cause }
 
 // report prints a failure (stdout as JSON, else stderr) and returns the exit code for it. A response the api
 // command already printed only sets the exit code.
@@ -391,7 +405,12 @@ func report(env environment, asJSON bool, err error) int {
 
 // hints are the lines a human-mode refusal adds after its message: what the refusal's details say to do next.
 func (e *cliError) hints() []string {
+	if strings.HasPrefix(e.command, "site ") {
+		return e.siteHints()
+	}
 	switch e.Code {
+	case "SITE_ROUTES_PENDING":
+		return e.routesPendingHints()
 	case "URL_NAME_RENAME_TOO_SOON":
 		if e.ChangeableAt != "" {
 			return []string{"The name can change again at " + e.ChangeableAt + "."}
@@ -402,6 +421,20 @@ func (e *cliError) hints() []string {
 		}
 	case "URL_NAME_TAKEOVER_UNCONFIRMED":
 		return []string{"Run the command again with --confirm-takeover to take the name."}
+	}
+	return nil
+}
+
+// routesPendingHints are SITE_ROUTES_PENDING's hints outside the site commands: the change is saved, and how its site
+// URLs catch up.
+func (e *cliError) routesPendingHints() []string {
+	switch e.command {
+	case "url-name rename":
+		return []string{"The URL name is changed, but the site URLs built from it don't show it yet. Run the same url-name rename again, asking for the same name, to finish it, or wait for the daily reconcile to repair it."}
+	case "envs delete", "envs remove":
+		return []string{"The environment is deleted, but its site URL doesn't show it yet. Run the same " + e.command + " again. A NOT_FOUND then means the environment is gone; its site URL stops serving at the application's next site change or the daily reconcile."}
+	case "envs create":
+		return []string{"The environment is created, but its site URL doesn't serve the application's site yet. Don't create it again: that is refused as a duplicate name. Its site URL catches up at the application's next site deploy, site remove or URL-name rename, or the daily reconcile."}
 	}
 	return nil
 }

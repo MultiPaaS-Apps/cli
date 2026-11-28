@@ -1127,3 +1127,87 @@ mutation RenameEnvironmentUrlName($environmentId: ID!, $name: String!, $confirmT
     }
   }
 }
+
+fragment SiteParts on Site {
+  id
+  disabled
+  # @genqlient(pointer: true)
+  activeDeployment {
+    id
+    status
+    fileCount
+    totalBytes
+    # @genqlient(pointer: true)
+    publishedAt
+  }
+}
+
+query Sites {
+  me {
+    application {
+      id
+      # @genqlient(pointer: true, flatten: true)
+      site {
+        ...SiteParts
+      }
+      environments {
+        id
+        isDefault
+        siteUrl
+        # @genqlient(pointer: true, flatten: true)
+        site {
+          ...SiteParts
+        }
+        # @genqlient(pointer: true, flatten: true)
+        servedSite {
+          ...SiteParts
+        }
+      }
+    }
+  }
+}
+
+mutation CreateSiteDeployment(
+  $applicationId: ID!
+  # @genqlient(omitempty: true)
+  $environmentId: ID
+  $files: [SiteFileInput!]!
+  $spaFallback: Boolean
+) {
+  createSiteDeployment(applicationId: $applicationId, environmentId: $environmentId, files: $files, spaFallback: $spaFallback) {
+    deploymentId
+    # @genqlient(flatten: true)
+    uploads {
+      ...SiteUploadParts
+    }
+  }
+}
+
+fragment SiteUploadParts on SiteUpload {
+  path
+  url
+  # @genqlient(typename: "signedHeader")
+  headers {
+    name
+    value
+  }
+}
+
+mutation PublishSiteDeployment($deploymentId: ID!) {
+  # @genqlient(flatten: true)
+  publishSiteDeployment(deploymentId: $deploymentId) {
+    ...SiteParts
+  }
+}
+
+mutation RemoveEnvironmentSite($environmentId: ID!) {
+  removeEnvironmentSite(environmentId: $environmentId) {
+    id
+  }
+}
+
+mutation DeleteApplicationSite($applicationId: ID!) {
+  deleteApplicationSite(applicationId: $applicationId) {
+    id
+  }
+}

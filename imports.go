@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -395,7 +396,7 @@ func upload(ctx context.Context, s *session, scope, importID string, file planne
 		return DataImportFileParts{}, err
 	}
 	registered := added.AddDataImportFile.ImportFile.DataImportFileParts
-	status, err := put(ctx, file.path, size, added.AddDataImportFile.UploadUrl, added.AddDataImportFile.UploadHeaders)
+	status, _, err := put(ctx, file.path, size, added.AddDataImportFile.UploadUrl, added.AddDataImportFile.UploadHeaders)
 	if err == nil && status >= 200 && status < 300 {
 		return registered, nil
 	}
@@ -416,17 +417,21 @@ func upload(ctx context.Context, s *session, scope, importID string, file planne
 		"upload of %s refused (%s); it was removed from the import. Run import add again.", name, reason)}
 }
 
-// put sends path as the body of a PUT to target and returns the response status, or 0 with the error
-// when there was no response. The error is not returned to the user: it names the presigned URL.
-func put(ctx context.Context, path string, size int64, target string, headers []signedHeader) (int, error) {
-	body, err := os.Open(path)
+// put sends path as the body of a PUT to target and returns the response status and the start of its body, or 0
+// with the error when there was no response. The error is not returned to the user: it names the presigned URL.
+func put(ctx context.Context, path string, size int64, target string, headers []signedHeader) (int, string, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		return 0, err
+		return 0, "", localFileError{err}
 	}
-	defer body.Close()
+	defer file.Close()
+	var body io.Reader = file
+	if size == 0 {
+		body = http.NoBody // Go sends a non-nil body of ContentLength 0 chunked, with no Content-Length for S3 to check
+	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, target, body)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 	request.ContentLength = size
 	for _, header := range headers {
@@ -434,12 +439,18 @@ func put(ctx context.Context, path string, size int64, target string, headers []
 	}
 	response, err := transferClient().Do(request)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 	defer response.Body.Close()
+	answer, _ := io.ReadAll(io.LimitReader(response.Body, 1024))
 	_, _ = io.Copy(io.Discard, response.Body)
-	return response.StatusCode, nil
+	return response.StatusCode, string(answer), nil
 }
+
+// localFileError is put's failure to open the file it was asked to send, as opposed to the transfer failing.
+type localFileError struct{ error }
+
+func (e localFileError) Unwrap() error { return e.error }
 
 // transferClient carries bodies too large for the session's timeout. It holds no bearer or scope, which a
 // presigned URL does not take.
@@ -595,34 +606,50 @@ func planDir(ctx context.Context, s *session, scope, dir string) ([]plannedFile,
 // chain of links that loops, or at a folder it sits inside, is refused, naming every such link, before
 // anything is created. Any other failure to read a path is returned as it is.
 func listRecordFiles(dir string) ([]string, error) {
-	walk := &recordFileWalk{dir: dir, found: []string{}}
+	walk := &fileWalk{dir: dir, found: []string{}}
 	if err := walk.visit(filesFolder, nil); err != nil {
 		return nil, err
 	}
-	if len(walk.dangling) > 0 || len(walk.circular) > 0 {
-		parts := []string{}
-		if len(walk.dangling) > 0 {
-			parts = append(parts, "Cannot follow "+strings.Join(walk.dangling, ", ")+": a link that points at nothing, or into a chain of links that loops. Point each one straight at the file or folder it stands for, or remove it if that no longer exists.")
-		}
-		if len(walk.circular) > 0 {
-			parts = append(parts, "Cannot follow "+strings.Join(walk.circular, ", ")+": a link to a folder it sits inside would repeat that folder's files without end. Remove each one.")
-		}
-		parts = append(parts, "Nothing was created.")
-		return nil, &cliError{exit: exitRefused, Code: "IMPORT_FILE_INVALID", Message: strings.Join(parts, " ")}
+	if problems := walk.problems(); len(problems) > 0 {
+		return nil, &cliError{exit: exitRefused, Code: "IMPORT_FILE_INVALID", Message: strings.Join(append(problems, "Nothing was created."), " ")}
 	}
 	return walk.found, nil
 }
 
-// recordFileWalk collects the files under dir/files, the links that point at nothing or loop among themselves,
-// and the links to a folder they sit inside.
-type recordFileWalk struct {
-	dir                       string
-	found, dangling, circular []string
+// fileWalk collects the files under dir, the links that point at nothing or loop among themselves, the links to a
+// folder they sit inside and, when inside is set, the links that lead outside that real path.
+type fileWalk struct {
+	dir, inside                         string
+	found, dangling, circular, escaping []string
+}
+
+// quotedNames is names in Go quoting, comma separated, so a link name can't write control characters to the terminal.
+func quotedNames(names []string) string {
+	quoted := make([]string, len(names))
+	for i, name := range names {
+		quoted[i] = strconv.Quote(name)
+	}
+	return strings.Join(quoted, ", ")
+}
+
+// problems are the sentences naming each link the walk could not follow, empty when it followed them all.
+func (w *fileWalk) problems() []string {
+	problems := []string{}
+	if len(w.dangling) > 0 {
+		problems = append(problems, "Cannot follow "+quotedNames(w.dangling)+": a link that points at nothing, or into a chain of links that loops. Point each one straight at the file or folder it stands for, or remove it if that no longer exists.")
+	}
+	if len(w.circular) > 0 {
+		problems = append(problems, "Cannot follow "+quotedNames(w.circular)+": a link to a folder it sits inside would repeat that folder's files without end. Remove each one.")
+	}
+	if len(w.escaping) > 0 {
+		problems = append(problems, "Cannot follow "+quotedNames(w.escaping)+": a link that leads outside the directory. Copy what it stands for into the directory, or remove it.")
+	}
+	return problems
 }
 
 // visit adds the entry reached at rel, a slash path under dir, following links. above holds the real
 // paths of the folders rel sits inside.
-func (w *recordFileWalk) visit(rel string, above []string) error {
+func (w *fileWalk) visit(rel string, above []string) error {
 	path := filepath.Join(w.dir, filepath.FromSlash(rel))
 	info, err := os.Stat(path)
 	if err != nil {
@@ -637,6 +664,16 @@ func (w *recordFileWalk) visit(rel string, above []string) error {
 		}
 		w.dangling = append(w.dangling, rel)
 		return nil
+	}
+	if w.inside != "" {
+		real, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return err
+		}
+		if !within(real, w.inside) {
+			w.escaping = append(w.escaping, rel)
+			return nil
+		}
 	}
 	if info.Mode().IsRegular() {
 		w.found = append(w.found, rel)

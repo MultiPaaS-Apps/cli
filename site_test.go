@@ -226,6 +226,40 @@ func TestSiteDeployFailsWhenNoEnvironmentServesAPublishedSiteBecauseItWasDisable
 	}
 }
 
+func TestSiteDeploySucceedsWithNoURLWhenTheApplicationSiteIsDisabledButEveryEnvironmentServesItsOwn(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	setup := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-default", "--json")
+	if setup.exit != exitOK {
+		t.Fatalf("setup deploy: exit %d: %s %s", setup.exit, setup.stdout, setup.stderr)
+	}
+	fake.sites.disableOnPublish = true
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
+
+	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a site of its own, so none serves it\n" {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+}
+
+func TestSiteDeploySucceedsWithNoURLWhenAnEnvironmentsOwnSiteIsDisabledAfterAnApplicationSitePublish(t *testing.T) {
+	fake := siteFake(t)
+	dir := t.TempDir()
+	writeNested(t, dir, "index.html", []byte("<p>hi</p>"))
+	setup := fake.run(t, "site", "deploy", dir, "--app", siteApp, "--env", "env-default", "--json")
+	if setup.exit != exitOK {
+		t.Fatalf("setup deploy: exit %d: %s %s", setup.exit, setup.stdout, setup.stderr)
+	}
+	fake.sites.afterPublish = func() { fake.sites.disabled[fake.sites.siteIDs["env:env-default"]] = true }
+
+	got := fake.run(t, "site", "deploy", dir, "--app", siteApp)
+
+	if got.exit != exitOK || got.stdout != "deployment dep-4 is published (1 files, 9 bytes), but every environment has a site of its own, so none serves it\n" {
+		t.Fatalf("exit %d: %s %s", got.exit, got.stdout, got.stderr)
+	}
+}
+
 func TestSiteDeployRefusesADirectoryOverALimitBeforeSendingAnything(t *testing.T) {
 	for _, c := range []struct {
 		name         string

@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -465,7 +466,10 @@ func servingURL(ctx context.Context, s *session, scope, siteID, envID string) (s
 	if envID != "" {
 		return "", &cliError{exit: exitRefused, Code: "NOT_FOUND", Message: "environment " + envID + " is not an environment of application " + application.Id}
 	}
-	if found == "" && siteDisabled(application) {
+	unserved := slices.ContainsFunc(application.Environments, func(e SitesMeUserApplicationEnvironmentsEnvironment) bool {
+		return e.ServedSite == nil && (e.Site == nil || !e.Site.Disabled)
+	})
+	if found == "" && unserved && siteDisabled(application) {
 		return "", &cliError{exit: exitRefused, Code: "SITE_DISABLED", Message: "MultiPaaS has disabled a site of this application, so no environment serves the site that was published"}
 	}
 	return found, nil
